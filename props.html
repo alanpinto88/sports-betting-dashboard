@@ -15,6 +15,7 @@
 <label>Sportsbook projection (optional)<input id="bookLine" type="number" step="any" min="0" placeholder="75.5"></label>
 <label>Sportsbook name<input id="book" maxlength="60" placeholder="DraftKings"></label>
 </div></section>
+<section class="card"><h2>Fetch NFL game logs (beta)</h2><p class="muted">Enter the ESPN athlete ID from the player’s ESPN profile URL. The browser will attempt to load the published game log; this is not a PrizePicks feed. Source availability and browser cross-origin permissions may prevent loading. Always check the dates and values before using them.</p><div class="grid"><label>ESPN athlete ID<input id="espnId" inputmode="numeric" pattern="[0-9]*" placeholder="Numeric ESPN player ID"></label><label>Season<input id="espnSeason" type="number" min="2000" max="2100" step="1" value="2026"></label></div><button type="button" id="fetchGames">Fetch last five NFL games</button><p id="fetchStatus" class="muted" role="status">No external statistics loaded.</p></section>
 <section class="card"><h2>Last five completed games</h2><p class="muted">Enter actual player totals, oldest to newest. Missing games must stay blank; do not enter zeros for games the player missed.</p><div class="grid">
 <label>Game 1<input class="game" type="number" min="0" step="any"></label><label>Game 2<input class="game" type="number" min="0" step="any"></label><label>Game 3<input class="game" type="number" min="0" step="any"></label><label>Game 4<input class="game" type="number" min="0" step="any"></label><label>Game 5<input class="game" type="number" min="0" step="any"></label>
 </div><p class="muted">The last five are a diagnostic, not a sufficient predictive sample. Confirm snaps, injuries, matchup, role, weather, and line movement separately.</p><button id="analyze">Analyze discrepancy</button></section>
@@ -26,6 +27,32 @@
 const el=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n).toFixed(2).replace(/\.00$/,'');
+const espnFields={'Receiving yards':['receivingYards','REC YDS'],'Rushing yards':['rushingYards','RUSH YDS'],'Receptions':['receptions','REC'],'Receiving targets':['receivingTargets','targets','TGTS'],'Rushing attempts':['rushingAttempts','CAR'],'Passing yards':['passingYards','PASS YDS'],'Pass completions':['completions','CMP'],'Passing touchdowns':['passingTouchdowns','PASS TD'],'Anytime touchdowns':['totalTouchdowns','TD']};
+function readEspnGamelog(data,stat,season){
+ const labels=espnFields[stat];if(!labels)throw Error('This market is not supported for automatic loading.');
+ const category=(data.categories||[]).find(c=>Array.isArray(c.labels)&&c.labels.some(x=>labels.some(k=>k.toLowerCase()===String(x).toLowerCase())));
+ if(!category)throw Error('ESPN did not return the required stat column.');
+ const index=category.labels.findIndex(x=>labels.some(k=>k.toLowerCase()===String(x).toLowerCase()));
+ const events=data.events||{};let rows=[];
+ for(const group of data.seasonTypes||[]){for(const cat of group.categories||[]){if(cat.name!==category.name)continue;for(const entry of cat.events||[]){const event=events[entry.eventId];const value=Array.isArray(entry.stats)?entry.stats[index]:null;const date=event?.gameDate||event?.date;
+ if(!date||!/^\\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date()||value===null||value===undefined||value===''||!Number.isFinite(Number(value))||Number(value)<0)continue;
+ rows.push({id:String(entry.eventId),date:String(date),value:Number(value)});
+ }}}
+ rows.sort((a,b)=>b.date.localeCompare(a.date));const unique=[...new Map(rows.map(x=>[x.id,x])).values()].slice(0,5);
+ if(unique.length!==5)throw Error('Fewer than five completed games with valid statistics were returned.');return unique.reverse();
+}
+el('fetchGames').addEventListener('click',async()=>{
+ const id=el('espnId').value.trim(),season=Number(el('espnSeason').value),status=el('fetchStatus'),btn=el('fetchGames');
+ if(!/^\\d{4,10}$/.test(id)||!Number.isInteger(season)||season<2000||season>new Date().getFullYear()){status.textContent='Enter a valid numeric ESPN athlete ID and season.';return}
+ btn.disabled=true;status.textContent='Requesting ESPN NFL game log…';
+ try{const url='https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/'+encodeURIComponent(id)+'/gamelog?season='+season;
+ const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw Error('HTTP '+response.status);
+ const data=await response.json(),rows=readEspnGamelog(data,el('stat').value,season);
+ document.querySelectorAll('.game').forEach((field,i)=>field.value=String(rows[i].value));
+ status.textContent='Loaded five ESPN game-log values ('+rows.map(r=>r.date.slice(0,10)).join(', ')+'). Confirm player identity, game completion, stat definitions and dates before analyzing. Source: '+url;
+ }catch(err){status.textContent='Automatic fetch unavailable: '+String(err.message)+'. No values changed. You can still enter five verified games manually.'}
+ finally{btn.disabled=false}
+});
 el('analyze').addEventListener('click',()=>{
  const raw=el('pp').value.trim(),p=Number(raw),values=[...document.querySelectorAll('.game')].map(x=>x.value.trim());
  if(!raw||!Number.isFinite(p)||p<0||values.some(v=>v==='')||values.some(v=>!Number.isFinite(Number(v))||Number(v)<0)){el('output').textContent='Enter a valid nonnegative projection and five nonnegative completed-game totals. Missing games cannot be treated as zero.';return}
