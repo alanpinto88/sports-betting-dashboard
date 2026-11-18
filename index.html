@@ -121,7 +121,7 @@ el('exportBets').onclick=()=>{
  const columns=['date','sport','event','odds','stake','status'];
  const lines=[columns.map(csvCell).join(',')];
  for(const bet of bets)lines.push(columns.map(key=>csvCell(bet[key])).join(','));
- const blob=new Blob(['\\uFEFF'+lines.join('\\r\\n')],{type:'text/csv;charset=utf-8'});
+ const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
  const url=URL.createObjectURL(blob),link=document.createElement('a');
  link.href=url;link.download='ev-sports-bets-'+new Date().toISOString().slice(0,10)+'.csv';
  document.body.append(link);link.click();link.remove();
