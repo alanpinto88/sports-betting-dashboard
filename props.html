@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07131f"><title>EV Sports | Player Prop Discrepancy Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#07131f;--card:#102536;--line:#315065;--muted:#b4c6d3;--accent:#57c4ff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f0f7fd;font:15px system-ui,-apple-system,sans-serif}header{padding:18px max(16px,calc((100vw - 1100px)/2));border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}a{color:var(--accent)}nav{display:flex;gap:14px;flex-wrap:wrap}main{max-width:1100px;margin:auto;padding:20px 14px 70px}h1{font-size:26px}h2{font-size:19px}.muted,small{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:13px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px}.wide{grid-column:1/-1}label{display:grid;gap:5px;font-weight:600}input,select,button{font:inherit;border:1px solid #486b83;background:#091d2c;color:white;border-radius:9px;padding:11px;width:100%;min-width:0}button{background:#175478;cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent)}.result{line-height:1.8}.warn{color:#ffd082}.good{color:#83e8ae}.bad{color:#ff9ba6}.metric{font-size:24px;font-weight:800}.tag{display:inline-block;border:1px solid #57748a;border-radius:20px;padding:4px 9px}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--line);text-align:left;padding:10px;white-space:nowrap}th{color:var(--muted)}@media(max-width:550px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}}
+</style></head><body>
+<header><strong>EV <span style="color:#57c4ff">Sports</span> / Player Props</strong><nav><a href="index.html">Dashboard</a><a href="scanner.html">Scanner</a><a href="research.html">Research Lab</a></nav></header>
+<main><h1>Player Prop Discrepancy Lab</h1><p class="muted">Compare manually verified PrizePicks projections against a sportsbook line and five completed games. Research-only: no live PrizePicks feed, verified sportsbook odds, injury data, or calibrated win probabilities are connected. Nothing here is an automatic pick.</p>
+<div class="grid">
+<section class="card"><h2>Projection details</h2><div class="grid">
+<label>Player<input id="player" maxlength="80" placeholder="Player name"></label><label>Game / opponent<input id="match" maxlength="100" placeholder="Team vs opponent and date"></label>
+<label>Statistic<select id="stat"><option>Receiving yards</option><option>Rushing yards</option><option>Receptions</option><option>Receiving targets</option><option>Rushing attempts</option><option>Passing yards</option><option>Pass completions</option><option>Passing touchdowns</option><option>Anytime touchdowns</option><option>Fantasy points</option><option>Other</option></select></label>
+<label>PrizePicks projection<input id="pp" type="number" step="any" min="0" placeholder="70.5"></label>
+<label>Projection type<select id="type"><option value="standard">Standard</option><option value="goblin">Goblin (green)</option><option value="demon">Demon (red)</option></select></label>
+<label>Side being evaluated<select id="side"><option value="more">More</option><option value="less">Less</option></select></label>
+<label>Sportsbook projection (optional)<input id="bookLine" type="number" step="any" min="0" placeholder="75.5"></label>
+<label>Sportsbook name<input id="book" maxlength="60" placeholder="DraftKings"></label>
+</div></section>
+<section class="card"><h2>Last five completed games</h2><p class="muted">Enter actual player totals, oldest to newest. Missing games must stay blank; do not enter zeros for games the player missed.</p><div class="grid">
+<label>Game 1<input class="game" type="number" min="0" step="any"></label><label>Game 2<input class="game" type="number" min="0" step="any"></label><label>Game 3<input class="game" type="number" min="0" step="any"></label><label>Game 4<input class="game" type="number" min="0" step="any"></label><label>Game 5<input class="game" type="number" min="0" step="any"></label>
+</div><p class="muted">The last five are a diagnostic, not a sufficient predictive sample. Confirm snaps, injuries, matchup, role, weather, and line movement separately.</p><button id="analyze">Analyze discrepancy</button></section>
+<section class="card wide"><h2>Research result</h2><div id="output" class="result" role="status">Enter a projection and all five completed-game results, then analyze.</div></section>
+<section class="card wide"><h2>How the signals work</h2><p><strong>Line gap:</strong> sportsbook line minus PrizePicks projection. A positive number is not automatically an edge: prices, payouts, and market rules differ.</p><p><strong>Rebound watch:</strong> recent average below the PrizePicks projection and the newest two games below the first three. This flags a question for further research, <em>not</em> evidence of a bounce-back.</p><p><strong>Goblin / Demon:</strong> special difficulty and payout modifiers. Evaluate the actual side and multiplier, not the color alone. Alternate lines cannot be compared as though they have identical payouts.</p><p class="muted">Five-game hit rate is descriptive only. No model-derived probability, expected value, or automatic recommendation is published without validated historical data and payout information.</p></section>
+</div></main>
+<script>
+'use strict';
+const el=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Number(n).toFixed(2).replace(/\.00$/,'');
+el('analyze').addEventListener('click',()=>{
+ const raw=el('pp').value.trim(),p=Number(raw),values=[...document.querySelectorAll('.game')].map(x=>x.value.trim());
+ if(!raw||!Number.isFinite(p)||p<0||values.some(v=>v==='')||values.some(v=>!Number.isFinite(Number(v))||Number(v)<0)){el('output').textContent='Enter a valid nonnegative projection and five nonnegative completed-game totals. Missing games cannot be treated as zero.';return}
+ const v=values.map(Number),avg=v.reduce((a,b)=>a+b,0)/5,first=(v[0]+v[1]+v[2])/3,recent=(v[3]+v[4])/2,side=el('side').value;
+ const hits=v.filter(n=>side==='more'?n>p:n<p).length,push=v.filter(n=>n===p).length;
+ const braw=el('bookLine').value.trim(),book=braw===''?null:Number(braw);
+ if(book!==null&&(!Number.isFinite(book)||book<0)){el('output').textContent='Enter a valid nonnegative sportsbook projection or leave it blank.';return}
+ const gap=book===null?'No sportsbook comparison entered.':('Sportsbook minus PrizePicks: '+fmt(book-p)+' ('+esc(el('book').value.trim()||'unverified book')+'). Verify identical market definitions and payout rules.');
+ const rebound=avg<p&&recent<first?'Rebound watch: last-five average is below the line and the last two games declined versus the first three. This does not establish a More advantage.':'No two-part rebound-watch condition met.';
+ const name=esc(el('player').value.trim()||'Unnamed player'),game=esc(el('match').value.trim()||'Game not entered'),kind=el('type').value;
+ el('output').innerHTML='<strong>'+name+'</strong> · '+game+' · '+esc(el('stat').value)+'<p class="metric">'+fmt(p)+' · '+(side==='more'?'More':'Less')+'</p><p>Last 5 average: <strong>'+fmt(avg)+'</strong> · '+(side==='more'?'More':'Less')+' hits: <strong>'+hits+'/5</strong> · exact-line ties: '+push+'/5</p><p>Oldest three average: '+fmt(first)+' · newest two average: '+fmt(recent)+'</p><p>'+gap+'</p><p class="warn">'+rebound+'</p><p>Projection class: '+esc(kind)+'. '+(kind==='standard'?'Standard line.':'Special projection: check side-specific eligibility and payout multiplier before interpreting value.')+'</p><p class="bad"><strong>Prediction: withheld.</strong> Five games and line gaps cannot establish a calibrated probability or positive expected value. Verify matchup, usage, injuries, opponent strength, and available payout.</p>';
+});
+</script></body></html>
