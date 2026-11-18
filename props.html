@@ -63,17 +63,36 @@ el('searchPlayer').addEventListener('click',async()=>{
 el('playerMatches').addEventListener('change',()=>{const select=el('playerMatches');if(!select.value)return;el('espnId').value=select.value;el('player').value=select.selectedOptions[0].text.split(' · ')[0];el('fetchStatus').textContent='Player selected. Tap Fetch last five NFL games.'});
 const espnFields={'Receiving yards':['receivingYards','REC YDS'],'Rushing yards':['rushingYards','RUSH YDS'],'Receptions':['receptions','REC'],'Receiving targets':['receivingTargets','targets','TGTS'],'Rushing attempts':['rushingAttempts','CAR'],'Passing yards':['passingYards','PASS YDS'],'Pass completions':['completions','CMP'],'Passing touchdowns':['passingTouchdowns','PASS TD'],'Anytime touchdowns':['totalTouchdowns','TD']};
 function readEspnGamelog(data,stat,season){
- const labels=espnFields[stat];if(!labels)throw Error('This market is not supported for automatic loading.');
- const category=(data.categories||[]).find(c=>Array.isArray(c.labels)&&c.labels.some(x=>labels.some(k=>k.toLowerCase()===String(x).toLowerCase())));
- if(!category)throw Error('ESPN did not return the required stat column.');
- const index=category.labels.findIndex(x=>labels.some(k=>k.toLowerCase()===String(x).toLowerCase()));
+ const aliases=espnFields[stat];if(!aliases)throw Error('This market is not supported for automatic loading.');
+ const norm=x=>String(x??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+ const wanted=new Set(aliases.map(norm));
+ const groups=Array.isArray(data.seasonTypes)?data.seasonTypes:[];
+ const topCategories=Array.isArray(data.categories)?data.categories:[];
+ const allCategories=[...topCategories,...groups.flatMap(g=>Array.isArray(g.categories)?g.categories:[])];
+ const matching=allCategories.filter(c=>Array.isArray(c.labels)&&c.labels.some(x=>wanted.has(norm(x))));
+ if(!matching.length){
+   const available=[...new Set(allCategories.flatMap(c=>Array.isArray(c.labels)?c.labels:[]).map(String))].slice(0,35);
+   throw Error('ESPN stat column unavailable for '+stat+'. Returned columns: '+(available.join(', ')||'none')+'.');
+ }
  const events=data.events||{};let rows=[];
- for(const group of data.seasonTypes||[]){for(const cat of group.categories||[]){if(cat.name!==category.name)continue;for(const entry of cat.events||[]){const event=events[entry.eventId];const value=Array.isArray(entry.stats)?entry.stats[index]:null;const date=event?.gameDate||event?.date;
- if(!date||!/^\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date()||value===null||value===undefined||value===''||!Number.isFinite(Number(value))||Number(value)<0)continue;
- rows.push({id:String(entry.eventId),date:String(date),value:Number(value)});
- }}}
- rows.sort((a,b)=>b.date.localeCompare(a.date));const unique=[...new Map(rows.map(x=>[x.id,x])).values()].slice(0,5);
- if(unique.length!==5)throw Error('Fewer than five completed games with valid statistics were returned.');return unique.reverse();
+ for(const group of groups)for(const cat of group.categories||[]){
+   const definition=matching.find(c=>c===cat||(c.name&&c.name===cat.name));
+   if(!definition)continue;
+   const labels=Array.isArray(cat.labels)?cat.labels:definition.labels;
+   const index=labels.findIndex(x=>wanted.has(norm(x)));
+   if(index<0)continue;
+   for(const entry of cat.events||[]){
+     const event=events[entry.eventId];
+     const raw=Array.isArray(entry.stats)?entry.stats[index]:null;
+     const date=event?.gameDate||event?.date;
+     if(!date||!/^\\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date()||raw===null||raw===undefined||raw===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
+     rows.push({id:String(entry.eventId),date:String(date),value:Number(raw)});
+   }
+ }
+ rows.sort((a,b)=>b.date.localeCompare(a.date));
+ const unique=[...new Map(rows.map(x=>[x.id,x])).values()].slice(0,5);
+ if(unique.length!==5)throw Error('Only '+unique.length+' completed game-log values found for '+stat+'; five required.');
+ return unique.reverse();
 }
 el('fetchGames').addEventListener('click',async()=>{
  const id=el('espnId').value.trim(),season=Number(el('espnSeason').value),status=el('fetchStatus'),btn=el('fetchGames');
