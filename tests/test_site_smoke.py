@@ -98,6 +98,17 @@ class PublicSiteSmokeTests(unittest.TestCase):
         self.assertIn("'providerGameId','market','side','line','settlementSource'",home)
         self.assertIn("manually entered, not automatically settled",home)
 
+    def test_settlement_preview_is_non_binding(self):
+        home=(ROOT/"index.html").read_text(encoding="utf-8")
+        for control in ("settleBet","settleHome","settleAway","previewSettlement","settlementPreview"):
+            self.assertIn('id="'+control+'"',home)
+        self.assertIn("function standardSettlement(b,home,away)",home)
+        self.assertIn("if(home===away)return null",home)
+        self.assertIn("return 'push'",home)
+        self.assertIn("Confirm official results and sportsbook rules",home)
+        self.assertIn("does not change saved bets",home)
+        self.assertNotIn("b.status=result",home)
+
     def test_no_unverified_feed_picks(self):
         for filename in ("recent-market-review.json","nba-player-props-review.json"):
             path=ROOT/filename
