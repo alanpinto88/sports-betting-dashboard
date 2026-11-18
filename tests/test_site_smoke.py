@@ -34,6 +34,9 @@ class PublicSiteSmokeTests(unittest.TestCase):
             self.assertIn('id="'+control+'"',scanner)
         self.assertIn("groupedChoices('books'",scanner)
         self.assertIn("cb.disabled=false",scanner)
+        self.assertIn("summary.append(addText",scanner)
+        self.assertIn("d.append(summary,selectionRow,inner)",scanner)
+        self.assertIn("groupSelectLabel",scanner)
 
     def test_no_unverified_feed_picks(self):
         for filename in ("recent-market-review.json","nba-player-props-review.json"):
