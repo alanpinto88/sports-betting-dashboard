@@ -41,9 +41,9 @@ el('searchPlayer').addEventListener('click',async()=>{
  if(Array.isArray(value)){value.forEach(x=>walk(x,depth+1));return}
  const name=String(value.displayName||value.fullName||value.name||value.title||'');
  const href=String(value.href||value.url||value.link||value.uid||'');
- const id=String(value.id||href.match(/(?:athletes?\\/|athlete\\/|a:)(\\d{4,10})(?:\\b|$)/i)?.[1]||'');
+ const id=String(value.id||href.match(/(?:athletes?\/|athlete\/|a:)(\d{4,10})(?:\b|$)/i)?.[1]||'');
  const context=JSON.stringify({sport:value.sport,league:value.league,href,category:value.type});
- if(/^\\d{4,10}$/.test(id)&&name.toLowerCase().includes(q.toLowerCase())&&(/nfl|football/i.test(context)||!value.sport&&!value.league))found.push({id,name,team:String(value.team?.abbreviation||value.team?.displayName||'')});
+ if(/^\d{4,10}$/.test(id)&&name.toLowerCase().includes(q.toLowerCase())&&(/nfl|football/i.test(context)||!value.sport&&!value.league))found.push({id,name,team:String(value.team?.abbreviation||value.team?.displayName||'')});
  for(const [key,item] of Object.entries(value))if(key!=='links'&&key!=='images')walk(item,depth+1);
  }
  walk(data,0);const unique=[...new Map(found.map(x=>[x.id,x])).values()].slice(0,30);
@@ -62,7 +62,7 @@ function readEspnGamelog(data,stat,season){
  const index=category.labels.findIndex(x=>labels.some(k=>k.toLowerCase()===String(x).toLowerCase()));
  const events=data.events||{};let rows=[];
  for(const group of data.seasonTypes||[]){for(const cat of group.categories||[]){if(cat.name!==category.name)continue;for(const entry of cat.events||[]){const event=events[entry.eventId];const value=Array.isArray(entry.stats)?entry.stats[index]:null;const date=event?.gameDate||event?.date;
- if(!date||!/^\\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date()||value===null||value===undefined||value===''||!Number.isFinite(Number(value))||Number(value)<0)continue;
+ if(!date||!/^\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date()||value===null||value===undefined||value===''||!Number.isFinite(Number(value))||Number(value)<0)continue;
  rows.push({id:String(entry.eventId),date:String(date),value:Number(value)});
  }}}
  rows.sort((a,b)=>b.date.localeCompare(a.date));const unique=[...new Map(rows.map(x=>[x.id,x])).values()].slice(0,5);
@@ -70,7 +70,7 @@ function readEspnGamelog(data,stat,season){
 }
 el('fetchGames').addEventListener('click',async()=>{
  const id=el('espnId').value.trim(),season=Number(el('espnSeason').value),status=el('fetchStatus'),btn=el('fetchGames');
- if(!/^\\d{4,10}$/.test(id)||!Number.isInteger(season)||season<2000||season>new Date().getFullYear()){status.textContent='Enter a valid numeric ESPN athlete ID and season.';return}
+ if(!/^\d{4,10}$/.test(id)||!Number.isInteger(season)||season<2000||season>new Date().getFullYear()){status.textContent='Enter a valid numeric ESPN athlete ID and season.';return}
  btn.disabled=true;status.textContent='Requesting ESPN NFL game log…';
  try{const url='https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/'+encodeURIComponent(id)+'/gamelog?season='+season;
  const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw Error('HTTP '+response.status);
