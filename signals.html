@@ -12,14 +12,27 @@ table{width:100%;border-collapse:collapse;min-width:650px}td,th{border-bottom:1p
 <div class="notice"><b>NOT LIVE ODDS.</b> These are timestamped, historical paper signals.
 Prices may no longer be available. Market-relative EV is not independently
 validated, not a betting recommendation, and not evidence of sharp-money action.</div>
-<p id="status" role="status">Loading published archive…</p>
+<label for="sport">Sport: </label><select id="sport" aria-label="Filter archived signals by sport" style="background:#132b3b;color:#eaf6fc;border:1px solid #55768a;padding:9px;border-radius:7px"><option value="ALL">All sports</option></select><p id="status" role="status">Loading published archive…</p>
 <div class="scroll"><table><thead><tr><th>Captured (UTC)</th><th>Game</th><th>Selection</th><th>Book</th><th>Recorded odds</th><th>Market-relative estimate</th></tr></thead><tbody id="rows"></tbody></table></div>
 <p class="muted">Historical observations only. No bets placed or automatically settled.</p>
 <script>
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let archive=[];
+function render(){
+const selected=document.getElementById('sport').value;
+const visible=selected==='ALL'?archive:archive.filter(s=>s.sport===selected);
+document.getElementById('status').textContent=visible.length+' of '+archive.length+' archived paper signals shown — no live feed connected.';
+document.getElementById('rows').innerHTML=visible.map(s=>'<tr><td>'+esc(s.captured_at)+'</td><td>'+esc(s.matchup)+'</td><td>'+esc(s.selection)+'</td><td>'+esc(s.bookmaker)+'</td><td>'+esc((s.american_price>0?'+':'')+s.american_price)+'</td><td>'+esc(s.market_proxy_ev_pct)+'%</td></tr>').join('')||'<tr><td colspan="6">No archived signals for this sport yet. This does not mean no games were played.</td></tr>';
+}
+document.getElementById('sport').addEventListener('change',render);
 fetch('./public-signals.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(d=>{
 if(d.kind!=='historical_paper_signals'||!Array.isArray(d.signals))throw Error('Invalid published feed');
-document.getElementById('status').textContent=d.signals.length+' archived paper signals — no live feed connected.';
-document.getElementById('rows').innerHTML=d.signals.map(s=>'<tr><td>'+esc(s.captured_at)+'</td><td>'+esc(s.matchup)+'</td><td>'+esc(s.selection)+'</td><td>'+esc(s.bookmaker)+'</td><td>'+esc((s.american_price>0?'+':'')+s.american_price)+'</td><td>'+esc(s.market_proxy_ev_pct)+'%</td></tr>').join('')||'<tr><td colspan="6">No archived signals yet.</td></tr>';
+archive=d.signals;
+const sports=[...new Set(archive.map(s=>s.sport).filter(Boolean))].sort();
+const select=document.getElementById('sport');
+sports.forEach(s=>{const option=document.createElement('option');option.value=s;option.textContent=s;select.appendChild(option)});
+const urlSport=new URLSearchParams(location.search).get('sport');
+if(urlSport&&sports.includes(urlSport))select.value=urlSport;
+render();
 }).catch(()=>{document.getElementById('status').textContent='Published data unavailable. No live prices are displayed.'});
 </script></body></html>
