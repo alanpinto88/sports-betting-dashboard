@@ -85,7 +85,7 @@ function readEspnGamelog(data,stat,season){
      const event=events[entry.eventId];
      const raw=Array.isArray(entry.stats)?entry.stats[index]:null;
      const date=event?.gameDate||event?.date;
-     if(!date||!/^\\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date()||raw===null||raw===undefined||raw===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
+     if(!date||!/^\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date()||raw===null||raw===undefined||raw===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
      rows.push({id:String(entry.eventId),date:String(date),value:Number(raw)});
    }
  }
