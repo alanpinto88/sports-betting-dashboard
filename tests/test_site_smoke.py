@@ -109,6 +109,15 @@ class PublicSiteSmokeTests(unittest.TestCase):
         self.assertIn("does not change saved bets",home)
         self.assertNotIn("b.status=result",home)
 
+    def test_nhl_settlement_clears_stale_scores_and_rechecks_edits(self):
+        home=(ROOT/"index.html").read_text(encoding="utf-8")
+        self.assertIn("Selected bet is no longer pending. Choose another pending bet.",home)
+        self.assertIn("Score edited. Check NHL final score again before confirming.",home)
+        self.assertIn("proposal.homeScore",home)
+        self.assertIn("proposal.awayScore",home)
+        self.assertIn("homeScore:home.score,awayScore:away.score",home)
+        self.assertIn("b.status!=='pending'||b.sport!=='NHL'",home)
+
     def test_verified_nhl_settlement_requires_user_confirmation(self):
         home=(ROOT/"index.html").read_text(encoding="utf-8")
         self.assertIn('id="applyVerifiedNhl"',home)
