@@ -60,7 +60,7 @@ el('searchPlayer').addEventListener('click',async()=>{
  }catch(err){select.replaceChildren(new Option('Search unavailable',''));status.textContent='Player search unavailable ('+String(err.message)+'). ESPN may restrict browser access; manual lookup remains available.'}
  finally{button.disabled=false}
 });
-el('playerMatches').addEventListener('change',()=>{const select=el('playerMatches');if(!select.value)return;el('espnId').value=select.value;// Selecting a research player does not modify the projection form.el('fetchStatus').textContent='Player selected. Tap Fetch last five NFL games.'});
+el('playerMatches').addEventListener('change',()=>{const select=el('playerMatches');if(!select.value)return;el('espnId').value=select.value;el('fetchStatus').textContent='Player selected. Tap Fetch last five NFL games.';});
 const espnFields={
  'Receiving yards':{categories:['receiving'],labels:['receivingYards','REC YDS','YDS']},
  'Rushing yards':{categories:['rushing'],labels:['rushingYards','RUSH YDS','YDS']},
