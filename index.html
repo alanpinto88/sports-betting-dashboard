@@ -115,12 +115,12 @@ el('clearQuotes').onclick=()=>{if(confirm('Remove all saved manual quotes?')){qu
 el('quotes').onclick=e=>{let b=e.target.closest('[data-delquote]');if(b){quotes=quotes.filter(x=>x.id!==b.dataset.delquote);save();render()}};
 el('addBet').onclick=()=>{let event=el('betEvent').value.trim(),odds=Number(el('betOdds').value),stake=Number(el('stake').value),date=el('betDate').value;if(!event||!validOdds(odds)||!Number.isFinite(stake)||stake<=0||!/^\d{4}-\d{2}-\d{2}$/.test(date)){alert('Provide a selection, valid American odds, positive stake, and date.');return}bets.unshift({id:crypto.randomUUID(),sport,event,odds,stake,date,status:el('status').value});el('betEvent').value='';save();render()};
 // Export only the user's locally stored ledger; never send private bet data to a server.
-function csvCell(value){let str=String(value??'');if(/^[\\s]*[=+@-]/.test(str))str="'"+str;return '"'+str.replace(/"/g,'""')+'"'}
+function csvCell(value){let str=String(value??'');if(/^[\s]*[=+@-]/.test(str))str="'"+str;return '"'+str.replace(/"/g,'""')+'"'}
 el('exportBets').onclick=()=>{
  if(!bets.length){el('exportStatus').textContent='No bets to export yet.';return}
- const columns=['date','sport','event','odds','stake','status'];
+ const columns=['date','sport','event','odds','stake','status','profit'];
  const lines=[columns.map(csvCell).join(',')];
- for(const bet of bets)lines.push(columns.map(key=>csvCell(bet[key])).join(','));
+ for(const bet of bets)lines.push(columns.map(key=>csvCell(key==='profit'?pnl(bet):bet[key])).join(','));
  const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
  const url=URL.createObjectURL(blob),link=document.createElement('a');
  link.href=url;link.download='ev-sports-bets-'+new Date().toISOString().slice(0,10)+'.csv';
