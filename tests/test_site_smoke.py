@@ -88,14 +88,14 @@ class PublicSiteSmokeTests(unittest.TestCase):
 
     def test_structured_bet_metadata_for_future_settlement(self):
         home=(ROOT/"index.html").read_text(encoding="utf-8")
-        for control in ("betBook","betGameId","betMarket","betSide","betLine"):
+        for control in ("betBook","betGameId","betHomeTeam","betAwayTeam","betMarket","betSide","betLine"):
             self.assertIn('id="'+control+'"',home)
         for market in ("moneyline","spread","total","player_prop"):
             self.assertIn('value="'+market+'"',home)
         self.assertIn("providerGameId:el('betGameId').value.trim()",home)
         self.assertIn("settlementSource:'manual'",home)
         self.assertIn("rawLine===''?null:Number(rawLine)",home)
-        self.assertIn("'providerGameId','market','side','line','settlementSource'",home)
+        self.assertIn("'providerGameId','homeTeam','awayTeam','market','side','line','settlementSource'",home)
         self.assertIn("manually entered, not automatically settled",home)
 
     def test_settlement_preview_is_non_binding(self):
@@ -117,6 +117,8 @@ class PublicSiteSmokeTests(unittest.TestCase):
         self.assertIn("String(game.id)!==String(b.providerGameId)",home)
         self.assertIn("api-web.nhle.com/v1/gamecenter/",home)
         self.assertIn("Not applied to bet",home)
+        self.assertIn("b.homeTeam!==home.abbrev||b.awayTeam!==away.abbrev",home)
+        self.assertIn("Team codes missing or do not match",home)
         self.assertNotIn("b.status=preview",home)
         self.assertIn("The NHL web API may block cross-origin browser requests",home)
         self.assertIn("Selected bet changed. Enter or retrieve its final score",home)
