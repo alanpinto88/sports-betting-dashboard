@@ -6,7 +6,7 @@
 a{color:#7bd5ff}.muted{color:#aac0ce}.notice{background:#2c2930;border-left:4px solid #eab75e;padding:13px;margin:18px 0}
 table{width:100%;border-collapse:collapse;min-width:650px}td,th{border-bottom:1px solid #344c5c;padding:12px;text-align:left}
 .scroll{overflow-x:auto}th{color:#aac0ce}strong{color:#8ef5b4}
-</style></head><body>
+@media(max-width:700px){body{padding:16px}h1{font-size:1.65rem;line-height:1.25}h1 small{display:block;font-size:1rem;margin-top:7px}.scroll{overflow:visible}table{min-width:0}thead{display:none}tbody{display:grid;gap:14px}tr{display:block;background:#132b3b;border:1px solid #344c5c;border-radius:12px;padding:12px}td{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border:0;padding:7px 0;overflow-wrap:anywhere;word-break:normal}td::before{content:attr(data-label);flex:0 0 37%;color:#aac0ce;font-weight:600}td:last-child{color:#8ef5b4}td[colspan]{display:block}td[colspan]::before{content:none}}\n</style></head><body>
 <p><a href="./index.html">← Back to dashboard</a></p>
 <h1>Historical market signals <small class="muted">Read-only beta</small></h1>
 <div class="notice"><b>NOT LIVE ODDS.</b> These are timestamped, historical paper signals.
@@ -22,7 +22,7 @@ function render(){
 const selected=document.getElementById('sport').value;
 const visible=selected==='ALL'?archive:archive.filter(s=>s.sport===selected);
 document.getElementById('status').textContent=visible.length+' of '+archive.length+' archived paper signals shown — no live feed connected.';
-document.getElementById('rows').innerHTML=visible.map(s=>'<tr><td>'+esc(s.captured_at)+'</td><td>'+esc(s.matchup)+'</td><td>'+esc(s.selection)+'</td><td>'+esc(s.bookmaker)+'</td><td>'+esc((s.american_price>0?'+':'')+s.american_price)+'</td><td>'+esc(s.market_proxy_ev_pct)+'%</td></tr>').join('')||'<tr><td colspan="6">No archived signals for this sport yet. This does not mean no games were played.</td></tr>';
+document.getElementById('rows').innerHTML=visible.map(s=>'<tr><td data-label="Captured (UTC)">'+esc(new Date(s.captured_at).toLocaleString('en-US',{timeZone:'UTC',dateStyle:'medium',timeStyle:'short'}))+'</td><td data-label="Game">'+esc(s.matchup)+'</td><td data-label="Selection">'+esc(s.selection)+'</td><td data-label="Sportsbook">'+esc(s.bookmaker)+'</td><td data-label="Recorded odds">'+esc((s.american_price>0?'+':'')+s.american_price)+'</td><td data-label="Market estimate">'+esc(s.market_proxy_ev_pct)+'%</td></tr>').join('')||'<tr><td colspan="6">No archived signals for this sport yet. This does not mean no games were played.</td></tr>';
 }
 document.getElementById('sport').addEventListener('change',render);
 fetch('./public-signals.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(d=>{
