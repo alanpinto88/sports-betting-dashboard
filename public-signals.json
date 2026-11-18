@@ -1,0 +1,58 @@
+{
+  "feed_version": 1,
+  "kind": "historical_paper_signals",
+  "status": "ARCHIVED_OBSERVATIONS_NOT_LIVE_ODDS",
+  "source": "archived pregame market-review signals",
+  "count": 4,
+  "signals": [
+    {
+      "signal_id": "1940706a79cbcbafacdcbf231069716b|draftkings|Las Vegas Raiders|2026-11-17T23:45:02.967911+00:00",
+      "event_id": "1940706a79cbcbafacdcbf231069716b",
+      "sport": "americanfootball_nfl",
+      "matchup": "Las Vegas Raiders @ Denver Broncos",
+      "selection": "Las Vegas Raiders",
+      "bookmaker": "draftkings",
+      "american_price": 470,
+      "market_proxy_ev_pct": 5.88,
+      "captured_at": "2026-11-17T23:45:02.967911+00:00",
+      "commence_time": "2026-11-22T21:25:00Z"
+    },
+    {
+      "signal_id": "1940706a79cbcbafacdcbf231069716b|fanduel|Las Vegas Raiders|2026-11-17T23:45:02.967911+00:00",
+      "event_id": "1940706a79cbcbafacdcbf231069716b",
+      "sport": "americanfootball_nfl",
+      "matchup": "Las Vegas Raiders @ Denver Broncos",
+      "selection": "Las Vegas Raiders",
+      "bookmaker": "fanduel",
+      "american_price": 450,
+      "market_proxy_ev_pct": 2.16,
+      "captured_at": "2026-11-17T23:45:02.967911+00:00",
+      "commence_time": "2026-11-22T21:25:00Z"
+    },
+    {
+      "signal_id": "4c5b1c0843a260278e95eb93e7787576|fanduel|Miami Dolphins|2026-11-17T23:45:02.967911+00:00",
+      "event_id": "4c5b1c0843a260278e95eb93e7787576",
+      "sport": "americanfootball_nfl",
+      "matchup": "Miami Dolphins @ Buffalo Bills",
+      "selection": "Miami Dolphins",
+      "bookmaker": "fanduel",
+      "american_price": 980,
+      "market_proxy_ev_pct": 2.8,
+      "captured_at": "2026-11-17T23:45:02.967911+00:00",
+      "commence_time": "2026-11-22T18:00:00Z"
+    },
+    {
+      "signal_id": "5e63079b678f8c13419adc169fff02d3|fanduel|Tennessee Titans|2026-11-17T23:45:02.967911+00:00",
+      "event_id": "5e63079b678f8c13419adc169fff02d3",
+      "sport": "americanfootball_nfl",
+      "matchup": "Tennessee Titans @ Dallas Cowboys",
+      "selection": "Tennessee Titans",
+      "bookmaker": "fanduel",
+      "american_price": 350,
+      "market_proxy_ev_pct": 3.17,
+      "captured_at": "2026-11-17T23:45:02.967911+00:00",
+      "commence_time": "2026-11-22T18:00:00Z"
+    }
+  ],
+  "disclaimer": "Not current odds, not placed bets, not verified sharp money or proven positive EV."
+}
