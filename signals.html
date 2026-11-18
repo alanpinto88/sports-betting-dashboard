@@ -12,7 +12,7 @@ table{width:100%;border-collapse:collapse;min-width:650px}td,th{border-bottom:1p
 <div class="notice"><b>NOT LIVE ODDS.</b> These are timestamped, historical paper signals.
 Prices may no longer be available. Market-relative EV is not independently
 validated, not a betting recommendation, and not evidence of sharp-money action.</div>
-<label for="sport">Sport: </label><select id="sport" aria-label="Filter archived signals by sport" style="background:#132b3b;color:#eaf6fc;border:1px solid #55768a;padding:9px;border-radius:7px"><option value="ALL">All sports</option></select><p id="status" role="status">Loading published archive…</p>
+<label for="sport">Sport: </label><select id="sport" aria-label="Filter archived signals by sport" style="background:#132b3b;color:#eaf6fc;border:1px solid #55768a;padding:9px;border-radius:7px"><option value="ALL">All sports</option></select> <label for="book">Sportsbook: </label><select id="book" aria-label="Filter by sportsbook" style="background:#132b3b;color:#eaf6fc;border:1px solid #55768a;padding:9px;border-radius:7px"><option value="ALL">All books</option></select><button id="csv" type="button" disabled style="background:#135b36;color:white;border:1px solid #40f47b;border-radius:7px;min-height:44px;padding:9px 13px;cursor:pointer">Export filtered CSV</button><p id="status" role="status">Loading published archive…</p><p id="summary" class="muted"></p>
 <div class="scroll"><table><thead><tr><th>Captured (UTC)</th><th>Game</th><th>Selection</th><th>Book</th><th>Recorded odds</th><th>Market-relative estimate</th></tr></thead><tbody id="rows"></tbody></table></div>
 <p class="muted">Historical observations only. No bets placed or automatically settled.</p>
 <script>
@@ -20,18 +20,18 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let archive=[];
 function render(){
 const selected=document.getElementById('sport').value;
-const visible=selected==='ALL'?archive:archive.filter(s=>s.sport===selected);
+const selectedBook=document.getElementById('book').value;\nconst visible=archive.filter(s=>(selected==='ALL'||s.sport===selected)&&(selectedBook==='ALL'||s.bookmaker===selectedBook));
 document.getElementById('status').textContent=visible.length+' of '+archive.length+' archived paper signals shown — no live feed connected.';
-document.getElementById('rows').innerHTML=visible.map(s=>'<tr><td data-label="Captured (UTC)">'+esc(new Date(s.captured_at).toLocaleString('en-US',{timeZone:'UTC',dateStyle:'medium',timeStyle:'short',hour12:true})+' UTC')+'</td><td data-label="Game">'+esc(s.matchup)+'</td><td data-label="Selection">'+esc(s.selection)+'</td><td data-label="Sportsbook">'+esc(s.bookmaker)+'</td><td data-label="Recorded odds">'+esc((s.american_price>0?'+':'')+s.american_price)+'</td><td data-label="Market estimate">'+esc(s.market_proxy_ev_pct)+'%</td></tr>').join('')||'<tr><td colspan="6">No archived signals for this sport yet. This does not mean no games were played.</td></tr>';
+document.getElementById('summary').textContent=new Set(visible.map(s=>s.event_id)).size+' distinct games represented. Multiple sportsbook observations of one game are not independent predictions.';\ndocument.getElementById('csv').disabled=visible.length===0;\ndocument.getElementById('rows').innerHTML=visible.map(s=>'<tr><td data-label="Captured (UTC)">'+esc(new Date(s.captured_at).toLocaleString('en-US',{timeZone:'UTC',dateStyle:'medium',timeStyle:'short',hour12:true})+' UTC')+'</td><td data-label="Game">'+esc(s.matchup)+'</td><td data-label="Selection">'+esc(s.selection)+'</td><td data-label="Sportsbook">'+esc(s.bookmaker)+'</td><td data-label="Recorded odds">'+esc((s.american_price>0?'+':'')+s.american_price)+'</td><td data-label="Market estimate">'+esc(s.market_proxy_ev_pct)+'%</td></tr>').join('')||'<tr><td colspan="6">No archived signals for this sport yet. This does not mean no games were played.</td></tr>';
 }
-document.getElementById('sport').addEventListener('change',render);
+document.getElementById('sport').addEventListener('change',render);\ndocument.getElementById('book').addEventListener('change',render);\ndocument.getElementById('csv').addEventListener('click',()=>{const sport=document.getElementById('sport').value,book=document.getElementById('book').value;const data=archive.filter(s=>(sport==='ALL'||s.sport===sport)&&(book==='ALL'||s.bookmaker===book));const keys=['captured_at','sport','matchup','selection','bookmaker','american_price','market_proxy_ev_pct','commence_time'];const quote=v=>'"'+String(v??'').replace(/^[=+@\-\t\r]/,'\' document.getElementById('sport').addEventListener('change',render);').replace(/"/g,'""')+'"';const csv=[keys.join(','),...data.map(s=>keys.map(k=>quote(s[k])).join(','))].join('\\r\\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='archived-paper-signals.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 fetch('./public-signals.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(d=>{
 if(d.kind!=='historical_paper_signals'||!Array.isArray(d.signals))throw Error('Invalid published feed');
 archive=d.signals;
 const sports=[...new Set(archive.map(s=>s.sport).filter(Boolean))].sort();
 const select=document.getElementById('sport');
 sports.forEach(s=>{const option=document.createElement('option');option.value=s;option.textContent=s;select.appendChild(option)});
-const urlSport=new URLSearchParams(location.search).get('sport');
+const books=[...new Set(archive.map(s=>s.bookmaker).filter(Boolean))].sort();\nbooks.forEach(b=>{const option=document.createElement('option');option.value=b;option.textContent=b;document.getElementById('book').appendChild(option)});\nconst urlSport=new URLSearchParams(location.search).get('sport');
 if(urlSport&&sports.includes(urlSport))select.value=urlSport;
 render();
 }).catch(()=>{document.getElementById('status').textContent='Published data unavailable. No live prices are displayed.'});
