@@ -39,8 +39,11 @@ el('searchPlayer').addEventListener('click',async()=>{
  const data=await response.json();const found=[];
  function walk(value,depth){if(depth>7||!value||typeof value!=='object')return;
  if(Array.isArray(value)){value.forEach(x=>walk(x,depth+1));return}
- const id=String(value.id||value.uid?.match?.(/a:(\\d+)/)?.[1]||''),name=String(value.displayName||value.fullName||value.name||'');
- if(/^\\d{4,10}$/.test(id)&&name.toLowerCase().includes(q.toLowerCase())&&(!value.sport||/football|nfl/i.test(JSON.stringify(value.sport))))found.push({id,name,team:String(value.team?.abbreviation||value.team?.displayName||'')});
+ const name=String(value.displayName||value.fullName||value.name||value.title||'');
+ const href=String(value.href||value.url||value.link||value.uid||'');
+ const id=String(value.id||href.match(/(?:athletes?\\/|athlete\\/|a:)(\\d{4,10})(?:\\b|$)/i)?.[1]||'');
+ const context=JSON.stringify({sport:value.sport,league:value.league,href,category:value.type});
+ if(/^\\d{4,10}$/.test(id)&&name.toLowerCase().includes(q.toLowerCase())&&(/nfl|football/i.test(context)||!value.sport&&!value.league))found.push({id,name,team:String(value.team?.abbreviation||value.team?.displayName||'')});
  for(const [key,item] of Object.entries(value))if(key!=='links'&&key!=='images')walk(item,depth+1);
  }
  walk(data,0);const unique=[...new Map(found.map(x=>[x.id,x])).values()].slice(0,30);
