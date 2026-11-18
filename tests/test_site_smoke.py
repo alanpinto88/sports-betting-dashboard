@@ -21,9 +21,11 @@ class PublicSiteSmokeTests(unittest.TestCase):
         scanner=(ROOT/"scanner.html").read_text(encoding="utf-8")
         research=(ROOT/"research.html").read_text(encoding="utf-8")
         self.assertIn("research.html",home)
+        self.assertIn("exportBets",home)
+        self.assertIn("csvCell",home)
         self.assertIn("research.html",scanner)
         self.assertIn("scanner.html",research)
-        for tool in ("evOdds","vigA","arbA","kellyOdds","feeds"):
+        for tool in ("evOdds","vigA","arbA","kellyOdds","feeds","compareOddsA","compareOddsB","compareOddsC","compareResult"):
             self.assertIn('id="'+tool+'"',research)
 
     def test_filter_controls_remain_present(self):
