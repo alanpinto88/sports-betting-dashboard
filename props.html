@@ -15,7 +15,7 @@
 <label>Sportsbook projection (optional)<input id="bookLine" type="number" step="any" min="0" placeholder="75.5"></label>
 <label>Sportsbook name<input id="book" maxlength="60" placeholder="DraftKings"></label>
 </div></section>
-<section class="card"><h2>Fetch NFL game logs (beta)</h2><p class="muted">Search for the player by name and select a matching result. The ESPN athlete ID is an optional fallback. The browser will attempt to load the published game log; this is not a PrizePicks feed. Source availability and browser cross-origin permissions may prevent loading. Always check the dates and values before using them.</p><div class="grid"><label>Search player by name<input id="playerSearch" maxlength="80" placeholder="e.g. Nico Collins"></label><div><button type="button" id="searchPlayer">Find player</button></div><label>Matching players<select id="playerMatches"><option value="">Search for a player first</option></select></label><label>ESPN athlete ID (advanced fallback)<input id="espnId" inputmode="numeric" pattern="[0-9]*" placeholder="Filled when you select a player"></label><label>Season<input id="espnSeason" type="number" min="2000" max="2100" step="1" value="2026"></label></div><button type="button" id="fetchGames">Fetch last five NFL games</button><p id="fetchStatus" class="muted" role="status">No external statistics loaded. Loader revision 4.</p></section>
+<section class="card"><h2>Fetch NFL game logs (beta)</h2><p class="muted">Search for the player by name and select a matching result. This lookup is independent of your manually entered PrizePicks and sportsbook lines. The ESPN athlete ID is an optional fallback. The browser will attempt to load the published game log; this is not a PrizePicks feed. Source availability and browser cross-origin permissions may prevent loading. Always check the dates and values before using them.</p><div class="grid"><label>Search player by name<input id="playerSearch" maxlength="80" placeholder="e.g. Nico Collins"></label><div><button type="button" id="searchPlayer">Find player</button></div><label>Matching players<select id="playerMatches"><option value="">Search for a player first</option></select></label><label>ESPN athlete ID (advanced fallback)<input id="espnId" inputmode="numeric" pattern="[0-9]*" placeholder="Filled when you select a player"></label><label>Season<input id="espnSeason" type="number" min="2000" max="2100" step="1" value="2026"></label></div><button type="button" id="fetchGames">Fetch last five NFL games</button><p id="fetchStatus" class="muted" role="status">No external statistics loaded. Loader revision 4.</p></section>
 <section class="card"><h2>Last five completed games</h2><p class="muted">Enter actual player totals, oldest to newest. Missing games must stay blank; do not enter zeros for games the player missed.</p><div class="grid">
 <label>Game 1<input class="game" type="number" min="0" step="any"></label><label>Game 2<input class="game" type="number" min="0" step="any"></label><label>Game 3<input class="game" type="number" min="0" step="any"></label><label>Game 4<input class="game" type="number" min="0" step="any"></label><label>Game 5<input class="game" type="number" min="0" step="any"></label>
 </div><p class="muted">The last five are a diagnostic, not a sufficient predictive sample. Confirm snaps, injuries, matchup, role, weather, and line movement separately.</p><button id="analyze">Analyze discrepancy</button></section>
@@ -27,8 +27,8 @@
 const el=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n).toFixed(2).replace(/\.00$/,'');
-el('playerSearch').value=el('player').value;
-el('player').addEventListener('input',()=>{el('espnId').value='';el('playerMatches').replaceChildren(new Option('Search for a player first',''));});
+// Player research and projection inputs remain independent.
+el('playerSearch').addEventListener('input',()=>{el('espnId').value='';el('playerMatches').replaceChildren(new Option('Search for a player first',''));});
 el('searchPlayer').addEventListener('click',async()=>{
  const q=el('playerSearch').value.trim(),status=el('fetchStatus'),button=el('searchPlayer'),select=el('playerMatches');
  if(q.length<3){status.textContent='Enter at least three letters of the player name.';return}
@@ -60,7 +60,7 @@ el('searchPlayer').addEventListener('click',async()=>{
  }catch(err){select.replaceChildren(new Option('Search unavailable',''));status.textContent='Player search unavailable ('+String(err.message)+'). ESPN may restrict browser access; manual lookup remains available.'}
  finally{button.disabled=false}
 });
-el('playerMatches').addEventListener('change',()=>{const select=el('playerMatches');if(!select.value)return;el('espnId').value=select.value;el('player').value=select.selectedOptions[0].text.split(' · ')[0];el('fetchStatus').textContent='Player selected. Tap Fetch last five NFL games.'});
+el('playerMatches').addEventListener('change',()=>{const select=el('playerMatches');if(!select.value)return;el('espnId').value=select.value;// Selecting a research player does not modify the projection form.el('fetchStatus').textContent='Player selected. Tap Fetch last five NFL games.'});
 const espnFields={
  'Receiving yards':{categories:['receiving'],labels:['receivingYards','REC YDS','YDS']},
  'Rushing yards':{categories:['rushing'],labels:['rushingYards','RUSH YDS','YDS']},
@@ -105,7 +105,7 @@ function readEspnGamelog(data,stat,season){
  if(unique.length!==5)throw Error('Only '+unique.length+' valid completed games returned for '+stat+'; five required.');
  return unique.reverse();
 }
-el('findFromProjection').addEventListener('click',()=>{const name=el('player').value.trim();if(!name){el('player').focus();return}el('playerSearch').value=name;el('searchPlayer').click();el('playerSearch').scrollIntoView({behavior:'smooth',block:'center'});});
+el('findFromProjection').addEventListener('click',()=>{const name=el('player').value.trim();if(!name){el('player').focus();return}el('playerSearch').value=name;el('espnId').value='';el('playerMatches').replaceChildren(new Option('Search for a player first',''));el('searchPlayer').click();el('playerSearch').scrollIntoView({behavior:'smooth',block:'center'});});
 el('fetchGames').addEventListener('click',async()=>{
  const id=el('espnId').value.trim(),season=Number(el('espnSeason').value),status=el('fetchStatus'),btn=el('fetchGames');
  if(!/^\d{4,10}$/.test(id)||!Number.isInteger(season)||season<2000||season>new Date().getFullYear()){status.textContent='Enter a valid numeric ESPN athlete ID and season.';return}
@@ -125,6 +125,7 @@ el('analyze').addEventListener('click',()=>{
  const hits=v.filter(n=>side==='more'?n>p:n<p).length,push=v.filter(n=>n===p).length;
  const braw=el('bookLine').value.trim(),book=braw===''?null:Number(braw);
  if(book!==null&&(!Number.isFinite(book)||book<0)){el('output').textContent='Enter a valid nonnegative sportsbook projection or leave it blank.';return}
+ const bookHits=book===null?null:v.filter(n=>side==='more'?n>book:n<book).length;const bookTies=book===null?null:v.filter(n=>n===book).length;
  const gap=book===null?'No sportsbook comparison entered.':('Sportsbook minus PrizePicks: '+fmt(book-p)+' ('+esc(el('book').value.trim()||'unverified book')+'). Verify identical market definitions and payout rules.');
  const rebound=avg<p&&recent<first?'Rebound watch: last-five average is below the line and the last two games declined versus the first three. This does not establish a More advantage.':'No two-part rebound-watch condition met.';
  const name=esc(el('player').value.trim()||'Unnamed player'),game=esc(el('match').value.trim()||'Game not entered'),kind=el('type').value;
