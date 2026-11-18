@@ -3,11 +3,10 @@ on:
   push:
     branches: [main]
     paths:
-      - 'index.html'
-      - 'signals.html'
-      - 'scanner.html'
+      - '*.html'
       - 'public-signals.json'
       - 'recent-market-review.json'
+      - 'nba-player-props-review.json'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 permissions:
@@ -30,6 +29,8 @@ jobs:
           test -f index.html
           test -f signals.html
           test -f scanner.html
+          test -f research.html
+          test -f props.html
           python -m json.tool public-signals.json >/dev/null
           if grep -R -E 'THE_ODDS_API_KEY|ghp_[A-Za-z0-9]+|github_pat_' --include='*.html' --include='*.json' .; then
             echo "Possible credential in public files"; exit 1
