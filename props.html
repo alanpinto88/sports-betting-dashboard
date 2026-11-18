@@ -7,7 +7,7 @@
 <main><h1>Player Prop Discrepancy Lab</h1><p class="muted">Compare manually verified PrizePicks projections against a sportsbook line and five completed games. Research-only: no live PrizePicks feed, verified sportsbook odds, injury data, or calibrated win probabilities are connected. Nothing here is an automatic pick.</p>
 <div class="grid">
 <section class="card"><h2>Projection details</h2><div class="grid">
-<label>Player<input id="player" maxlength="80" placeholder="Player name"></label><label>Game / opponent<input id="match" maxlength="100" placeholder="Team vs opponent and date"></label>
+<label>Player<input id="player" maxlength="80" placeholder="Player name"></label><div><button type="button" id="findFromProjection">Search this player’s NFL stats</button><small class="muted">Uses the name above to find a player in the game-log section. PrizePicks and sportsbook lines are still entered manually.</small></div><label>Game / opponent<input id="match" maxlength="100" placeholder="Team vs opponent and date"></label>
 <label>Statistic<select id="stat"><option>Receiving yards</option><option>Rushing yards</option><option>Receptions</option><option>Receiving targets</option><option>Rushing attempts</option><option>Passing yards</option><option>Pass completions</option><option>Passing touchdowns</option><option>Anytime touchdowns</option><option>Fantasy points</option><option>Other</option></select></label>
 <label>PrizePicks projection<input id="pp" type="number" step="any" min="0" placeholder="70.5"></label>
 <label>Projection type<select id="type"><option value="standard">Standard</option><option value="goblin">Goblin (green)</option><option value="demon">Demon (red)</option></select></label>
@@ -105,6 +105,7 @@ function readEspnGamelog(data,stat,season){
  if(unique.length!==5)throw Error('Only '+unique.length+' valid completed games returned for '+stat+'; five required.');
  return unique.reverse();
 }
+el('findFromProjection').addEventListener('click',()=>{const name=el('player').value.trim();if(!name){el('player').focus();return}el('playerSearch').value=name;el('searchPlayer').click();el('playerSearch').scrollIntoView({behavior:'smooth',block:'center'});});
 el('fetchGames').addEventListener('click',async()=>{
  const id=el('espnId').value.trim(),season=Number(el('espnSeason').value),status=el('fetchStatus'),btn=el('fetchGames');
  if(!/^\d{4,10}$/.test(id)||!Number.isInteger(season)||season<2000||season>new Date().getFullYear()){status.textContent='Enter a valid numeric ESPN athlete ID and season.';return}
