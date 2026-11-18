@@ -107,7 +107,9 @@ function readEspnGamelog(data,stat,season){
  if(unique.length!==5){
   const rootKeys=Object.keys(data).slice(0,20).join(',');
   const names=(Array.isArray(data.names)?data.names:[]).slice(0,35).join(',');
-  throw Error('Found '+unique.length+' verified values for '+stat+' (need five). ESPN root fields: '+rootKeys+'; stat names: '+(names||'none')+'.');
+  const groupsInfo=groups.slice(0,3).map(g=>({type:g.type,name:g.displayName||g.name,keys:Object.keys(g),categories:(g.categories||[]).slice(0,3).map(c=>({name:c.name||c.displayName,keys:Object.keys(c),eventsCount:Array.isArray(c.events)?c.events.length:null,firstEvent:Array.isArray(c.events)&&c.events.length?{keys:Object.keys(c.events[0]),eventId:c.events[0].eventId,statsLength:c.events[0].stats?.length}:null}))}));
+  const firstEvent=Object.entries(events).slice(0,1).map(([id,e])=>({id,keys:Object.keys(e||{}),date:e?.gameDate||e?.date}));
+  throw Error('Found '+unique.length+' verified values for '+stat+' (need five). Debug schema: '+JSON.stringify({rootKeys,statNames:names,rootCategories:(data.categories||[]).slice(0,3).map(c=>({name:c.name,keys:Object.keys(c)})),groups:groupsInfo,firstEvent}).slice(0,1900)+'.');
  }
  return unique.reverse();
 }
