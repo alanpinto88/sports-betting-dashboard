@@ -11,3 +11,7 @@ This directory contains a proposed read-only Cloudflare Worker relay. The public
 The Worker only permits ten-digit IDs in `GET /nhl/final/{gameId}`, restricts browser origins to `https://alanpinto88.github.io`, and returns a minimal validated final-score response. Origin checks are **not authentication**; non-browser clients can omit or spoof Origin. Add rate limiting before public deployment. The Worker does not accept arbitrary upstream URLs and does not write bet data.
 
 This relay is intentionally separate from the user's local-only bet ledger.
+
+## Git-connected Cloudflare deployment
+
+The Cloudflare Worker `ev-sports-nhl-scores` can use repository `alanpinto88/sports-betting-dashboard` on branch `main`, with no build command and deploy command `npx wrangler deploy worker/nhl-final-relay.mjs --name ev-sports-nhl-scores`. The Git integration may wait for a new commit to trigger its first build. Check the Cloudflare build logs and confirm the deployed Worker response before changing the website. Do not configure unrelated Workers or scheduled triggers.
