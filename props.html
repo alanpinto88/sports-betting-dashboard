@@ -100,7 +100,7 @@ function readEspnGamelog(data,stat,season){
   for(const entry of entries){
    const event=events[entry.eventId]||{};
    const date=event.gameDate||event.date;
-   if(!date||!/^\\d{4}-/.test(String(date))||new Date(date)>new Date())continue;
+   if(!date||!/^\d{4}-/.test(String(date))||new Date(date)>new Date())continue;
    const stats=entry.stats;
    if(!Array.isArray(stats))continue;
    const index=candidates.find(i=>i<stats.length);
