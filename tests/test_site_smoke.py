@@ -113,11 +113,13 @@ class PublicSiteSmokeTests(unittest.TestCase):
         home=(ROOT/"index.html").read_text(encoding="utf-8")
         self.assertIn('id="fetchNhlFinal"',home)
         self.assertIn(r"/^\d{10}$/",home)
-        self.assertIn("game.gameState!=='OFF'",home)
+        self.assertIn("!['OFF','FINAL'].includes(game.gameState)",home)
         self.assertIn("String(game.id)!==String(b.providerGameId)",home)
         self.assertIn("api-web.nhle.com/v1/gamecenter/",home)
         self.assertIn("Not applied to bet",home)
         self.assertNotIn("b.status=preview",home)
+        self.assertIn("The NHL web API may block cross-origin browser requests",home)
+        self.assertIn("Selected bet changed. Enter or retrieve its final score",home)
 
     def test_no_unverified_feed_picks(self):
         for filename in ("recent-market-review.json","nba-player-props-review.json"):
