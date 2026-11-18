@@ -61,6 +61,21 @@ class PublicSiteSmokeTests(unittest.TestCase):
         self.assertIn("key==='profit'?pnl(bet):bet[key]",home)
         self.assertIn("URL.createObjectURL(blob)",home)
 
+    def test_local_storage_failure_is_visible(self):
+        home=(ROOT/"index.html").read_text(encoding="utf-8")
+        self.assertIn("function save(){try{",home)
+        self.assertIn("Browser storage is unavailable or full",home)
+        self.assertNotIn(r"grid-template-columns:1fr}}\\n</style>",home)
+
+    def test_single_recent_review_refresh_listener(self):
+        home=(ROOT/"index.html").read_text(encoding="utf-8")
+        self.assertEqual(home.count("el('refreshAuto').addEventListener('click',loadRecentReviews)"),1)
+
+    def test_bet_roi_uses_settled_stakes_only(self):
+        home=(ROOT/"index.html").read_text(encoding="utf-8")
+        self.assertIn("let settled=bets.filter(b=>b.status!=='pending')",home)
+        self.assertIn("staked=settled.reduce",home)
+
     def test_no_unverified_feed_picks(self):
         for filename in ("recent-market-review.json","nba-player-props-review.json"):
             path=ROOT/filename
