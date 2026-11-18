@@ -75,42 +75,50 @@ const espnFields={
 function readEspnGamelog(data,stat,season){
  const spec=espnFields[stat];if(!spec)throw Error('This statistic is not supported for automatic loading.');
  const norm=x=>String(x??'').toLowerCase().replace(/[^a-z0-9]/g,'');
- const wanted=new Set(spec.labels.map(norm));
- // ESPN game logs can publish the stat schema at the document root (names/labels),
- // while seasonTypes contain event rows without their own column labels.
- const schemas=[data.names,data.labels,data.statNames,data.statLabels].filter(Array.isArray);
- const groups=Array.isArray(data.seasonTypes)?data.seasonTypes:[];
- const events=data.events||{};
+ const wanted=new Set(spec.labels.map(norm)),categoryNames=new Set(spec.categories.map(norm));
+ const events=data.events||{},groups=Array.isArray(data.seasonTypes)?data.seasonTypes:[];
+ const rootCategories=Array.isArray(data.categories)?data.categories:[];
+ const schemas=[];
+ function addSchema(category,columns){
+  if(!Array.isArray(columns))return;
+  const idx=columns.findIndex(x=>wanted.has(norm(typeof x==='object'?(x.name||x.displayName||x.abbreviation):x)));
+  if(idx>=0)schemas.push({category:norm(category),index:idx});
+ }
+ // ESPN publishes category-to-stat arrays in root names, sometimes root categories.
+ for(const [key,columns] of Object.entries(data.names||{}))addSchema(key,columns);
+ for(const [key,columns] of Object.entries(data.labels||{}))addSchema(key,columns);
+ for(const cat of rootCategories){
+  const name=cat.name||cat.displayName||'';
+  addSchema(name,cat.names);addSchema(name,cat.labels);
+ }
  const rows=[];
+ function collect(entries,category,columns){
+  if(!Array.isArray(entries))return;
+  const candidates=[];
+  if(Array.isArray(columns))addSchema(category,columns);
+  for(const schema of schemas)if(!schema.category||categoryNames.has(schema.category)||schema.category===norm(category))candidates.push(schema.index);
+  for(const entry of entries){
+   const event=events[entry.eventId]||{};
+   const date=event.gameDate||event.date;
+   if(!date||!/^\\d{4}-/.test(String(date))||new Date(date)>new Date())continue;
+   const stats=entry.stats;
+   if(!Array.isArray(stats))continue;
+   const index=candidates.find(i=>i<stats.length);
+   if(index===undefined)continue;
+   const raw=stats[index];
+   if(raw===null||raw===undefined||String(raw).trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
+   rows.push({id:String(entry.eventId),date:String(date),value:Number(raw)});
+  }
+ }
  for(const group of groups){
   if(group.type!==undefined&&String(group.type)!=='2'&&!/regular/i.test(String(group.displayName||group.name||'')))continue;
-  for(const cat of group.categories||[]){
-   const candidates=[cat.names,cat.labels,...schemas].filter(Array.isArray);
-   const indexOptions=candidates.map(columns=>columns.findIndex(x=>wanted.has(norm(x)))).filter(i=>i>=0);
-   if(!indexOptions.length)continue;
-   for(const entry of cat.events||[]){
-    const event=events[entry.eventId];
-    const date=event?.gameDate||event?.date;
-    if(!date||!/^\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date())continue;
-    const stats=entry.stats;
-    if(!Array.isArray(stats))continue;
-    const index=indexOptions.find(i=>i<stats.length);
-    if(index===undefined)continue;
-    const raw=stats[index];
-    if(raw===null||raw===undefined||String(raw).trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
-    rows.push({id:String(entry.eventId),date:String(date),value:Number(raw)});
-   }
-  }
+  for(const cat of group.categories||[])collect(cat.events,cat.name||cat.displayName,cat.names||cat.labels);
+  // ESPN also exposes season-type event rows directly, with root category schemas.
+  if(Array.isArray(group.events))collect(group.events,'',null);
  }
  rows.sort((a,b)=>b.date.localeCompare(a.date));
  const unique=[...new Map(rows.map(x=>[x.id,x])).values()].slice(0,5);
- if(unique.length!==5){
-  const rootKeys=Object.keys(data).slice(0,20).join(',');
-  const names=(Array.isArray(data.names)?data.names:[]).slice(0,35).join(',');
-  const groupsInfo=groups.slice(0,3).map(g=>({type:g.type,name:g.displayName||g.name,keys:Object.keys(g),categories:(g.categories||[]).slice(0,3).map(c=>({name:c.name||c.displayName,keys:Object.keys(c),eventsCount:Array.isArray(c.events)?c.events.length:null,firstEvent:Array.isArray(c.events)&&c.events.length?{keys:Object.keys(c.events[0]),eventId:c.events[0].eventId,statsLength:c.events[0].stats?.length}:null}))}));
-  const firstEvent=Object.entries(events).slice(0,1).map(([id,e])=>({id,keys:Object.keys(e||{}),date:e?.gameDate||e?.date}));
-  throw Error('Found '+unique.length+' verified values for '+stat+' (need five). Debug schema: '+JSON.stringify({rootKeys,statNames:names,rootCategories:(data.categories||[]).slice(0,3).map(c=>({name:c.name,keys:Object.keys(c)})),groups:groupsInfo,firstEvent}).slice(0,1900)+'.');
- }
+ if(unique.length!==5)throw Error('Found '+unique.length+' verified games (need five). ESPN schema: '+JSON.stringify({names:data.names,rootCategories:rootCategories.slice(0,3).map(c=>({name:c.name,keys:Object.keys(c)})),groups:groups.slice(0,2).map(g=>({keys:Object.keys(g),events:g.events?.length,categories:g.categories?.length}))}).slice(0,1300));
  return unique.reverse();
 }
 el('findFromProjection').addEventListener('click',()=>{const name=el('player').value.trim();if(!name){el('player').focus();return}el('playerSearch').value=name;el('espnId').value='';el('playerMatches').replaceChildren(new Option('Search for a player first',''));el('searchPlayer').click();el('playerSearch').scrollIntoView({behavior:'smooth',block:'center'});});
