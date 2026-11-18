@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EV Sports — Historical Signal Beta</title>
+<style>
+:root{color-scheme:dark}body{background:#08131d;color:#eaf6fc;font:15px system-ui,sans-serif;max-width:1050px;margin:auto;padding:22px}
+a{color:#7bd5ff}.muted{color:#aac0ce}.notice{background:#2c2930;border-left:4px solid #eab75e;padding:13px;margin:18px 0}
+table{width:100%;border-collapse:collapse;min-width:650px}td,th{border-bottom:1px solid #344c5c;padding:12px;text-align:left}
+.scroll{overflow-x:auto}th{color:#aac0ce}strong{color:#8ef5b4}
+</style></head><body>
+<p><a href="./index.html">← Back to dashboard</a></p>
+<h1>Historical market signals <small class="muted">Read-only beta</small></h1>
+<div class="notice"><b>NOT LIVE ODDS.</b> These are timestamped, historical paper signals.
+Prices may no longer be available. Market-relative EV is not independently
+validated, not a betting recommendation, and not evidence of sharp-money action.</div>
+<p id="status" role="status">Loading published archive…</p>
+<div class="scroll"><table><thead><tr><th>Captured (UTC)</th><th>Game</th><th>Selection</th><th>Book</th><th>Recorded odds</th><th>Market-relative estimate</th></tr></thead><tbody id="rows"></tbody></table></div>
+<p class="muted">Historical observations only. No bets placed or automatically settled.</p>
+<script>
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+fetch('./public-signals.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(d=>{
+if(d.kind!=='historical_paper_signals'||!Array.isArray(d.signals))throw Error('Invalid published feed');
+document.getElementById('status').textContent=d.signals.length+' archived paper signals — no live feed connected.';
+document.getElementById('rows').innerHTML=d.signals.map(s=>'<tr><td>'+esc(s.captured_at)+'</td><td>'+esc(s.matchup)+'</td><td>'+esc(s.selection)+'</td><td>'+esc(s.bookmaker)+'</td><td>'+esc((s.american_price>0?'+':'')+s.american_price)+'</td><td>'+esc(s.market_proxy_ev_pct)+'%</td></tr>').join('')||'<tr><td colspan="6">No archived signals yet.</td></tr>';
+}).catch(()=>{document.getElementById('status').textContent='Published data unavailable. No live prices are displayed.'});
+</script></body></html>
