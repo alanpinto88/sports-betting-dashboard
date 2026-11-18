@@ -91,7 +91,7 @@ function readEspnGamelog(data,stat,season){
    for(const entry of cat.events||[]){
     const event=events[entry.eventId];
     const date=event?.gameDate||event?.date;
-    if(!date||!/^\\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date())continue;
+    if(!date||!/^\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date())continue;
     const stats=entry.stats;
     if(!Array.isArray(stats))continue;
     const index=indexOptions.find(i=>i<stats.length);
