@@ -76,6 +76,16 @@ class PublicSiteSmokeTests(unittest.TestCase):
         self.assertIn("let settled=bets.filter(b=>b.status!=='pending')",home)
         self.assertIn("staked=settled.reduce",home)
 
+    def test_bet_ledger_filter_does_not_change_export_or_metrics(self):
+        home=(ROOT/"index.html").read_text(encoding="utf-8")
+        self.assertIn('id="betView"',home)
+        self.assertIn("visibleBets=bets.filter(",home)
+        self.assertIn("betView==='settled'?b.status!=='pending'",home)
+        self.assertIn("visibleBets.map(b=>",home)
+        self.assertIn("el('betView').addEventListener('change',render)",home)
+        self.assertIn("for(const bet of bets)lines.push(",home)
+        self.assertIn("let settled=bets.filter(",home)
+
     def test_no_unverified_feed_picks(self):
         for filename in ("recent-market-review.json","nba-player-props-review.json"):
             path=ROOT/filename
