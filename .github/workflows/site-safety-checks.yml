@@ -6,6 +6,7 @@ on:
       - '*.html'
       - '*.json'
       - 'tests/**'
+      - 'worker/**'
       - '.github/workflows/site-safety-checks.yml'
   pull_request:
     paths:
@@ -37,3 +38,6 @@ jobs:
             console.log(file+': '+scripts.length+' inline script(s) parsed');
           }
           JS
+
+      - name: Test NHL relay behavior without live API calls
+        run: node --test tests/nhl-relay.test.mjs
