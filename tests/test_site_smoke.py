@@ -86,6 +86,18 @@ class PublicSiteSmokeTests(unittest.TestCase):
         self.assertIn("for(const bet of bets)lines.push(",home)
         self.assertIn("let settled=bets.filter(",home)
 
+    def test_structured_bet_metadata_for_future_settlement(self):
+        home=(ROOT/"index.html").read_text(encoding="utf-8")
+        for control in ("betBook","betGameId","betMarket","betSide","betLine"):
+            self.assertIn('id="'+control+'"',home)
+        for market in ("moneyline","spread","total","player_prop"):
+            self.assertIn('value="'+market+'"',home)
+        self.assertIn("providerGameId:el('betGameId').value.trim()",home)
+        self.assertIn("settlementSource:'manual'",home)
+        self.assertIn("rawLine===''?null:Number(rawLine)",home)
+        self.assertIn("'providerGameId','market','side','line','settlementSource'",home)
+        self.assertIn("manually entered, not automatically settled",home)
+
     def test_no_unverified_feed_picks(self):
         for filename in ("recent-market-review.json","nba-player-props-review.json"):
             path=ROOT/filename
