@@ -15,7 +15,7 @@
 <label>Sportsbook projection (optional)<input id="bookLine" type="number" step="any" min="0" placeholder="75.5"></label>
 <label>Sportsbook name<input id="book" maxlength="60" placeholder="DraftKings"></label>
 </div></section>
-<section class="card"><h2>Fetch NFL game logs (beta)</h2><p class="muted">Search for the player by name and select a matching result. This lookup is independent of your manually entered PrizePicks and sportsbook lines. The ESPN athlete ID is an optional fallback. The browser will attempt to load the published game log; this is not a PrizePicks feed. Source availability and browser cross-origin permissions may prevent loading. Always check the dates and values before using them.</p><div class="grid"><label>Search player by name<input id="playerSearch" maxlength="80" placeholder="e.g. Nico Collins"></label><div><button type="button" id="searchPlayer">Find player</button></div><label>Matching players<select id="playerMatches"><option value="">Search for a player first</option></select></label><label>ESPN athlete ID (advanced fallback)<input id="espnId" inputmode="numeric" pattern="[0-9]*" placeholder="Filled when you select a player"></label><label>Season<input id="espnSeason" type="number" min="2000" max="2100" step="1" value="2026"></label></div><button type="button" id="fetchGames">Fetch last five NFL games</button><p id="fetchStatus" class="muted" role="status">No external statistics loaded. Loader revision 4.</p></section>
+<section class="card"><h2>Fetch NFL game logs (beta)</h2><p class="muted">Search for the player by name and select a matching result. This lookup is independent of your manually entered PrizePicks and sportsbook lines. The ESPN athlete ID is an optional fallback. The browser will attempt to load the published game log; this is not a PrizePicks feed. Source availability and browser cross-origin permissions may prevent loading. Always check the dates and values before using them.</p><div class="grid"><label>Search player by name<input id="playerSearch" maxlength="80" placeholder="e.g. Nico Collins"></label><div><button type="button" id="searchPlayer">Find player</button></div><label>Matching players<select id="playerMatches"><option value="">Search for a player first</option></select></label><label>ESPN athlete ID (advanced fallback)<input id="espnId" inputmode="numeric" pattern="[0-9]*" placeholder="Filled when you select a player"></label><label>Season<input id="espnSeason" type="number" min="2000" max="2100" step="1" value="2026"></label></div><button type="button" id="fetchGames">Fetch last five NFL games</button><p id="fetchStatus" class="muted" role="status">No external statistics loaded. Loader revision 5.</p></section>
 <section class="card"><h2>Last five completed games</h2><p class="muted">Enter actual player totals, oldest to newest. Missing games must stay blank; do not enter zeros for games the player missed.</p><div class="grid">
 <label>Game 1<input class="game" type="number" min="0" step="any"></label><label>Game 2<input class="game" type="number" min="0" step="any"></label><label>Game 3<input class="game" type="number" min="0" step="any"></label><label>Game 4<input class="game" type="number" min="0" step="any"></label><label>Game 5<input class="game" type="number" min="0" step="any"></label>
 </div><p class="muted">The last five are a diagnostic, not a sufficient predictive sample. Confirm snaps, injuries, matchup, role, weather, and line movement separately.</p><button id="analyze">Analyze discrepancy</button></section>
@@ -73,36 +73,42 @@ const espnFields={
  'Anytime touchdowns':{categories:['scoring'],labels:['totalTouchdowns','TD']}
 };
 function readEspnGamelog(data,stat,season){
- const spec=espnFields[stat];if(!spec)throw Error('This market is not supported for automatic loading.');
+ const spec=espnFields[stat];if(!spec)throw Error('This statistic is not supported for automatic loading.');
  const norm=x=>String(x??'').toLowerCase().replace(/[^a-z0-9]/g,'');
  const wanted=new Set(spec.labels.map(norm));
+ // ESPN game logs can publish the stat schema at the document root (names/labels),
+ // while seasonTypes contain event rows without their own column labels.
+ const schemas=[data.names,data.labels,data.statNames,data.statLabels].filter(Array.isArray);
  const groups=Array.isArray(data.seasonTypes)?data.seasonTypes:[];
- const topCategories=Array.isArray(data.categories)?data.categories:[];
- const allCategories=[...topCategories,...groups.flatMap(g=>Array.isArray(g.categories)?g.categories:[])];
- const categoryMatches=c=>spec.categories.some(k=>norm(c.name||c.displayName||c.type).includes(k));
- const matching=allCategories.filter(c=>categoryMatches(c)&&Array.isArray(c.labels)&&c.labels.some(x=>wanted.has(norm(x))));
- if(!matching.length){
-  const available=[...new Set(allCategories.map(c=>String(c.name||c.displayName||'?')+' keys=['+Object.keys(c).slice(0,12).join(',')+'] labels=['+(c.labels||[]).join('/')+'] eventKeys=['+Object.keys((c.events||[])[0]||{}).slice(0,12).join(',')+']'))].slice(0,8);
-  throw Error('No matching '+stat+' category/column. ESPN returned: '+(available.join('; ')||'no categories')+'.');
- }
- const events=data.events||{};let rows=[];
- for(const group of groups)for(const cat of group.categories||[]){
-  const definition=matching.find(c=>c===cat||(c.name&&c.name===cat.name));
-  if(!definition)continue;
-  const labels=Array.isArray(cat.labels)?cat.labels:definition.labels;
-  const index=labels.findIndex(x=>wanted.has(norm(x)));
-  if(index<0)continue;
-  for(const entry of cat.events||[]){
-   const event=events[entry.eventId];
-   const raw=Array.isArray(entry.stats)?entry.stats[index]:null;
-   const date=event?.gameDate||event?.date;
-   if(!date||!/^\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date()||raw===null||raw===undefined||raw===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
-   rows.push({id:String(entry.eventId),date:String(date),value:Number(raw)});
+ const events=data.events||{};
+ const rows=[];
+ for(const group of groups){
+  if(group.type!==undefined&&String(group.type)!=='2'&&!/regular/i.test(String(group.displayName||group.name||'')))continue;
+  for(const cat of group.categories||[]){
+   const candidates=[cat.names,cat.labels,...schemas].filter(Array.isArray);
+   const indexOptions=candidates.map(columns=>columns.findIndex(x=>wanted.has(norm(x)))).filter(i=>i>=0);
+   if(!indexOptions.length)continue;
+   for(const entry of cat.events||[]){
+    const event=events[entry.eventId];
+    const date=event?.gameDate||event?.date;
+    if(!date||!/^\\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date())continue;
+    const stats=entry.stats;
+    if(!Array.isArray(stats))continue;
+    const index=indexOptions.find(i=>i<stats.length);
+    if(index===undefined)continue;
+    const raw=stats[index];
+    if(raw===null||raw===undefined||String(raw).trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
+    rows.push({id:String(entry.eventId),date:String(date),value:Number(raw)});
+   }
   }
  }
  rows.sort((a,b)=>b.date.localeCompare(a.date));
  const unique=[...new Map(rows.map(x=>[x.id,x])).values()].slice(0,5);
- if(unique.length!==5)throw Error('Only '+unique.length+' valid completed games returned for '+stat+'; five required.');
+ if(unique.length!==5){
+  const rootKeys=Object.keys(data).slice(0,20).join(',');
+  const names=(Array.isArray(data.names)?data.names:[]).slice(0,35).join(',');
+  throw Error('Found '+unique.length+' verified values for '+stat+' (need five). ESPN root fields: '+rootKeys+'; stat names: '+(names||'none')+'.');
+ }
  return unique.reverse();
 }
 el('findFromProjection').addEventListener('click',()=>{const name=el('player').value.trim();if(!name){el('player').focus();return}el('playerSearch').value=name;el('espnId').value='';el('playerMatches').replaceChildren(new Option('Search for a player first',''));el('searchPlayer').click();el('playerSearch').scrollIntoView({behavior:'smooth',block:'center'});});
