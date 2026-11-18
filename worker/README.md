@@ -1,6 +1,6 @@
-# NHL final-score relay (not deployed)
+# NHL final-score relay (deployment pending verification)
 
-This directory contains a proposed read-only Cloudflare Worker relay. The public GitHub Pages website does **not** call this Worker yet. No Cloudflare account, domain, paid API, or scheduled job was created.
+This directory contains a proposed read-only Cloudflare Worker relay. The public GitHub Pages website does **not** call this Worker yet. Cloudflare deployment must be verified separately; this repository does not contain Cloudflare credentials.
 
 ## Before enabling
 1. Run `node --test tests/nhl-relay.test.mjs` and verify the GitHub Actions smoke workflow.
@@ -14,4 +14,4 @@ This relay is intentionally separate from the user's local-only bet ledger.
 
 ## Git-connected Cloudflare deployment
 
-The Cloudflare Worker `ev-sports-nhl-scores` can use repository `alanpinto88/sports-betting-dashboard` on branch `main`, with no build command and deploy command `npx wrangler deploy worker/nhl-final-relay.mjs --name ev-sports-nhl-scores`. The Git integration may wait for a new commit to trigger its first build. Check the Cloudflare build logs and confirm the deployed Worker response before changing the website. Do not configure unrelated Workers or scheduled triggers.
+The Cloudflare Worker `ev-sports-nhl-scores` uses repository `alanpinto88/sports-betting-dashboard` on branch `main`. The root `wrangler.jsonc` declares the entry point, Worker name, and required `compatibility_date` (`2026-11-17`). Keep the build command empty and use the deploy command `npx wrangler deploy worker/nhl-final-relay.mjs --name ev-sports-nhl-scores`. The previous deployment failed because Wrangler could not find a compatibility date; the root configuration addresses that specific error. The Git integration may wait for a new commit to trigger its first build. Check the Cloudflare build logs and confirm the deployed Worker response before changing the website. Do not configure unrelated Workers or scheduled triggers.
