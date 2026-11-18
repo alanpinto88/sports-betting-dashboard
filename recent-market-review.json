@@ -1,19 +1,18 @@
 {
-  "captured_at": "2026-11-18T06:44:52.374755+00:00",
+  "captured_at": "2026-11-18T14:24:00.222812+00:00",
   "diagnostics": {
     "books_total": 9,
-    "evaluated_prices": 250,
-    "events_total": 16,
+    "evaluated_prices": 54,
+    "events_total": 3,
     "minimum_reference_books": 3,
-    "quotes_total": 256,
-    "reason": "Safety quarantine: previous snapshot may contain started-game or stale odds. Await a fresh capture with pregame and quote-freshness validation.",
-    "review_threshold_pct": 2,
+    "quotes_total": 54,
+    "reason": "Eligible comparisons were evaluated, but none passed the 2% market-relative review threshold.",
+    "review_threshold_pct": 2.0,
     "sport_quote_counts": {
-      "basketball_nba": 206,
-      "icehockey_nhl": 50
+      "icehockey_nhl": 54
     }
   },
-  "disclaimer": "Safety quarantine. Previous review flags withdrawn pending verified pregame quotes. No live betting recommendations.",
+  "disclaimer": "Snapshot only; not live streaming odds, not verified profitable EV, and not betting advice.",
   "feed_version": 1,
   "kind": "recent_market_review",
   "review_count": 0,
