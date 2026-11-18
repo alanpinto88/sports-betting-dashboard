@@ -109,12 +109,23 @@ class PublicSiteSmokeTests(unittest.TestCase):
         self.assertIn("does not change saved bets",home)
         self.assertNotIn("b.status=result",home)
 
+    def test_verified_nhl_settlement_requires_user_confirmation(self):
+        home=(ROOT/"index.html").read_text(encoding="utf-8")
+        self.assertIn('id="applyVerifiedNhl"',home)
+        self.assertIn("verifiedNhlProposal=null",home)
+        self.assertIn("Date.now()-proposal.checkedAt>120000",home)
+        self.assertIn("b.market!=='moneyline'",home)
+        self.assertIn("if(!confirm('Set this NHL full-game moneyline bet",home)
+        self.assertIn("b.settlementSource='nhl-relay-user-confirmed'",home)
+        self.assertIn("clearVerifiedNhlProposal();button.disabled=true",home)
+        self.assertIn("el('settleBet').addEventListener('change',()=>{clearVerifiedNhlProposal();",home)
+
     def test_nhl_final_lookup_requires_exact_game_id_and_is_read_only(self):
         home=(ROOT/"index.html").read_text(encoding="utf-8")
         self.assertIn('id="fetchNhlFinal"',home)
         self.assertIn(r"/^\d{10}$/",home)
         self.assertIn("!['OFF','FINAL'].includes(game.state)",home)
-        self.assertIn("String(game.id)!==String(b.providerGameId)",home)
+        self.assertIn("String(game.gameId)!==String(b.providerGameId)",home)
         self.assertIn("ev-sports-nhl-scores.alansuper2004.workers.dev/nhl/final/",home)
         self.assertIn("Not applied to bet",home)
         self.assertIn("b.homeTeam!==home.team||b.awayTeam!==away.team",home)
