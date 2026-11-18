@@ -1,0 +1,5 @@
+{
+  "name": "ev-sports-nhl-scores",
+  "main": "worker/nhl-final-relay.mjs",
+  "compatibility_date": "2026-11-17"
+}
