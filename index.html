@@ -140,8 +140,8 @@ el('fetchNhlFinal').onclick=async()=>{
   const game=await response.json();
   const home=game.homeTeam,away=game.awayTeam;
   if(String(game.id)!==String(b.providerGameId)||!['OFF','FINAL'].includes(game.gameState)||!home||!away||!Number.isInteger(home.score)||!Number.isInteger(away.score)||home.score<0||away.score<0||!home.abbrev||!away.abbrev)throw Error('Game is not final or the score is incomplete');
-  el('settleHome').value=String(home.score);el('settleAway').value=String(away.score);
   if(!b.homeTeam||!b.awayTeam||b.homeTeam!==home.abbrev||b.awayTeam!==away.abbrev)throw Error('Team codes missing or do not match the NHL game. Bet unchanged');
+  el('settleHome').value=String(home.score);el('settleAway').value=String(away.score);
   const preview=standardSettlement(b,home.score,away.score);
   const teams=String(away.abbrev)+' @ '+String(home.abbrev);
   output.textContent='NHL final '+teams+': '+away.score+'–'+home.score+'. Confirm these are the teams on your ticket. '+(preview?'Standard-rule preview: '+preview.toUpperCase()+'. ':'')+'Not applied to bet. Verify team/market identity, overtime/shootout handling and sportsbook settlement rules.';
