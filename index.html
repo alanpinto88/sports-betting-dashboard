@@ -128,21 +128,23 @@ function refreshSettlementBets(){
  select.replaceChildren(new Option('Choose a pending bet',''));
  bets.filter(b=>b.status==='pending').forEach(b=>select.add(new Option(b.sport+' · '+b.event+' ('+(b.market||'unknown market')+')',b.id)));
  select.value=bets.some(b=>b.id===selected&&b.status==='pending')?selected:'';
+ if(selected&&!select.value){el('settleHome').value='';el('settleAway').value='';el('settlementPreview').textContent='Selected bet is no longer pending. Choose another pending bet.';}
 }
 // A verified lookup is only a short-lived, local proposal. It is never auto-applied.
 let verifiedNhlProposal=null;
 function clearVerifiedNhlProposal(){verifiedNhlProposal=null;el('applyVerifiedNhl').disabled=true}
+for(const id of ['settleHome','settleAway'])el(id).addEventListener('input',()=>{if(verifiedNhlProposal){clearVerifiedNhlProposal();el('settlementPreview').textContent='Score edited. Check NHL final score again before confirming.'}});
 el('applyVerifiedNhl').onclick=()=>{
  const proposal=verifiedNhlProposal,b=proposal&&bets.find(x=>x.id===proposal.betId);
- if(!proposal||!b||b.status!=='pending'||el('settleBet').value!==b.id||b.sport!=='NHL'||b.market!=='moneyline'||!['home','away'].includes(b.side)||b.providerGameId!==proposal.gameId||b.homeTeam!==proposal.homeTeam||b.awayTeam!==proposal.awayTeam||!['win','loss'].includes(proposal.result)||Date.now()-proposal.checkedAt>120000){clearVerifiedNhlProposal();el('settlementPreview').textContent='Verified proposal expired or bet changed. Check NHL final score again.';return}
+ if(!proposal||!b||b.status!=='pending'||el('settleBet').value!==b.id||b.sport!=='NHL'||b.market!=='moneyline'||!['home','away'].includes(b.side)||b.providerGameId!==proposal.gameId||b.homeTeam!==proposal.homeTeam||b.awayTeam!==proposal.awayTeam||!['win','loss'].includes(proposal.result)||Date.now()-proposal.checkedAt>120000||el('settleHome').value!==String(proposal.homeScore)||el('settleAway').value!==String(proposal.awayScore)){clearVerifiedNhlProposal();el('settlementPreview').textContent='Verified proposal expired or bet changed. Check NHL final score again.';return}
  if(!confirm('Set this NHL full-game moneyline bet to '+proposal.result.toUpperCase()+'? Only confirm if your sportsbook ticket uses full-game including overtime/shootout rules. This updates your local bet ledger.'))return;
  b.status=proposal.result;b.settlementSource='nhl-relay-user-confirmed';save();clearVerifiedNhlProposal();render();
- el('settlementPreview').textContent='Bet marked '+proposal.result.toUpperCase()+' after your confirmation. Review your sportsbook ticket; manual corrections remain available.';
+ el('settleHome').value='';el('settleAway').value='';el('settlementPreview').textContent='Bet marked '+proposal.result.toUpperCase()+' after your confirmation. Review your sportsbook ticket; manual corrections remain available.';
 };
 // Read-only NHL game lookup. Never settle bets automatically from a fetched score.
 el('fetchNhlFinal').onclick=async()=>{
  const output=el('settlementPreview'),button=el('fetchNhlFinal'),b=bets.find(x=>x.id===el('settleBet').value);
- if(!b||b.sport!=='NHL'||!/^\d{10}$/.test(String(b.providerGameId||''))){output.textContent='Choose a pending NHL bet with a 10-digit NHL game ID. Other provider IDs are not interchangeable.';return}
+ if(!b||b.status!=='pending'||b.sport!=='NHL'||!/^\d{10}$/.test(String(b.providerGameId||''))){output.textContent='Choose a pending NHL bet with a 10-digit NHL game ID. Other provider IDs are not interchangeable.';return}
  clearVerifiedNhlProposal();button.disabled=true;el('settleHome').value='';el('settleAway').value='';output.textContent='Checking NHL game result…';
  try{
   const response=await fetch('https://ev-sports-nhl-scores.alansuper2004.workers.dev/nhl/final/'+encodeURIComponent(b.providerGameId),{cache:'no-store'});
@@ -155,7 +157,7 @@ el('fetchNhlFinal').onclick=async()=>{
   el('settleHome').value=String(home.score);el('settleAway').value=String(away.score);
   const preview=standardSettlement(b,home.score,away.score);
   if(b.market==='moneyline'&&['home','away'].includes(b.side)&&['win','loss'].includes(preview)){
-   verifiedNhlProposal={betId:b.id,gameId:String(game.gameId),homeTeam:home.team,awayTeam:away.team,result:preview,checkedAt:Date.now()};
+   verifiedNhlProposal={betId:b.id,gameId:String(game.gameId),homeTeam:home.team,awayTeam:away.team,result:preview,homeScore:home.score,awayScore:away.score,checkedAt:Date.now()};
    el('applyVerifiedNhl').disabled=false;
   }
   const teams=String(away.team)+' @ '+String(home.team);
