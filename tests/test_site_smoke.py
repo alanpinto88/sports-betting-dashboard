@@ -53,6 +53,14 @@ class PublicSiteSmokeTests(unittest.TestCase):
         self.assertIn("d.append(summary,selectionRow,inner)",section)
         self.assertNotIn("summary.append(cb",section)
 
+    def test_bet_export_is_local_and_formula_safe(self):
+        home=(ROOT/"index.html").read_text(encoding="utf-8")
+        self.assertIn("function csvCell(value)",home)
+        self.assertIn(r"/^[\s]*[=+@-]/",home)
+        self.assertIn("'profit'",home)
+        self.assertIn("key==='profit'?pnl(bet):bet[key]",home)
+        self.assertIn("URL.createObjectURL(blob)",home)
+
     def test_no_unverified_feed_picks(self):
         for filename in ("recent-market-review.json","nba-player-props-review.json"):
             path=ROOT/filename
