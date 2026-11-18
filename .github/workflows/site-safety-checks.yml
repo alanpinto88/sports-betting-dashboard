@@ -1,0 +1,39 @@
+name: Public Site Safety Checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - '*.html'
+      - '*.json'
+      - 'tests/**'
+      - '.github/workflows/site-safety-checks.yml'
+  pull_request:
+    paths:
+      - '*.html'
+      - '*.json'
+      - 'tests/**'
+      - '.github/workflows/site-safety-checks.yml'
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify public pages and safe feed formats
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Check JavaScript syntax without executing website code
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),vm=require('vm');
+          for(const file of ['index.html','scanner.html','research.html']){
+            const html=fs.readFileSync(file,'utf8');
+            const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
+            for(const [,code] of scripts){new vm.Script(code,{filename:file})}
+            console.log(file+': '+scripts.length+' inline script(s) parsed');
+          }
+          JS
