@@ -15,7 +15,7 @@
 <label>Sportsbook projection (optional)<input id="bookLine" type="number" step="any" min="0" placeholder="75.5"></label>
 <label>Sportsbook name<input id="book" maxlength="60" placeholder="DraftKings"></label>
 </div></section>
-<section class="card"><h2>Fetch NFL game logs (beta)</h2><p class="muted">Search for the player by name and select a matching result. The ESPN athlete ID is an optional fallback. The browser will attempt to load the published game log; this is not a PrizePicks feed. Source availability and browser cross-origin permissions may prevent loading. Always check the dates and values before using them.</p><div class="grid"><label>Search player by name<input id="playerSearch" maxlength="80" placeholder="e.g. Nico Collins"></label><div><button type="button" id="searchPlayer">Find player</button></div><label>Matching players<select id="playerMatches"><option value="">Search for a player first</option></select></label><label>ESPN athlete ID (advanced fallback)<input id="espnId" inputmode="numeric" pattern="[0-9]*" placeholder="Filled when you select a player"></label><label>Season<input id="espnSeason" type="number" min="2000" max="2100" step="1" value="2026"></label></div><button type="button" id="fetchGames">Fetch last five NFL games</button><p id="fetchStatus" class="muted" role="status">No external statistics loaded.</p></section>
+<section class="card"><h2>Fetch NFL game logs (beta)</h2><p class="muted">Search for the player by name and select a matching result. The ESPN athlete ID is an optional fallback. The browser will attempt to load the published game log; this is not a PrizePicks feed. Source availability and browser cross-origin permissions may prevent loading. Always check the dates and values before using them.</p><div class="grid"><label>Search player by name<input id="playerSearch" maxlength="80" placeholder="e.g. Nico Collins"></label><div><button type="button" id="searchPlayer">Find player</button></div><label>Matching players<select id="playerMatches"><option value="">Search for a player first</option></select></label><label>ESPN athlete ID (advanced fallback)<input id="espnId" inputmode="numeric" pattern="[0-9]*" placeholder="Filled when you select a player"></label><label>Season<input id="espnSeason" type="number" min="2000" max="2100" step="1" value="2026"></label></div><button type="button" id="fetchGames">Fetch last five NFL games</button><p id="fetchStatus" class="muted" role="status">No external statistics loaded. Loader revision 3.</p></section>
 <section class="card"><h2>Last five completed games</h2><p class="muted">Enter actual player totals, oldest to newest. Missing games must stay blank; do not enter zeros for games the player missed.</p><div class="grid">
 <label>Game 1<input class="game" type="number" min="0" step="any"></label><label>Game 2<input class="game" type="number" min="0" step="any"></label><label>Game 3<input class="game" type="number" min="0" step="any"></label><label>Game 4<input class="game" type="number" min="0" step="any"></label><label>Game 5<input class="game" type="number" min="0" step="any"></label>
 </div><p class="muted">The last five are a diagnostic, not a sufficient predictive sample. Confirm snaps, injuries, matchup, role, weather, and line movement separately.</p><button id="analyze">Analyze discrepancy</button></section>
@@ -61,37 +61,48 @@ el('searchPlayer').addEventListener('click',async()=>{
  finally{button.disabled=false}
 });
 el('playerMatches').addEventListener('change',()=>{const select=el('playerMatches');if(!select.value)return;el('espnId').value=select.value;el('player').value=select.selectedOptions[0].text.split(' · ')[0];el('fetchStatus').textContent='Player selected. Tap Fetch last five NFL games.'});
-const espnFields={'Receiving yards':['receivingYards','REC YDS'],'Rushing yards':['rushingYards','RUSH YDS'],'Receptions':['receptions','REC'],'Receiving targets':['receivingTargets','targets','TGTS'],'Rushing attempts':['rushingAttempts','CAR'],'Passing yards':['passingYards','PASS YDS'],'Pass completions':['completions','CMP'],'Passing touchdowns':['passingTouchdowns','PASS TD'],'Anytime touchdowns':['totalTouchdowns','TD']};
+const espnFields={
+ 'Receiving yards':{categories:['receiving'],labels:['receivingYards','REC YDS','YDS']},
+ 'Rushing yards':{categories:['rushing'],labels:['rushingYards','RUSH YDS','YDS']},
+ 'Receptions':{categories:['receiving'],labels:['receptions','REC']},
+ 'Receiving targets':{categories:['receiving'],labels:['receivingTargets','targets','TGTS','TGT']},
+ 'Rushing attempts':{categories:['rushing'],labels:['rushingAttempts','CAR','ATT']},
+ 'Passing yards':{categories:['passing'],labels:['passingYards','PASS YDS','YDS']},
+ 'Pass completions':{categories:['passing'],labels:['completions','CMP','COMP']},
+ 'Passing touchdowns':{categories:['passing'],labels:['passingTouchdowns','PASS TD','TD']},
+ 'Anytime touchdowns':{categories:['scoring'],labels:['totalTouchdowns','TD']}
+};
 function readEspnGamelog(data,stat,season){
- const aliases=espnFields[stat];if(!aliases)throw Error('This market is not supported for automatic loading.');
+ const spec=espnFields[stat];if(!spec)throw Error('This market is not supported for automatic loading.');
  const norm=x=>String(x??'').toLowerCase().replace(/[^a-z0-9]/g,'');
- const wanted=new Set(aliases.map(norm));
+ const wanted=new Set(spec.labels.map(norm));
  const groups=Array.isArray(data.seasonTypes)?data.seasonTypes:[];
  const topCategories=Array.isArray(data.categories)?data.categories:[];
  const allCategories=[...topCategories,...groups.flatMap(g=>Array.isArray(g.categories)?g.categories:[])];
- const matching=allCategories.filter(c=>Array.isArray(c.labels)&&c.labels.some(x=>wanted.has(norm(x))));
+ const categoryMatches=c=>spec.categories.some(k=>norm(c.name||c.displayName||c.type).includes(k));
+ const matching=allCategories.filter(c=>categoryMatches(c)&&Array.isArray(c.labels)&&c.labels.some(x=>wanted.has(norm(x))));
  if(!matching.length){
-   const available=[...new Set(allCategories.flatMap(c=>Array.isArray(c.labels)?c.labels:[]).map(String))].slice(0,35);
-   throw Error('ESPN stat column unavailable for '+stat+'. Returned columns: '+(available.join(', ')||'none')+'.');
+  const available=[...new Set(allCategories.map(c=>String(c.name||c.displayName||'?')+': '+(c.labels||[]).join('/')))].slice(0,16);
+  throw Error('No matching '+stat+' category/column. ESPN returned: '+(available.join('; ')||'no categories')+'.');
  }
  const events=data.events||{};let rows=[];
  for(const group of groups)for(const cat of group.categories||[]){
-   const definition=matching.find(c=>c===cat||(c.name&&c.name===cat.name));
-   if(!definition)continue;
-   const labels=Array.isArray(cat.labels)?cat.labels:definition.labels;
-   const index=labels.findIndex(x=>wanted.has(norm(x)));
-   if(index<0)continue;
-   for(const entry of cat.events||[]){
-     const event=events[entry.eventId];
-     const raw=Array.isArray(entry.stats)?entry.stats[index]:null;
-     const date=event?.gameDate||event?.date;
-     if(!date||!/^\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date()||raw===null||raw===undefined||raw===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
-     rows.push({id:String(entry.eventId),date:String(date),value:Number(raw)});
-   }
+  const definition=matching.find(c=>c===cat||(c.name&&c.name===cat.name));
+  if(!definition)continue;
+  const labels=Array.isArray(cat.labels)?cat.labels:definition.labels;
+  const index=labels.findIndex(x=>wanted.has(norm(x)));
+  if(index<0)continue;
+  for(const entry of cat.events||[]){
+   const event=events[entry.eventId];
+   const raw=Array.isArray(entry.stats)?entry.stats[index]:null;
+   const date=event?.gameDate||event?.date;
+   if(!date||!/^\d{4}-/.test(String(date))||Number(String(date).slice(0,4))!==season||new Date(date)>new Date()||raw===null||raw===undefined||raw===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
+   rows.push({id:String(entry.eventId),date:String(date),value:Number(raw)});
+  }
  }
  rows.sort((a,b)=>b.date.localeCompare(a.date));
  const unique=[...new Map(rows.map(x=>[x.id,x])).values()].slice(0,5);
- if(unique.length!==5)throw Error('Only '+unique.length+' completed game-log values found for '+stat+'; five required.');
+ if(unique.length!==5)throw Error('Only '+unique.length+' valid completed games returned for '+stat+'; five required.');
  return unique.reverse();
 }
 el('fetchGames').addEventListener('click',async()=>{
