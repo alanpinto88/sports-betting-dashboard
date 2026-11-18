@@ -39,17 +39,24 @@ el('searchPlayer').addEventListener('click',async()=>{
  const data=await response.json();const found=[];
  function walk(value,depth){if(depth>7||!value||typeof value!=='object')return;
  if(Array.isArray(value)){value.forEach(x=>walk(x,depth+1));return}
- const name=String(value.displayName||value.fullName||value.name||value.title||'');
- const href=String(value.href||value.url||value.link||value.uid||'');
- const id=String(value.id||href.match(/(?:athletes?\/|athlete\/|a:)(\d{4,10})(?:\b|$)/i)?.[1]||'');
- const context=JSON.stringify({sport:value.sport,league:value.league,href,category:value.type});
- if(/^\d{4,10}$/.test(id)&&name.toLowerCase().includes(q.toLowerCase())&&(/nfl|football/i.test(context)||!value.sport&&!value.league))found.push({id,name,team:String(value.team?.abbreviation||value.team?.displayName||'')});
+ const name=String(value.displayName||value.fullName||value.name||'').trim();
+ const href=String(value.href||value.url||value.link||'');
+ const uid=String(value.uid||'');
+ const type=String(value.type?.name||value.type?.id||value.type||'').toLowerCase();
+ const athleteLink=/(?:\\/athletes?\\/|\\/nfl\\/player\\/_\\/id\\/)(\\d{4,10})(?:\\b|\\/|$)/i.exec(href);
+ const athleteUid=/(?:^|~)a:(\\d{4,10})(?:$|~)/.exec(uid);
+ const athleteRecord=/athlete|player/.test(type)||!!athleteLink||!!athleteUid;
+ const id=String(athleteLink?.[1]||athleteUid?.[1]||(athleteRecord?value.id:'')||'');
+ const cleanName=/^[\\p{L}][\\p{L} .'-]{2,65}$/u.test(name);
+ const nflContext=JSON.stringify({sport:value.sport,league:value.league,href,uid}).toLowerCase();
+ const isOtherSport=/basketball|baseball|hockey|soccer|tennis|golf|nba|mlb|nhl/.test(nflContext);
+ if(athleteRecord&&cleanName&&/^\\d{4,10}$/.test(id)&&name.toLowerCase().includes(q.toLowerCase())&&!isOtherSport)found.push({id,name,team:String(value.team?.abbreviation||value.team?.displayName||'')});
  for(const [key,item] of Object.entries(value))if(key!=='links'&&key!=='images')walk(item,depth+1);
  }
  walk(data,0);const unique=[...new Map(found.map(x=>[x.id,x])).values()].slice(0,30);
  select.replaceChildren(new Option(unique.length?'Choose the correct player':'No matching NFL players found',''));
  unique.forEach(x=>select.add(new Option(x.name+(x.team?' · '+x.team:''),x.id)));
- status.textContent=unique.length?'Choose a player, then tap Fetch last five NFL games. Verify the team.':'No verified matches from this search response. Use the ESPN ID fallback if available.';
+ status.textContent=unique.length?'Choose a player, then tap Fetch last five NFL games. Verify the team.':'ESPN did not provide a verified NFL athlete profile. News articles are excluded. Player lookup needs a supported athlete directory.';
  }catch(err){select.replaceChildren(new Option('Search unavailable',''));status.textContent='Player search unavailable ('+String(err.message)+'). ESPN may restrict browser access; manual lookup remains available.'}
  finally{button.disabled=false}
 });
