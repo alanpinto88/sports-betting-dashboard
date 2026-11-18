@@ -132,7 +132,7 @@ function refreshSettlementBets(){
 // Read-only NHL game lookup. Never settle bets automatically from a fetched score.
 el('fetchNhlFinal').onclick=async()=>{
  const output=el('settlementPreview'),button=el('fetchNhlFinal'),b=bets.find(x=>x.id===el('settleBet').value);
- if(!b||b.sport!=='NHL'||!/^\\d{10}$/.test(String(b.providerGameId||''))){output.textContent='Choose a pending NHL bet with a 10-digit NHL game ID. Other provider IDs are not interchangeable.';return}
+ if(!b||b.sport!=='NHL'||!/^\d{10}$/.test(String(b.providerGameId||''))){output.textContent='Choose a pending NHL bet with a 10-digit NHL game ID. Other provider IDs are not interchangeable.';return}
  button.disabled=true;output.textContent='Checking NHL game result…';
  try{
   const response=await fetch('https://api-web.nhle.com/v1/gamecenter/'+encodeURIComponent(b.providerGameId)+'/landing',{cache:'no-store'});
