@@ -38,6 +38,21 @@ class PublicSiteSmokeTests(unittest.TestCase):
         self.assertIn("d.append(summary,selectionRow,inner)",scanner)
         self.assertIn("groupSelectLabel",scanner)
 
+    def test_comparison_requires_two_valid_prices(self):
+        research=(ROOT/"research.html").read_text(encoding="utf-8")
+        self.assertIn("rows.length<2",research)
+        self.assertIn("Example prices",research)
+        self.assertIn("Manually entered prices are unverified",research)
+        self.assertIn("Additional potential profit if the selection wins",research)
+
+    def test_safari_group_checkbox_outside_summary(self):
+        scanner=(ROOT/"scanner.html").read_text(encoding="utf-8")
+        section=scanner.split("function groupedChoices(",1)[1].split("function drawChecks(",1)[0]
+        self.assertIn("summary.append(addText",section)
+        self.assertIn("groupLabel.append(cb",section)
+        self.assertIn("d.append(summary,selectionRow,inner)",section)
+        self.assertNotIn("summary.append(cb",section)
+
     def test_no_unverified_feed_picks(self):
         for filename in ("recent-market-review.json","nba-player-props-review.json"):
             path=ROOT/filename
