@@ -1,0 +1,25 @@
+{
+  "kind": "nba_player_props_review",
+  "feed_version": 1,
+  "source": "the-odds-api-v4",
+  "captured_at": "2026-11-18T07:03:16.788878+00:00",
+  "review_count": 0,
+  "signals": [],
+  "diagnostics": {
+    "games_requested": 2,
+    "games_fetched": 2,
+    "quotes_total": 108,
+    "evaluated_prices": 0,
+    "quarantined_extreme_edges": 0,
+    "credits_used_this_run": 4,
+    "credits_remaining": 473,
+    "markets_requested": [
+      "player_points",
+      "player_rebounds",
+      "player_assists",
+      "player_threes"
+    ],
+    "minimum_reference_books": 3
+  },
+  "disclaimer": "Pregame snapshot only; not live prices or validated true EV. Extreme 10%+ discrepancies withheld."
+}
