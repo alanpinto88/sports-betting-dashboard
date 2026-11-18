@@ -43,14 +43,14 @@ el('searchPlayer').addEventListener('click',async()=>{
  const href=String(value.href||value.url||value.link||'');
  const uid=String(value.uid||'');
  const type=String(value.type?.name||value.type?.id||value.type||'').toLowerCase();
- const athleteLink=/(?:\\/athletes?\\/|\\/nfl\\/player\\/_\\/id\\/)(\\d{4,10})(?:\\b|\\/|$)/i.exec(href);
- const athleteUid=/(?:^|~)a:(\\d{4,10})(?:$|~)/.exec(uid);
+ const athleteLink=/(?:\/athletes?\/|\/nfl\/player\/_\/id\/)(\d{4,10})(?:\b|\/|$)/i.exec(href);
+ const athleteUid=/(?:^|~)a:(\d{4,10})(?:$|~)/.exec(uid);
  const athleteRecord=/athlete|player/.test(type)||!!athleteLink||!!athleteUid;
  const id=String(athleteLink?.[1]||athleteUid?.[1]||(athleteRecord?value.id:'')||'');
- const cleanName=/^[\\p{L}][\\p{L} .'-]{2,65}$/u.test(name);
+ const cleanName=/^[a-zA-Z][a-zA-Z .'-]{2,65}$/.test(name);
  const nflContext=JSON.stringify({sport:value.sport,league:value.league,href,uid}).toLowerCase();
  const isOtherSport=/basketball|baseball|hockey|soccer|tennis|golf|nba|mlb|nhl/.test(nflContext);
- if(athleteRecord&&cleanName&&/^\\d{4,10}$/.test(id)&&name.toLowerCase().includes(q.toLowerCase())&&!isOtherSport)found.push({id,name,team:String(value.team?.abbreviation||value.team?.displayName||'')});
+ if(athleteRecord&&cleanName&&/^\d{4,10}$/.test(id)&&name.toLowerCase().includes(q.toLowerCase())&&!isOtherSport)found.push({id,name,team:String(value.team?.abbreviation||value.team?.displayName||'')});
  for(const [key,item] of Object.entries(value))if(key!=='links'&&key!=='images')walk(item,depth+1);
  }
  walk(data,0);const unique=[...new Map(found.map(x=>[x.id,x])).values()].slice(0,30);
