@@ -133,7 +133,7 @@ function refreshSettlementBets(){
 el('fetchNhlFinal').onclick=async()=>{
  const output=el('settlementPreview'),button=el('fetchNhlFinal'),b=bets.find(x=>x.id===el('settleBet').value);
  if(!b||b.sport!=='NHL'||!/^\d{10}$/.test(String(b.providerGameId||''))){output.textContent='Choose a pending NHL bet with a 10-digit NHL game ID. Other provider IDs are not interchangeable.';return}
- button.disabled=true;output.textContent='Checking NHL game result…';
+ button.disabled=true;el('settleHome').value='';el('settleAway').value='';output.textContent='Checking NHL game result…';
  try{
   const response=await fetch('https://api-web.nhle.com/v1/gamecenter/'+encodeURIComponent(b.providerGameId)+'/landing',{cache:'no-store'});
   if(!response.ok)throw Error('HTTP '+response.status);
@@ -141,11 +141,12 @@ el('fetchNhlFinal').onclick=async()=>{
   const home=game.homeTeam,away=game.awayTeam;
   if(String(game.id)!==String(b.providerGameId)||!['OFF','FINAL'].includes(game.gameState)||!home||!away||!Number.isInteger(home.score)||!Number.isInteger(away.score)||home.score<0||away.score<0||!home.abbrev||!away.abbrev)throw Error('Game is not final or the score is incomplete');
   if(!b.homeTeam||!b.awayTeam||b.homeTeam!==home.abbrev||b.awayTeam!==away.abbrev)throw Error('Team codes missing or do not match the NHL game. Bet unchanged');
+  if(el('settleBet').value!==b.id||!bets.some(x=>x.id===b.id&&x.status==='pending'))throw Error('Selected bet changed during lookup. Score discarded');
   el('settleHome').value=String(home.score);el('settleAway').value=String(away.score);
   const preview=standardSettlement(b,home.score,away.score);
   const teams=String(away.abbrev)+' @ '+String(home.abbrev);
   output.textContent='NHL final '+teams+': '+away.score+'–'+home.score+'. Confirm these are the teams on your ticket. '+(preview?'Standard-rule preview: '+preview.toUpperCase()+'. ':'')+'Not applied to bet. Verify team/market identity, overtime/shootout handling and sportsbook settlement rules.';
- }catch(err){output.textContent='NHL score unavailable or unverified ('+String(err.message)+'). The NHL web API may block cross-origin browser requests; a trusted server-side relay is needed for reliable access. Bet unchanged.'}
+ }catch(err){if(el('settleBet').value===b.id)output.textContent='NHL score unavailable or unverified ('+String(err.message)+'). The NHL web API may block cross-origin browser requests; a trusted server-side relay is needed for reliable access. Bet unchanged.'}
  finally{button.disabled=false}
 };
 el('settleBet').addEventListener('change',()=>{el('settleHome').value='';el('settleAway').value='';el('settlementPreview').textContent='Selected bet changed. Enter or retrieve its final score before previewing.'});
