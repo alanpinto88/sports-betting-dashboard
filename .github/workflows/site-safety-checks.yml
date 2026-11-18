@@ -13,6 +13,7 @@ on:
       - '*.html'
       - '*.json'
       - 'tests/**'
+      - 'worker/**'
       - '.github/workflows/site-safety-checks.yml'
 permissions:
   contents: read
