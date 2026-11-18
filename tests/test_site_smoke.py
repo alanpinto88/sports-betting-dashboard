@@ -122,6 +122,7 @@ class PublicSiteSmokeTests(unittest.TestCase):
         self.assertNotIn("b.status=preview",home)
         self.assertIn("The NHL web API may block cross-origin browser requests",home)
         self.assertIn("Selected bet changed. Enter or retrieve its final score",home)
+        self.assertIn("Selected bet changed during lookup. Score discarded",home)
 
     def test_no_unverified_feed_picks(self):
         for filename in ("recent-market-review.json","nba-player-props-review.json"):
