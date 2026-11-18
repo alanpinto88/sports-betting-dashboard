@@ -6,6 +6,7 @@ on:
       - 'index.html'
       - 'signals.html'
       - 'public-signals.json'
+      - 'recent-market-review.json'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 permissions:
