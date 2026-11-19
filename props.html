@@ -75,50 +75,40 @@ const espnFields={
 function readEspnGamelog(data,stat,season){
  const spec=espnFields[stat];if(!spec)throw Error('Unsupported statistic.');
  const norm=x=>String(x??'').toLowerCase().replace(/[^a-z0-9]/g,'');
- const wanted=new Set(spec.labels.map(norm));
- const accepted=new Set(spec.categories.map(norm));
- const rootNames=Array.isArray(data.names)?data.names:[];
- const rootLabels=Array.isArray(data.labels)?data.labels:[];
- const rootCategories=Array.isArray(data.categories)?data.categories:[];
- const events=data.events||{},groups=Array.isArray(data.seasonTypes)?data.seasonTypes:[];
- const rows=[];
- function findIndex(columns){
-  return Array.isArray(columns)?columns.findIndex(x=>wanted.has(norm(typeof x==='object'?(x.name||x.displayName||x.abbreviation):x))):-1;
- }
- function indexesFor(cat){
-  const category=norm(cat.name||cat.displayName||'');
-  if(category&&!accepted.has(category))return [];
-  const candidates=[cat.names,cat.labels,rootNames,rootLabels];
-  for(const root of rootCategories)if(norm(root.name||root.displayName)===category)candidates.push(root.names,root.labels);
-  return [...new Set(candidates.map(findIndex).filter(i=>i>=0))];
- }
- function consume(entry,indices){
-  if(!entry||!Array.isArray(entry.stats))return;
-  const id=String(entry.eventId||entry.id||'');
-  const event=events[id]||{};
-  const date=event.gameDate||event.date||entry.gameDate||entry.date;
-  if(!id||!date||!String(date).startsWith(String(season)+'-')||new Date(date)>new Date())return;
-  const idx=indices.find(i=>i<entry.stats.length);
-  if(idx===undefined)return;
-  const raw=entry.stats[idx];
-  if(raw===null||raw===undefined||String(raw).trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0)return;
-  rows.push({id,date:String(date),value:Number(raw)});
- }
+ const wanted=new Set(spec.labels.map(norm)),accepted=new Set(spec.categories.map(norm));
+ const names=Array.isArray(data.names)?data.names:[],labels=Array.isArray(data.labels)?data.labels:[];
+ const index=names.findIndex(x=>wanted.has(norm(x)));
+ const fallback=index<0?labels.findIndex(x=>wanted.has(norm(x))):index;
+ if(fallback<0)throw Error('ESPN did not publish the selected statistic.');
+ const events=data.events||{},groups=Array.isArray(data.seasonTypes)?data.seasonTypes:[],rows=[];
  for(const group of groups){
   if(group.type!==undefined&&String(group.type)!=='2'&&!/regular/i.test(String(group.displayName||group.name||'')))continue;
   for(const cat of group.categories||[]){
-   const idx=indexesFor(cat);
-   for(const entry of cat.events||[])consume(entry,idx);
-  }
-  // Some ESPN versions publish category event maps instead of arrays.
-  if(Array.isArray(group.events)){
-   const idx=indexesFor({});
-   for(const entry of group.events)consume(entry,idx);
+   const category=norm(cat.name||cat.displayName||'');
+   // ESPN supplies global stat columns, but each category contains only its own stat subset.
+   // Match by the actual category stat names, never by global position alone.
+   const localNames=Array.isArray(cat.names)?cat.names:[];
+   const localLabels=Array.isArray(cat.labels)?cat.labels:[];
+   const localIndex=localNames.findIndex(x=>wanted.has(norm(x)));
+   const localLabelIndex=localLabels.findIndex(x=>wanted.has(norm(x)));
+   const categoryIndex=localIndex>=0?localIndex:localLabelIndex>=0?localLabelIndex:fallback;
+   if(category&&!accepted.has(category)&&localIndex<0&&localLabelIndex<0)continue;
+   for(const entry of cat.events||[]){
+    if(!Array.isArray(entry.stats)||categoryIndex>=entry.stats.length)continue;
+    const id=String(entry.eventId||entry.id||''),event=events[id]||{};
+    const date=event.gameDate||event.date||entry.gameDate||entry.date;
+    const raw=entry.stats[categoryIndex];
+    if(!id||!date||!String(date).startsWith(String(season)+'-')||!Number.isFinite(new Date(date).getTime())||new Date(date)>new Date())continue;
+    if(raw===null||raw===undefined||String(raw).trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
+    // Do not treat an unfinished or scheduled game as a completed result.
+    if(event.completed===false||event.status?.type?.completed===false)continue;
+    rows.push({id,date:String(date),value:Number(raw)});
+   }
   }
  }
- rows.sort((x,y)=>y.date.localeCompare(x.date));
+ rows.sort((a,b)=>b.date.localeCompare(a.date));
  const unique=[...new Map(rows.map(x=>[x.id,x])).values()].slice(0,5);
- if(unique.length!==5)throw Error('Found '+unique.length+' verified games (need five). Schema: '+JSON.stringify({rootNames:rootNames.slice(0,8),categories:rootCategories.slice(0,3).map(c=>c.name),groups:groups.slice(0,2).map(g=>({type:g.type,keys:Object.keys(g),categories:(g.categories||[]).slice(0,2).map(c=>({name:c.name,keys:Object.keys(c),eventsCount:c.events?.length,firstEvent:c.events?.[0]?{keys:Object.keys(c.events[0]),stats:c.events[0].stats?.slice(0,5)}:null}))}))}).slice(0,1200));
+ if(unique.length!==5)throw Error('Found '+unique.length+' valid game-log values (need five). Check season, statistic and source data.');
  return unique.reverse();
 }
 el('findFromProjection').addEventListener('click',()=>{const name=el('player').value.trim();if(!name){el('player').focus();return}el('playerSearch').value=name;el('espnId').value='';el('playerMatches').replaceChildren(new Option('Search for a player first',''));el('searchPlayer').click();el('playerSearch').scrollIntoView({behavior:'smooth',block:'center'});});
