@@ -1,27 +1,68 @@
-// EV Sports — PrizePicks comparison relay (deployment template).
-// This worker intentionally does NOT make paid provider requests until an authorized
-// endpoint and response contract have been confirmed.
-// Configure ALLOWED_ORIGIN as https://alanpinto88.github.io, never '*'.
+// EV Sports — safe PrizePicksAPI relay. No credit-consuming endpoints are enabled.
+// The API credential stays in Cloudflare's PRIZEPICKS_API_KEY secret.
 const cors=(origin,allowed)=>({
-  'Access-Control-Allow-Origin': origin===allowed?allowed:'null',
+  'Access-Control-Allow-Origin':origin===allowed?allowed:'null',
   'Access-Control-Allow-Methods':'GET, OPTIONS',
   'Access-Control-Allow-Headers':'Content-Type',
   'Vary':'Origin',
-  'Cache-Control':'no-store',
+  'Cache-Control':'no-store'
 });
+const json=(body,status,headers)=>Response.json(body,{status,headers});
 export default {
-  async fetch(request,env) {
+  async fetch(request,env,ctx){
     const origin=request.headers.get('Origin')||'';
     const allowed=env.ALLOWED_ORIGIN||'https://alanpinto88.github.io';
     const headers={'Content-Type':'application/json; charset=utf-8',...cors(origin,allowed)};
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
-    const url=new URL(request.url);
-    if(request.method!=='GET')return Response.json({error:'Method not allowed'},{status:405,headers});
-    if(url.pathname==='/health')return Response.json({ok:true,service:'ev-sports-prop-relay',providerConnected:false,paidRequestsEnabled:false},{headers});
-    if(url.pathname==='/comparisons')return Response.json({
+    if(request.method!=='GET')return json({error:'Method not allowed'},405,headers);
+    const path=new URL(request.url).pathname;
+    if(path==='/health')return json({
+      ok:true,service:'ev-sports-prop-relay',
+      secretConfigured:Boolean(env.PRIZEPICKS_API_KEY),
+      providerConnected:false,paidRequestsEnabled:false
+    },200,headers);
+    if(path==='/provider-check'){
+      if(!env.PRIZEPICKS_API_KEY)return json({ok:false,status:'secret_missing',paidRequestsEnabled:false},503,headers);
+      // Only provider /coverage is permitted. No client-supplied upstream URL or parameters.
+      // Cache the result at the edge for 10 minutes to avoid repeated provider requests.
+      const cacheKey=new Request('https://ev-sports-prop-relay.internal/provider-check-v1');
+      const cache=caches.default;
+      const cached=await cache.match(cacheKey);
+      if(cached){
+        const result=await cached.json();
+        return json({...result,cached:true},200,headers);
+      }
+      try{
+        const upstream=await fetch('https://prizepicksapi.com/api/v1/coverage',{
+          headers:{
+            'Authorization':`Bearer ${env.PRIZEPICKS_API_KEY}`,
+            'Accept':'application/json',
+            'X-User-Request':'Verify supported player prop leagues for an EV Sports discrepancy dashboard'
+          },
+          signal:AbortSignal.timeout(8000)
+        });
+        const result={
+          ok:upstream.ok,
+          status:upstream.ok?'authenticated_coverage_ok':'provider_rejected',
+          providerHttpStatus:upstream.status,
+          paidRequestsEnabled:false
+        };
+        // Never forward provider payload or key to a public caller.
+        if(upstream.ok){
+          const toCache=new Response(JSON.stringify(result),{
+            headers:{'Content-Type':'application/json','Cache-Control':'public, max-age=600'}
+          });
+          ctx.waitUntil(cache.put(cacheKey,toCache));
+        }
+        return json(result,upstream.ok?200:502,headers);
+      }catch{
+        return json({ok:false,status:'provider_unreachable',paidRequestsEnabled:false},502,headers);
+      }
+    }
+    if(path==='/comparisons')return json({
       ok:false,status:'not_configured',rows:[],
-      message:'Provider API endpoint, account entitlement, request budget and terms must be verified before enabling live requests.'
-    },{status:503,headers});
-    return Response.json({error:'Not found'},{status:404,headers});
+      message:'Paid comparisons are disabled pending request authorization, abuse prevention and credit limits.'
+    },503,headers);
+    return json({error:'Not found'},404,headers);
   }
 };
