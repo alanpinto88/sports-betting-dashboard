@@ -43,8 +43,18 @@ export default {
         };
         return json(result,upstream.ok?200:502,headers);
       }catch(error){
-        const category=error?.name==='TimeoutError'?'timeout':error?.name==='AbortError'?'aborted':'network_or_runtime_error';
-        return json({ok:false,status:'provider_unreachable',reason:category,paidRequestsEnabled:false},502,headers);
+        // Expose only allowlisted diagnostic categories, never raw provider errors or credentials.
+        const name=String(error?.name||'');
+        const message=String(error?.message||'').toLowerCase();
+        const category=name==='TimeoutError'?'timeout':name==='AbortError'?'aborted':
+          name==='TypeError'?'fetch_type_error':'runtime_error';
+        const hint=/fetch failed|network|connection|connect|dns|resolve|tls|certificate/.test(message)
+          ?'upstream_network_failure'
+          :/invalid url|url parse/.test(message)?'invalid_upstream_url'
+          :/abort|timeout/.test(message)?'request_timeout'
+          :'check_worker_logs';
+        return json({ok:false,status:'provider_unreachable',reason:category,diagnosticHint:hint,
+          paidRequestsEnabled:false},502,headers);
       }
     }
     if(path==='/comparisons')return json({
