@@ -39,7 +39,7 @@ export default {
             'Accept':'application/json',
             'X-User-Request':'Verify supported player prop leagues for an EV Sports discrepancy dashboard'
           },
-          signal:AbortSignal.timeout(8000)
+          signal:AbortSignal.timeout(12000)
         });
         const result={
           ok:upstream.ok,
@@ -55,8 +55,9 @@ export default {
           ctx.waitUntil(cache.put(cacheKey,toCache));
         }
         return json(result,upstream.ok?200:502,headers);
-      }catch{
-        return json({ok:false,status:'provider_unreachable',paidRequestsEnabled:false},502,headers);
+      }catch(error){
+        const category=error?.name==='TimeoutError'?'timeout':error?.name==='AbortError'?'aborted':'network_or_runtime_error';
+        return json({ok:false,status:'provider_unreachable',reason:category,paidRequestsEnabled:false},502,headers);
       }
     }
     if(path==='/comparisons')return json({
