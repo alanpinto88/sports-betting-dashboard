@@ -24,14 +24,8 @@ export default {
     if(path==='/provider-check'){
       if(!env.PRIZEPICKS_API_KEY)return json({ok:false,status:'secret_missing',paidRequestsEnabled:false},503,headers);
       // Only provider /coverage is permitted. No client-supplied upstream URL or parameters.
-      // Cache the result at the edge for 10 minutes to avoid repeated provider requests.
-      const cacheKey=new Request('https://ev-sports-prop-relay.internal/provider-check-v1');
-      const cache=caches.default;
-      const cached=await cache.match(cacheKey);
-      if(cached){
-        const result=await cached.json();
-        return json({...result,cached:true},200,headers);
-      }
+      // This diagnostic intentionally skips Cache API: it is not available in every
+      // Worker execution context. This endpoint never requests paid comparisons.
       try{
         const upstream=await fetch('https://prizepicksapi.com/api/v1/coverage',{
           headers:{
@@ -47,13 +41,6 @@ export default {
           providerHttpStatus:upstream.status,
           paidRequestsEnabled:false
         };
-        // Never forward provider payload or key to a public caller.
-        if(upstream.ok){
-          const toCache=new Response(JSON.stringify(result),{
-            headers:{'Content-Type':'application/json','Cache-Control':'public, max-age=600'}
-          });
-          ctx.waitUntil(cache.put(cacheKey,toCache));
-        }
         return json(result,upstream.ok?200:502,headers);
       }catch(error){
         const category=error?.name==='TimeoutError'?'timeout':error?.name==='AbortError'?'aborted':'network_or_runtime_error';
