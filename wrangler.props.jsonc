@@ -1,0 +1,6 @@
+{
+  "name": "ev-sports-prop-relay",
+  "main": "worker/prop-comparison-relay.mjs",
+  "compatibility_date": "2026-11-19",
+  "workers_dev": true
+}
