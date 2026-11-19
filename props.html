@@ -80,7 +80,7 @@ function readEspnGamelog(data,stat,season){
  const index=names.findIndex(x=>wanted.has(norm(x)));
  const fallback=index<0?labels.findIndex(x=>wanted.has(norm(x))):index;
  if(fallback<0)throw Error('ESPN did not publish the selected statistic.');
- const events=data.events||{},groups=Array.isArray(data.seasonTypes)?data.seasonTypes:[],rows=[];
+ const events=data.events||{},groups=Array.isArray(data.seasonTypes)?data.seasonTypes:[],rows=[];let inspected=0,matchedCategory=0,validDates=0;
  for(const group of groups){
   if(group.type!==undefined&&String(group.type)!=='2'&&!/regular/i.test(String(group.displayName||group.name||'')))continue;
   for(const cat of group.categories||[]){
@@ -92,13 +92,19 @@ function readEspnGamelog(data,stat,season){
    const localIndex=localNames.findIndex(x=>wanted.has(norm(x)));
    const localLabelIndex=localLabels.findIndex(x=>wanted.has(norm(x)));
    const categoryIndex=localIndex>=0?localIndex:localLabelIndex>=0?localLabelIndex:fallback;
-   if(category&&!accepted.has(category)&&localIndex<0&&localLabelIndex<0)continue;
+   // ESPN sometimes labels its sole category as 'Regular Season Stats' rather than 'receiving'.
+   // Trust a named global stat column for single-category game logs.
+   if(category&&!accepted.has(category)&&localIndex<0&&localLabelIndex<0&&(group.categories||[]).length>1)continue;
+   matchedCategory++;
    for(const entry of cat.events||[]){
+    inspected++;
     if(!Array.isArray(entry.stats)||categoryIndex>=entry.stats.length)continue;
     const id=String(entry.eventId||entry.id||''),event=events[id]||{};
     const date=event.gameDate||event.date||entry.gameDate||entry.date;
     const raw=entry.stats[categoryIndex];
-    if(!id||!date||!String(date).startsWith(String(season)+'-')||!Number.isFinite(new Date(date).getTime())||new Date(date)>new Date())continue;
+    if(!id||!date||!Number.isFinite(new Date(date).getTime())||new Date(date)>new Date())continue;
+    // NFL season dates can cross calendar years (January playoffs); the ESPN season endpoint controls the season.
+    validDates++;
     if(raw===null||raw===undefined||String(raw).trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0)continue;
     // Do not treat an unfinished or scheduled game as a completed result.
     if(event.completed===false||event.status?.type?.completed===false)continue;
@@ -108,7 +114,7 @@ function readEspnGamelog(data,stat,season){
  }
  rows.sort((a,b)=>b.date.localeCompare(a.date));
  const unique=[...new Map(rows.map(x=>[x.id,x])).values()].slice(0,5);
- if(unique.length!==5)throw Error('Found '+unique.length+' valid game-log values (need five). Check season, statistic and source data.');
+ if(unique.length!==5)throw Error('Found '+unique.length+' valid game-log values (need five). Diagnostic: groups='+groups.length+', matchedCategories='+matchedCategory+', inspectedEvents='+inspected+', datedEvents='+validDates+'.');
  return unique.reverse();
 }
 el('findFromProjection').addEventListener('click',()=>{const name=el('player').value.trim();if(!name){el('player').focus();return}el('playerSearch').value=name;el('espnId').value='';el('playerMatches').replaceChildren(new Option('Search for a player first',''));el('searchPlayer').click();el('playerSearch').scrollIntoView({behavior:'smooth',block:'center'});});
