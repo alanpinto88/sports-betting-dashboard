@@ -147,7 +147,9 @@ el('fetchGames').addEventListener('click',async()=>{
 });
 el('analyze').addEventListener('click',()=>{
  const raw=el('pp').value.trim(),p=Number(raw),values=[...document.querySelectorAll('.game')].map(x=>x.value.trim());
- if(!raw||!Number.isFinite(p)||p<0||values.some(v=>v==='')||values.some(v=>!Number.isFinite(Number(v))||Number(v)<0)){el('output').textContent='Enter a valid nonnegative projection and five nonnegative completed-game totals. Missing games cannot be treated as zero.';return}
+ if(!raw||!Number.isFinite(p)||p<0){el('output').textContent='PrizePicks projection is missing. Enter the actual line in the PrizePicks projection field above (the gray 70.5 is only an example placeholder).';el('pp').focus();el('pp').scrollIntoView({behavior:'smooth',block:'center'});return}
+ const missing=values.findIndex(v=>v===''||!Number.isFinite(Number(v))||Number(v)<0);
+ if(missing!==-1){el('output').textContent='Game '+(missing+1)+' needs a valid nonnegative completed-game total. Missing games cannot be treated as zero.';const field=document.querySelectorAll('.game')[missing];field.focus();field.scrollIntoView({behavior:'smooth',block:'center'});return}
  const v=values.map(Number),avg=v.reduce((a,b)=>a+b,0)/5,first=(v[0]+v[1]+v[2])/3,recent=(v[3]+v[4])/2,side=el('side').value;
  const hits=v.filter(n=>side==='more'?n>p:n<p).length,push=v.filter(n=>n===p).length;
  const braw=el('bookLine').value.trim(),book=braw===''?null:Number(braw);
