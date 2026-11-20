@@ -21,6 +21,32 @@ export default {
       secretConfigured:Boolean(env.PRIZEPICKS_API_KEY),
       providerConnected:false,paidRequestsEnabled:false
     },200,headers);
+    if(path==='/network-check'){
+      // Zero-credit connectivity check: official fictional demo endpoint, no API key.
+      // Public and deliberately non-billable; never forwards arbitrary URLs.
+      try{
+        const upstream=await fetch('https://prizepicksapi.com/api/v1/demo/coverage',{
+          headers:{'Accept':'application/json'},
+          redirect:'manual',
+          signal:AbortSignal.timeout(10000)
+        });
+        return json({
+          ok:upstream.ok,
+          status:upstream.ok?'demo_reachable':'demo_http_response',
+          providerHttpStatus:upstream.status,
+          redirect:upstream.status>=300&&upstream.status<400,
+          paidRequestsEnabled:false
+        },200,headers);
+      }catch(error){
+        const name=String(error?.name||'');
+        const category=name==='TimeoutError'?'timeout':name==='TypeError'?'fetch_type_error':'network_or_runtime_error';
+        return json({
+          ok:false,status:'demo_unreachable',reason:category,
+          diagnosticHint:'The keyless provider demo also failed; check provider network reachability, DNS and Cloudflare outbound fetch.',
+          paidRequestsEnabled:false
+        },200,headers);
+      }
+    }
     if(path==='/provider-check'){
       if(!env.PRIZEPICKS_API_KEY)return json({ok:false,status:'secret_missing',paidRequestsEnabled:false},503,headers);
       // Only provider /coverage is permitted. No client-supplied upstream URL or parameters.
