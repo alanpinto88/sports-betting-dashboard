@@ -21,6 +21,14 @@ export default {
       secretConfigured:Boolean(env.PRIZEPICKS_API_KEY),
       providerConnected:false,paidRequestsEnabled:false
     },200,headers);
+    if(path==='/live-status')return json({
+      ok:true,service:'ev-sports-prop-relay',
+      secretConfigured:Boolean(env.PRIZEPICKS_API_KEY),
+      liveProjectionsEnabled:false,liveComparisonsEnabled:false,
+      creditSpendingEnabled:false,
+      safety:'locked_until_authenticated_fetch_cache_and_server_side_budget_are_verified',
+      message:'Live requests are locked. Demo requests use no API key.'
+    },200,headers);
     if(path==='/network-check'){
       // Zero-credit connectivity check: official fictional demo endpoint, no API key.
       // Public and deliberately non-billable; never forwards arbitrary URLs.
