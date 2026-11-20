@@ -1,0 +1,62 @@
+name: Capture multi-sport odds (manual, quota-controlled)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/multisport-capture-trigger.txt'
+permissions:
+  contents: write
+concurrency:
+  group: multisport-odds-capture
+  cancel-in-progress: false
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture selected sports with strict quota floor
+        env:
+          ODDS_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import os,json,urllib.request,urllib.error,urllib.parse,datetime,pathlib,sys
+          key=os.environ.get("ODDS_KEY")
+          if not key: sys.exit("Missing THE_ODDS_API_KEY secret")
+          sports=["icehockey_nhl","basketball_nba","americanfootball_nfl","soccer_epl","baseball_mlb"]
+          # Two markets, one US region: typically two credits per successful odds response.
+          # Stop before each request when the last provider quota header is below the safety floor.
+          remaining=None; records=[]; errors=[]
+          for sport in sports:
+              if remaining is not None and remaining<100:
+                  errors.append({"sport":sport,"reason":"Stopped at quota safety floor"});break
+              params=urllib.parse.urlencode({"apiKey":key,"regions":"us","markets":"h2h,totals","oddsFormat":"american"})
+              req=urllib.request.Request("https://api.the-odds-api.com/v4/sports/"+sport+"/odds/?"+params,headers={"Accept":"application/json"})
+              try:
+                  with urllib.request.urlopen(req,timeout=20) as r:
+                      data=json.load(r); h=r.headers
+                      if not isinstance(data,list): raise ValueError("Unexpected provider response")
+                      raw=h.get("x-requests-remaining")
+                      remaining=int(raw) if raw and raw.isdigit() else None
+                      records.append({"sport":sport,"events":data,"quota_remaining":remaining,"last_cost":h.get("x-requests-last")})
+                      print(sport,":",len(data),"events; quota remaining",remaining,"cost",h.get("x-requests-last"))
+              except urllib.error.HTTPError as e:
+                  errors.append({"sport":sport,"http_status":e.code})
+                  print(sport,"HTTP error",e.code)
+              except Exception as e:
+                  errors.append({"sport":sport,"error_type":type(e).__name__})
+                  print(sport,"error",type(e).__name__)
+          if not records: sys.exit("No sports data retrieved; previous published snapshot unchanged")
+          out={"source":"The Odds API","captured_at":datetime.datetime.now(datetime.timezone.utc).isoformat(),"markets_requested":["h2h","totals"],"region":"us","sports":records,"errors":errors,"quota_remaining_at_end":remaining,"refresh_mode":"manual snapshot"}
+          pathlib.Path("data").mkdir(exist_ok=True)
+          pathlib.Path("data/sports-odds-latest.json").write_text(json.dumps(out,separators=(",",":")))
+          print("Saved",len(records),"sports. No API key printed.")
+          PY
+      - name: Commit verified snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/sports-odds-latest.json
+          git diff --cached --quiet && exit 0
+          git commit -m "data: publish verified multi-sport odds snapshot"
+          git push
