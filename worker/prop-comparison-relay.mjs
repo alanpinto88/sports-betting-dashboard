@@ -66,6 +66,32 @@ export default {
           paidRequestsEnabled:false},200,headers);
       }
     }
+    if(path==='/demo-projections'){
+      // Keyless fictional examples only. Never call authenticated endpoints here.
+      const league=new URL(request.url).searchParams.get('league')||'NBA';
+      if(!['NBA','NFL','NHL'].includes(league))return json({error:'Unsupported league'},400,headers);
+      try{
+        const url=new URL('https://prizepicksapi.com/api/v1/demo/projections');
+        url.searchParams.set('league',league);url.searchParams.set('limit','20');
+        const upstream=await fetch(url.toString(),{
+          headers:{'Accept':'application/json'},redirect:'manual',
+          signal:AbortSignal.timeout(10000)
+        });
+        if(!upstream.ok)return json({ok:false,status:'demo_provider_http_error',providerHttpStatus:upstream.status,is_demo:true},502,headers);
+        const payload=await upstream.json();
+        const rows=(Array.isArray(payload?.data)?payload.data:[]).slice(0,20).map(p=>({
+          player:String(p?.player?.name||''),team:String(p?.player?.team||''),
+          opponent:String(p?.event?.opponent||''),league:String(p?.league||league),
+          stat:String(p?.market?.stat||''),period:String(p?.market?.period||''),
+          line:Number.isFinite(Number(p?.line))?Number(p.line):null,
+          starts_at:p?.event?.starts_at||null,
+          is_demo:true
+        })).filter(p=>p.player&&p.stat&&p.line!==null);
+        return json({ok:true,status:'fictional_demo',is_demo:true,league,rows,paidRequestsEnabled:false},200,headers);
+      }catch(error){
+        return json({ok:false,status:'demo_unavailable',reason:error?.name==='TimeoutError'?'timeout':'network_or_response_error',is_demo:true},502,headers);
+      }
+    }
     if(path==='/provider-check'){
       if(!env.PRIZEPICKS_API_KEY)return json({ok:false,status:'secret_missing',paidRequestsEnabled:false},503,headers);
       // Only provider /coverage is permitted. No client-supplied upstream URL or parameters.
