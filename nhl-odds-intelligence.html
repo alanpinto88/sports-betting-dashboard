@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>NHL Odds Intelligence | EV Sports</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--page:#061a40;--panel:#0b2559;--panel2:#0e2c63;--border:#bda724;--text:#ffe45a;--strong:#fff200;--muted:#ead77e;--accent:#ffea00;color-scheme:dark}
+*{box-sizing:border-box}
+html{background:var(--page)!important;color:var(--text)!important;min-height:100%;-webkit-text-size-adjust:100%}
+body{background:var(--page)!important;color:var(--text)!important;min-height:100vh;max-width:1150px;margin:0 auto;padding:20px 16px 56px}
+h1,h2,h3{color:var(--strong)}h1{font-size:clamp(1.7rem,5vw,2.6rem);line-height:1.15;margin:4px 0}h2{font-size:1.17rem;margin:0 0 10px}
+p{line-height:1.48}.eyebrow{font-size:.75rem;letter-spacing:.11em;text-transform:uppercase;color:var(--strong);font-weight:800}
+.sub,.muted,small{color:var(--muted)}.sub{max-width:760px;margin:9px 0 15px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.panel,.metric{background:var(--panel);border:1px solid #6e6a3d;border-radius:14px;padding:16px;color:var(--text)}
+.metric strong{display:block;font-size:1.75rem;margin-top:5px;color:var(--strong)}
+.metric span{font-size:.83rem;color:var(--muted)}.meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:9px 0 12px}
+.chip{font-size:.73rem;border:1px solid var(--border);color:var(--strong);border-radius:25px;padding:5px 9px}
+.danger{color:var(--muted);background:#102a56;border-left:3px solid var(--strong);padding:9px 12px;border-radius:7px;margin:12px 0;font-size:.78rem;line-height:1.45}
+.tabs{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;margin:12px 0 12px;padding-bottom:4px}
+.tabs button,.control,button{border-radius:10px;padding:10px 12px;color:var(--strong);border:1px solid var(--border);background:var(--panel2);font:inherit}
+.tabs button{cursor:pointer;flex:0 0 auto;font-size:.9rem;white-space:nowrap}
+.tabs button[aria-selected=true]{background:var(--strong);border-color:var(--strong);color:var(--page);font-weight:800}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--strong);outline-offset:2px}
+input,select{color:var(--strong);background:#071d45;border:1px solid var(--border);border-radius:10px;padding:10px;font:inherit;max-width:100%}
+input::placeholder{color:#e2ce7a;opacity:1}.tools{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:12px}.tools input{flex:1;min-width:175px}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:collapse;font-size:.87rem;white-space:nowrap}
+th,td{text-align:left;border-bottom:1px solid #5d5b3b;padding:11px 9px;color:var(--text)}th{font-size:.76rem;color:var(--muted);font-weight:700}
+tr:last-child td{border-bottom:none}.prob{font-weight:800;color:var(--strong)}
+.pos,.neg{color:var(--strong)}.foot{font-size:.81rem;color:var(--muted);margin-top:12px}
+pre{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:.8rem}
+.hidden{display:none!important}.empty{padding:16px;color:var(--muted)}.stack{display:grid;gap:12px}.row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+a{color:var(--strong)}input[type=file]{max-width:100%;width:100%;margin:10px 0}
+.mobile-game-list{display:none}
+.game-card{border:1px solid #bda724;border-radius:14px;background:#081e48;padding:13px;display:grid;gap:10px}
+.game-card-top{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.game-date{color:var(--muted);font-size:.8rem}
+.game-match{font-size:1.15rem;font-weight:800;color:var(--strong)}
+.game-probs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.game-prob{border:1px solid #665f31;border-radius:10px;padding:10px;background:var(--panel)}
+.game-prob span{display:block;color:var(--muted);font-size:.77rem}
+.game-prob strong{display:block;color:var(--strong);font-size:1.35rem;margin-top:3px}
+.scorer-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.scorer-tag{font-size:.75rem;border:1px solid #6e6a3d;border-radius:8px;padding:5px 7px;color:var(--muted)}
+.game-meta{display:flex;justify-content:space-between;gap:8px;font-size:.8rem;color:var(--muted);flex-wrap:wrap}
+.track-actions{display:flex;flex-wrap:wrap;gap:7px}
+.track-actions button{font-size:.78rem;padding:8px 10px;border-color:var(--strong);cursor:pointer}
+.tracker-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+.tracker-form>label{display:grid;gap:5px;color:var(--muted);font-size:.85rem}
+.tracker-form input,.tracker-form select{width:100%}
+.tracker-form .wide{grid-column:1/-1}
+.track-entry{border:1px solid #6e6a3d;background:#081e48;padding:12px;border-radius:12px;display:grid;gap:6px}
+.track-entry button{font-size:.78rem}
+.odds-input-row{display:flex;align-items:stretch;gap:7px}
+.odds-input-row input{flex:1;min-width:0;width:100%}
+.odds-sign{min-width:46px;font-size:1.35rem;font-weight:800;cursor:pointer}
+.odds-sign[aria-pressed=true]{background:var(--strong);color:var(--page);border-color:var(--strong)}
+.odds-help{font-size:.75rem;color:var(--muted);line-height:1.4}
+.calendar-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0}
+.calendar-head h3{margin:0;text-align:center;font-size:1rem}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.calendar-weekday{text-align:center;font-size:.69rem;color:var(--muted);padding:6px 0}
+.calendar-day{min-height:67px;border:1px solid #5d5b3b;border-radius:8px;background:#081e48;color:var(--text);padding:5px 2px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;cursor:pointer;font-size:.76rem;min-width:0}
+.calendar-day:disabled{opacity:.32;cursor:default}
+.calendar-day[aria-pressed=true]{outline:2px solid var(--strong);outline-offset:1px}
+.calendar-day.cal-win{border-color:#5da979;background:#10372e}
+.calendar-day.cal-loss{border-color:#a85d5d;background:#40242e}
+.calendar-day.cal-pending{border-color:#8b813a}
+.calendar-day .day-number{align-self:flex-start;margin-left:4px;font-weight:700}
+.calendar-day .day-money{font-size:.69rem;font-weight:800;overflow-wrap:anywhere;text-align:center}
+.calendar-day .day-count{font-size:.63rem;color:var(--muted)}
+.calendar-month-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 13px}
+.calendar-month-metrics>div{background:#081e48;border:1px solid #665f31;border-radius:9px;padding:9px 4px;text-align:center;font-size:.73rem}
+.calendar-month-metrics strong{display:block;font-size:1rem;margin-top:4px}
+@media(max-width:480px){.calendar-day{min-height:62px}.calendar-day .day-money{font-size:.62rem}}
+@media(max-width:510px){.tracker-form{grid-template-columns:1fr}}
+@media(max-width:720px){.forecast-table{display:none}.mobile-game-list{display:grid;gap:10px}
+.metrics{grid-template-columns:repeat(2,1fr)}.metric{padding:12px}.metric strong{font-size:1.5rem}.panel{padding:13px}body{padding:14px 12px 40px}.sub{font-size:.91rem}.meta{margin:8px 0 10px}.tabs button{font-size:.85rem;padding:9px 11px}}
+</style></head>
+<body>
+<div class="eyebrow">Test 23 • NHL first-period totals</div>
+<h1>Prediction Intelligence</h1>
+<p class="sub">Frozen pregame probabilities, historical accuracy and optional sportsbook comparisons. Works offline after download; no API key, account or live feed required.</p>
+<div class="meta"><span class="chip">Frozen historical snapshot</span><span class="chip">0 PuckAPI calls</span><span class="chip">No automated bets</span></div>
+<div class="metrics">
+  <div class="metric"><span>Frozen season forecasts</span><strong id="count">—</strong></div>
+  <div class="metric"><span>Graded outcomes</span><strong id="graded">—</strong></div>
+  <div class="metric"><span>Experimental Brier</span><strong id="brier">—</strong></div>
+  <div class="metric"><span>Verified live odds</span><strong>None</strong></div>
+</div>
+<div class="danger">Research only • No verified live odds or proven betting edge. Saved prices, if supplied, may be stale. No automated wagers.</div>
+<div class="tabs" role="tablist" aria-label="Dashboard views">
+<button data-tab="forecasts" role="tab" aria-selected="true">Predictions</button>
+<button data-tab="performance" role="tab" aria-selected="false">Performance</button>
+<button data-tab="scorers" role="tab" aria-selected="false">Goal scorers</button>
+<button data-tab="ml" role="tab" aria-selected="false">Moneyline (ML)</button>
+<button data-tab="puckline" role="tab" aria-selected="false">Puck line ±1.5</button>
+<button data-tab="odds" role="tab" aria-selected="false">Book comparison</button>
+<button data-tab="tracker" role="tab" aria-selected="false">My Bet Tracker</button>
+<button data-tab="movement" role="tab" aria-selected="false">Odds Movement</button>
+<button data-tab="about" role="tab" aria-selected="false">Sources & checks</button>
+</div>
+<section id="forecasts" class="panel" role="tabpanel">
+<h2>Frozen forecasts</h2>
+<p class="muted">Season report last generated <span id="capture"></span>. Each game shows its own original frozen prediction time; later settlement results cannot rewrite that forecast.</p>
+<div class="tools"><input id="search" type="search" placeholder="Search team or game ID" aria-label="Search games">
+<select id="filter" aria-label="Filter forecasts"><option value="all">All games</option><option value="over">Over ≥ 50%</option><option value="under">Over &lt; 50%</option><option value="graded">Graded only</option><option value="pending">Ungraded only</option></select></div>
+<div id="mobile-game-list" class="mobile-game-list" aria-label="Mobile game forecasts"></div>
+<div class="scroll forecast-table"><table><thead><tr><th>Scheduled (local)</th><th>Away @ Home</th><th>Over 1.5</th><th>Under 1.5</th><th>Baseline Over</th><th>Outcome</th></tr></thead><tbody id="games"></tbody></table></div>
+<p class="foot">Over/Under probabilities are complements. A higher probability is not the same as a profitable price.</p>
+</section>
+<section id="performance" class="panel hidden" role="tabpanel">
+<h2>Probability quality</h2><div id="performance-output" class="stack"></div>
+</section>
+<section id="ml" class="panel hidden" role="tabpanel">
+<h2>NHL Moneyline (full-game winner)</h2>
+<p class="muted">Experimental pregame win-form estimates based on recent official NHL final results, including overtime and shootouts. No verified sportsbook odds, confirmed goalies or calibrated ML betting edge.</p>
+<div class="foot" id="ml-overview"></div><div id="ml-games" class="stack"></div>
+<p class="foot">Only forecasts frozen before the game are graded. Earlier games with no ML model snapshot display as unavailable; no probabilities are backfilled after the fact.</p>
+</section>
+<section id="puckline" class="panel hidden" role="tabpanel">
+<h2>NHL puck line ±1.5 (full game)</h2>
+<p class="muted">Experimental frozen probabilities of winning by 2+ goals or staying within 1 goal. NHL final margin includes overtime and shootouts; no verified sportsbook odds or profitable model evidence.</p>
+<div class="foot" id="puck-overview"></div><div id="puck-games" class="stack"></div>
+<p class="foot">Both teams' -1.5 chances are estimated separately. Each team's +1.5 probability is the complement of the opposing team's -1.5 probability. No spreads are backfilled for older first-period-only snapshots.</p>
+</section>
+<section id="scorers" class="panel hidden" role="tabpanel">
+<h2>Anytime goalscorer watchlist & official goals</h2>
+<p class="muted">Candidates use recent historical goals only; neither lineups nor betting odds are verified. Official goals display only after completed games are graded. Watchlist success is a descriptive count, not profit.</p>
+<div id="scorer-overview"></div>
+<div id="scorer-games" class="stack"></div>
+</section>
+<section id="odds" class="panel hidden" role="tabpanel">
+<h2>Compare sportsbook odds from authorized sources</h2>
+<p class="muted">Upload a JSON file locally. Nothing is transmitted. Events must include <code>nhl_game_id</code> matching a frozen game; both books must quote the identical first-period Over/Under <strong>1.5</strong> market in decimal odds. This is not a live odds connection.</p>
+<label for="quotes">Authorized odds JSON file</label><input type="file" id="quotes" accept=".json,application/json">
+<div id="odds-status" class="foot">No authorized odds file loaded. No sportsbook prices displayed.</div>
+<div class="scroll"><table><thead><tr><th>Matchup</th><th>DK Over</th><th>DK Under</th><th>Pinnacle Over</th><th>Pinnacle Under</th><th>Pinnacle no-vig Over</th><th>Model minus benchmark</th></tr></thead><tbody id="odds-rows"></tbody></table></div>
+<p class="foot">Matched quotes are user-supplied and freshness/executability is not verified. Differences are analytical diagnostics, not proof of sharp money, mispricing, or positive expected value.</p>
+</section>
+<section id="tracker" class="panel hidden" role="tabpanel">
+<h2>My Bet Tracker — Manual entries</h2>
+<p class="muted">Tap Track Bet on a prediction, enter the actual stake and American odds, and mark whether you really placed it. Tracking does not place a wager. Official NHL results may settle the selected market automatically after the site's next results update.</p>
+<div class="danger">Private to this browser only: bets are saved in Safari storage, NOT your GitHub account or the website server. They do not sync across devices. Clearing website data, private browsing or switching phones can erase them. Export a backup regularly. Do not store passwords or account numbers.</div>
+<form id="bet-form" class="hidden" autocomplete="off">
+<h2>Record selected prediction</h2>
+<div class="tracker-form">
+<label class="wide">Matchup <input id="bet-matchup" readonly></label>
+<label class="wide">Market / selection <input id="bet-selection" readonly></label>
+<label>Amount staked ($) <input id="bet-stake" type="number" inputmode="decimal" min="0.01" max="1000000" step="0.01" placeholder="25.00" required></label>
+<label>Odds (American)
+<span class="odds-input-row"><button class="odds-sign" id="odds-minus" type="button" aria-label="Set negative American odds" aria-pressed="false">−</button><button class="odds-sign" id="odds-plus" type="button" aria-label="Set positive American odds" aria-pressed="false">+</button><input id="bet-odds" type="text" inputmode="numeric" pattern="[+-][0-9]{3,6}" maxlength="7" placeholder="Tap + or −, then digits" required aria-describedby="odds-instructions"></span>
+<span id="odds-instructions" class="odds-help">Tap − for favorites (e.g. −110), + for underdogs (e.g. +150). Then enter the number.</span>
+</label>
+<label class="wide">Sportsbook (optional) <input id="bet-book" maxlength="80" placeholder="e.g. DraftKings"></label>
+<label class="wide"><span><input id="bet-placed" type="checkbox"> I confirm I actually placed this wager (otherwise track as a paper pick)</span></label>
+</div>
+<div class="track-actions"><button type="submit">Save tracked pick</button><button type="button" id="bet-cancel">Cancel</button></div>
+<p id="bet-form-status" class="foot" role="status"></p>
+</form>
+<div class="metrics">
+<div class="metric"><span>Placed wagers</span><strong id="bets-count">0</strong></div>
+<div class="metric"><span>Graded placed wagers</span><strong id="bets-graded">0</strong></div>
+<div class="metric"><span>Settled P/L</span><strong id="bets-pl">$0.00</strong></div>
+<div class="metric"><span>Open wagers</span><strong id="bets-open">0</strong></div>
+</div>
+<div class="tools"><button type="button" id="scores-check">Check NHL scores now</button></div>
+<p id="scores-check-status" role="status" class="foot">Score checks run when you open or return to the tracker. ESPN results are provisional; official NHL grades take priority. This is not sportsbook settlement.</p>
+<div class="tools"><button type="button" id="bets-export">Export JSON backup</button><label for="bets-import">Import backup (merges records)</label><input type="file" id="bets-import" accept=".json,application/json"></div>
+<p id="bets-status" role="status" class="foot">No tracked bets yet.</p>
+<div class="panel" style="margin:14px 0">
+<h2>Betting Calendar</h2>
+<p class="foot">Placed bets are grouped by scheduled game day in your device's time zone. Green means positive settled net P/L; red negative; gold means open wagers. Paper picks and voids are excluded.</p>
+<div class="calendar-head"><button id="cal-prev" type="button" aria-label="Previous month">◀</button><h3 id="cal-month"></h3><button id="cal-next" type="button" aria-label="Next month">▶</button></div>
+<div class="calendar-month-metrics"><div>Month P/L<strong id="cal-pl">$0.00</strong></div><div>Settled<strong id="cal-settled">0</strong></div><div>Open<strong id="cal-open">0</strong></div></div>
+<div class="calendar-grid" id="cal-grid" aria-label="Betting calendar"></div>
+<div id="cal-detail" class="stack" style="margin-top:12px" aria-live="polite"></div>
+</div>
+<h2>All tracked bets</h2>
+<div id="bets-list" class="stack"></div>
+<p class="foot">Settled P/L excludes paper picks and voids, and assumes straight bets without fees, bonuses, cash-out, partial settlement or bookmaker corrections. Confirm official book settlement yourself. Model pick accuracy is not betting profitability.</p>
+</section>
+<section id="movement" class="panel hidden" role="tabpanel">
+<h2>Odds movement: T−24h through T−1h</h2>
+<p class="muted">Compare timestamped sportsbook quotes from 24 hours to 1 hour before the scheduled game start. Use authorized historical odds exports only. No continuous sportsbook feed is connected, so this tab cannot fill missing hours automatically.</p>
+<label for="odds-history">Import time-stamped odds history JSON</label>
+<input type="file" id="odds-history" accept=".json,application/json">
+<p id="movement-status" class="foot">No odds history imported on this device.</p>
+<div id="movement-list" class="stack"></div>
+<p class="foot">Quotes must match NHL game ID, book, side and the exact market. Hourly snapshots are observations, not guaranteed execution prices. A first available quote is NOT necessarily the opening line. Imported records are kept only in this page's memory and are lost on refresh; export the original file for backup. No historical odds are fabricated.</p>
+</section>
+<section id="about" class="panel hidden" role="tabpanel">
+<h2>Data provenance & limitations</h2><div id="about-text" class="stack"></div>
+</section>
+<script id="payload" type="application/json">{"title":"NHL First-Period Intelligence | Test 23","snapshot_at":"2026-11-20T04:18:09.427522Z","settlement_at":"2026-11-20T04:18:09.427522Z","snapshot_sha256":"Verified snapshots archived separately in season ledger","model_version":"test14_experimental_frozen_v1","games":[{"game_id":"2026020331","home":"NYR","away":"MTL","start_utc":"2026-11-17T00:30:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.559375,"p_raw":0.516538,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8481789,"team":"NYR","name":"T. Kartye","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8481604,"team":"NYR","name":"P. Dorofeyev","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8477416,"team":"NYR","name":"O. Bjorkstrand","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8481540,"team":"MTL","name":"C. Caufield","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8476981,"team":"MTL","name":"J. Anderson","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8480018,"team":"MTL","name":"N. Suzuki","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":0,"first_period_pick_correct":false,"actual_ml_winner":"NYR","actual_home_goal_margin":2,"first_period_verified_utc":"2026-11-17T02:48:39.946406Z","ml_pick_correct":null,"official_scorers":[{"player_id":8476479,"team":"MTL","name":"P. Danault","goals":1},{"player_id":8482157,"team":"NYR","name":"W. Cuylle","goals":2},{"player_id":8482666,"team":"NYR","name":"S. Morrow","goals":1}],"goalscorer_results":[{"player_id":8481789,"team":"NYR","name":"T. Kartye","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8481604,"team":"NYR","name":"P. Dorofeyev","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477416,"team":"NYR","name":"O. Bjorkstrand","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8481540,"team":"MTL","name":"C. Caufield","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8476981,"team":"MTL","name":"J. Anderson","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8480018,"team":"MTL","name":"N. Suzuki","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020332","home":"UTA","away":"VAN","start_utc":"2026-11-17T02:30:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.612914,"p_raw":0.56963,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8483431,"team":"UTA","name":"L. Cooley","historical_goal_games":5,"historical_goals":10,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8484386,"team":"UTA","name":"D. Simashev","historical_goal_games":3,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8479410,"team":"UTA","name":"M. Sergachev","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8478444,"team":"VAN","name":"B. Boeser","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8483499,"team":"VAN","name":"L. Ohgren","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8484136,"team":"VAN","name":"M. Sasson","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":0,"first_period_pick_correct":false,"actual_ml_winner":"VAN","actual_home_goal_margin":-1,"first_period_verified_utc":"2026-11-17T03:49:08.097040Z","ml_pick_correct":null,"official_scorers":[{"player_id":8476389,"team":"UTA","name":"V. Trocheck","goals":1},{"player_id":8480849,"team":"UTA","name":"B. Hayton","goals":1},{"player_id":8478444,"team":"VAN","name":"B. Boeser","goals":1},{"player_id":8478498,"team":"VAN","name":"J. DeBrusk","goals":1},{"player_id":8480078,"team":"VAN","name":"F. Chytil","goals":1}],"goalscorer_results":[{"player_id":8483431,"team":"UTA","name":"L. Cooley","historical_goal_games":5,"historical_goals":10,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484386,"team":"UTA","name":"D. Simashev","historical_goal_games":3,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8479410,"team":"UTA","name":"M. Sergachev","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8478444,"team":"VAN","name":"B. Boeser","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8483499,"team":"VAN","name":"L. Ohgren","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484136,"team":"VAN","name":"M. Sasson","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020333","home":"BOS","away":"LAK","start_utc":"2026-11-18T00:00:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.552686,"p_raw":0.552686,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8477956,"team":"BOS","name":"D. Pastrnak","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8479999,"team":"BOS","name":"C. Mittelstadt","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8477496,"team":"BOS","name":"E. Lindholm","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478550,"team":"LAK","name":"A. Panarin","historical_goal_games":4,"historical_goals":5,"historical_team_games":12,"not_verified_in_lineup":true},{"player_id":8482124,"team":"LAK","name":"Q. Byfield","historical_goal_games":3,"historical_goals":4,"historical_team_games":12,"not_verified_in_lineup":true},{"player_id":8476469,"team":"LAK","name":"J. Armia","historical_goal_games":3,"historical_goals":3,"historical_team_games":12,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":1,"first_period_pick_correct":false,"actual_ml_winner":"LAK","actual_home_goal_margin":-3,"first_period_verified_utc":"2026-11-18T00:59:51.085489Z","ml_pick_correct":null,"official_scorers":[{"player_id":8475692,"team":"LAK","name":"M. Zuccarello","goals":1},{"player_id":8476979,"team":"LAK","name":"E. Gustafsson","goals":1},{"player_id":8481732,"team":"LAK","name":"A. Lee","goals":1}],"goalscorer_results":[{"player_id":8477956,"team":"BOS","name":"D. Pastrnak","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8479999,"team":"BOS","name":"C. Mittelstadt","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477496,"team":"BOS","name":"E. Lindholm","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8478550,"team":"LAK","name":"A. Panarin","historical_goal_games":4,"historical_goals":5,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8482124,"team":"LAK","name":"Q. Byfield","historical_goal_games":3,"historical_goals":4,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8476469,"team":"LAK","name":"J. Armia","historical_goal_games":3,"historical_goals":3,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020335","home":"FLA","away":"EDM","start_utc":"2026-11-18T00:00:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.483107,"p_raw":0.483107,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8477933,"team":"FLA","name":"S. Reinhart","historical_goal_games":8,"historical_goals":8,"historical_team_games":13,"not_verified_in_lineup":true},{"player_id":8477409,"team":"FLA","name":"C. Verhaeghe","historical_goal_games":4,"historical_goals":7,"historical_team_games":13,"not_verified_in_lineup":true},{"player_id":8477935,"team":"FLA","name":"S. Bennett","historical_goal_games":4,"historical_goals":7,"historical_team_games":13,"not_verified_in_lineup":true},{"player_id":8477934,"team":"EDM","name":"L. Draisaitl","historical_goal_games":7,"historical_goals":12,"historical_team_games":13,"not_verified_in_lineup":true},{"player_id":8478402,"team":"EDM","name":"C. McDavid","historical_goal_games":5,"historical_goals":6,"historical_team_games":13,"not_verified_in_lineup":true},{"player_id":8480803,"team":"EDM","name":"E. Bouchard","historical_goal_games":5,"historical_goals":5,"historical_team_games":13,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":2,"first_period_pick_correct":false,"actual_ml_winner":"EDM","actual_home_goal_margin":-3,"first_period_verified_utc":"2026-11-18T00:59:51.085489Z","ml_pick_correct":null,"official_scorers":[{"player_id":8481617,"team":"EDM","name":"V. Podkolzin","goals":2},{"player_id":8477934,"team":"EDM","name":"L. Draisaitl","goals":1},{"player_id":8477953,"team":"EDM","name":"K. Kapanen","goals":1},{"player_id":8478402,"team":"EDM","name":"C. McDavid","goals":1},{"player_id":8479314,"team":"FLA","name":"M. Tkachuk","goals":2}],"goalscorer_results":[{"player_id":8477933,"team":"FLA","name":"S. Reinhart","historical_goal_games":8,"historical_goals":8,"historical_team_games":13,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477409,"team":"FLA","name":"C. Verhaeghe","historical_goal_games":4,"historical_goals":7,"historical_team_games":13,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477935,"team":"FLA","name":"S. Bennett","historical_goal_games":4,"historical_goals":7,"historical_team_games":13,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477934,"team":"EDM","name":"L. Draisaitl","historical_goal_games":7,"historical_goals":12,"historical_team_games":13,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8478402,"team":"EDM","name":"C. McDavid","historical_goal_games":5,"historical_goals":6,"historical_team_games":13,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8480803,"team":"EDM","name":"E. Bouchard","historical_goal_games":5,"historical_goals":5,"historical_team_games":13,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020336","home":"NYI","away":"CBJ","start_utc":"2026-11-18T00:00:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.53351,"p_raw":0.53351,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8485366,"team":"NYI","name":"M. Schaefer","historical_goal_games":5,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8485388,"team":"NYI","name":"V. Eklund","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8475170,"team":"NYI","name":"B. Schenn","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8482660,"team":"CBJ","name":"K. Johnson","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8483485,"team":"CBJ","name":"D. Mateychuk","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8484166,"team":"CBJ","name":"A. Fantilli","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":1,"first_period_pick_correct":false,"actual_ml_winner":"NYI","actual_home_goal_margin":4,"first_period_verified_utc":"2026-11-18T00:59:51.085489Z","ml_pick_correct":null,"official_scorers":[{"player_id":8478460,"team":"CBJ","name":"Z. Werenski","goals":1},{"player_id":8485366,"team":"NYI","name":"M. Schaefer","goals":3},{"player_id":8477407,"team":"NYI","name":"A. Duclair","goals":1},{"player_id":8477950,"team":"NYI","name":"T. DeAngelo","goals":1}],"goalscorer_results":[{"player_id":8485366,"team":"NYI","name":"M. Schaefer","historical_goal_games":5,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":3,"scored":true},{"player_id":8485388,"team":"NYI","name":"V. Eklund","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8475170,"team":"NYI","name":"B. Schenn","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8482660,"team":"CBJ","name":"K. Johnson","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8483485,"team":"CBJ","name":"D. Mateychuk","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484166,"team":"CBJ","name":"A. Fantilli","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020337","home":"PHI","away":"BUF","start_utc":"2026-11-18T00:00:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.486153,"p_raw":0.528381,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8484142,"team":"PHI","name":"D. Barkey","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8480220,"team":"PHI","name":"N. Cates","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8484387,"team":"PHI","name":"M. Michkov","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8479420,"team":"BUF","name":"T. Thompson","historical_goal_games":4,"historical_goals":7,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8482097,"team":"BUF","name":"J. Quinn","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8482659,"team":"BUF","name":"J. Doan","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":1,"first_period_pick_correct":true,"actual_ml_winner":"PHI","actual_home_goal_margin":1,"first_period_verified_utc":"2026-11-18T00:59:51.085489Z","ml_pick_correct":null,"official_scorers":[{"player_id":8479420,"team":"BUF","name":"T. Thompson","goals":1},{"player_id":8480807,"team":"BUF","name":"M. Samuelsson","goals":1},{"player_id":8483468,"team":"BUF","name":"J.Kulich","goals":1},{"player_id":8477948,"team":"PHI","name":"T. Sanheim","goals":1},{"player_id":8477989,"team":"PHI","name":"C. Dvorak","goals":1},{"player_id":8480015,"team":"PHI","name":"O. Tippett","goals":1},{"player_id":8482142,"team":"PHI","name":"J. Drysdale","goals":1}],"goalscorer_results":[{"player_id":8484142,"team":"PHI","name":"D. Barkey","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8480220,"team":"PHI","name":"N. Cates","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484387,"team":"PHI","name":"M. Michkov","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8479420,"team":"BUF","name":"T. Thompson","historical_goal_games":4,"historical_goals":7,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8482097,"team":"BUF","name":"J. Quinn","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8482659,"team":"BUF","name":"J. Doan","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020341","home":"WPG","away":"OTT","start_utc":"2026-11-18T00:00:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.535289,"p_raw":0.492905,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8478398,"team":"WPG","name":"K. Connor","historical_goal_games":6,"historical_goals":8,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8476460,"team":"WPG","name":"M. Scheifele","historical_goal_games":4,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8482110,"team":"WPG","name":"D. Mercer","historical_goal_games":3,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8481596,"team":"OTT","name":"S. Pinto","historical_goal_games":6,"historical_goals":7,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478020,"team":"OTT","name":"M. Amadio","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8480208,"team":"OTT","name":"D. Batherson","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":0,"first_period_pick_correct":false,"actual_ml_winner":"OTT","actual_home_goal_margin":-1,"first_period_verified_utc":"2026-11-18T00:59:51.085489Z","ml_pick_correct":null,"official_scorers":[{"player_id":8480208,"team":"OTT","name":"D. Batherson","goals":1},{"player_id":8482674,"team":"OTT","name":"T. Boucher","goals":1},{"player_id":8486025,"team":"WPG","name":"V. Björck","goals":1}],"goalscorer_results":[{"player_id":8478398,"team":"WPG","name":"K. Connor","historical_goal_games":6,"historical_goals":8,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8476460,"team":"WPG","name":"M. Scheifele","historical_goal_games":4,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8482110,"team":"WPG","name":"D. Mercer","historical_goal_games":3,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8481596,"team":"OTT","name":"S. Pinto","historical_goal_games":6,"historical_goals":7,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8478020,"team":"OTT","name":"M. Amadio","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8480208,"team":"OTT","name":"D. Batherson","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true}]},{"game_id":"2026020334","home":"TBL","away":"WSH","start_utc":"2026-11-18T00:30:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.544271,"p_raw":0.544271,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8479542,"team":"TBL","name":"B. Hagel","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8477404,"team":"TBL","name":"J. Guentzel","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478010,"team":"TBL","name":"B. Point","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8477949,"team":"WSH","name":"A. Tuch","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8479400,"team":"WSH","name":"P. Dubois","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8484186,"team":"WSH","name":"R. Leonard","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":4,"first_period_pick_correct":true,"actual_ml_winner":"TBL","actual_home_goal_margin":3,"first_period_verified_utc":"2026-11-18T02:17:18.470456Z","ml_pick_correct":null,"official_scorers":[{"player_id":8477404,"team":"TBL","name":"J. Guentzel","goals":2},{"player_id":8478519,"team":"TBL","name":"A. Cirelli","goals":1},{"player_id":8480426,"team":"TBL","name":"C. D'Astous","goals":1},{"player_id":8484770,"team":"TBL","name":"S. O'Reilly","goals":1},{"player_id":8477949,"team":"WSH","name":"A. Tuch","goals":1},{"player_id":8484186,"team":"WSH","name":"R. Leonard","goals":1}],"goalscorer_results":[{"player_id":8479542,"team":"TBL","name":"B. Hagel","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477404,"team":"TBL","name":"J. Guentzel","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":2,"scored":true},{"player_id":8478010,"team":"TBL","name":"B. Point","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477949,"team":"WSH","name":"A. Tuch","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8479400,"team":"WSH","name":"P. Dubois","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484186,"team":"WSH","name":"R. Leonard","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true}]},{"game_id":"2026020338","home":"CHI","away":"TOR","start_utc":"2026-11-18T00:30:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.588414,"p_raw":0.545236,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8484390,"team":"CHI","name":"R. Kantserov","historical_goal_games":6,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8484144,"team":"CHI","name":"C. Bedard","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8483493,"team":"CHI","name":"F. Nazar","historical_goal_games":3,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8477939,"team":"TOR","name":"W. Nylander","historical_goal_games":4,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8478458,"team":"TOR","name":"J. Roslovic","historical_goal_games":4,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8479318,"team":"TOR","name":"A. Matthews","historical_goal_games":4,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":1,"first_period_pick_correct":false,"actual_ml_winner":"CHI","actual_home_goal_margin":3,"first_period_verified_utc":"2026-11-18T02:17:18.470456Z","ml_pick_correct":null,"official_scorers":[{"player_id":8477479,"team":"CHI","name":"T. Bertuzzi","goals":2},{"player_id":8483493,"team":"CHI","name":"F. Nazar","goals":2},{"player_id":8484144,"team":"CHI","name":"C. Bedard","goals":1},{"player_id":8484197,"team":"CHI","name":"O. Moore","goals":1},{"player_id":8475166,"team":"TOR","name":"J. Tavares","goals":1},{"player_id":8476927,"team":"TOR","name":"T. Blueger","goals":1},{"player_id":8484158,"team":"TOR","name":"E. Cowan","goals":1}],"goalscorer_results":[{"player_id":8484390,"team":"CHI","name":"R. Kantserov","historical_goal_games":6,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484144,"team":"CHI","name":"C. Bedard","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8483493,"team":"CHI","name":"F. Nazar","historical_goal_games":3,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":2,"scored":true},{"player_id":8477939,"team":"TOR","name":"W. Nylander","historical_goal_games":4,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8478458,"team":"TOR","name":"J. Roslovic","historical_goal_games":4,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8479318,"team":"TOR","name":"A. Matthews","historical_goal_games":4,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020339","home":"STL","away":"ANA","start_utc":"2026-11-18T01:00:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.545381,"p_raw":0.502789,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8483516,"team":"STL","name":"J. Snuggerud","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8480023,"team":"STL","name":"R. Thomas","historical_goal_games":2,"historical_goals":2,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8480459,"team":"STL","name":"P. Suter","historical_goal_games":2,"historical_goals":2,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8483445,"team":"ANA","name":"C. Gauthier","historical_goal_games":9,"historical_goals":16,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8475798,"team":"ANA","name":"M. Granlund","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8484762,"team":"ANA","name":"B. Sennecke","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":3,"first_period_pick_correct":true,"actual_ml_winner":"STL","actual_home_goal_margin":2,"first_period_verified_utc":"2026-11-18T02:17:18.470456Z","ml_pick_correct":null,"official_scorers":[{"player_id":8483445,"team":"ANA","name":"C. Gauthier","goals":3},{"player_id":8473986,"team":"ANA","name":"A. Killorn","goals":1},{"player_id":8475798,"team":"ANA","name":"M. Granlund","goals":1},{"player_id":8482178,"team":"ANA","name":"I. Moore","goals":1},{"player_id":8477402,"team":"STL","name":"P. Buchnevich","goals":1},{"player_id":8480023,"team":"STL","name":"R. Thomas","goals":1},{"player_id":8481013,"team":"STL","name":"J. Berggren","goals":1},{"player_id":8481580,"team":"STL","name":"C. McMichael","goals":1},{"player_id":8481598,"team":"STL","name":"P. Broberg","goals":1},{"player_id":8482089,"team":"STL","name":"J. Neighbours","goals":1},{"player_id":8482733,"team":"STL","name":"L. Mailloux","goals":1},{"player_id":8484164,"team":"STL","name":"D. Dvorsky","goals":1}],"goalscorer_results":[{"player_id":8483516,"team":"STL","name":"J. Snuggerud","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8480023,"team":"STL","name":"R. Thomas","historical_goal_games":2,"historical_goals":2,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8480459,"team":"STL","name":"P. Suter","historical_goal_games":2,"historical_goals":2,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8483445,"team":"ANA","name":"C. Gauthier","historical_goal_games":9,"historical_goals":16,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":3,"scored":true},{"player_id":8475798,"team":"ANA","name":"M. Granlund","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8484762,"team":"ANA","name":"B. Sennecke","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020340","home":"MIN","away":"NSH","start_utc":"2026-11-18T01:00:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.517575,"p_raw":0.475617,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8478864,"team":"MIN","name":"K. Kaprizov","historical_goal_games":6,"historical_goals":6,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8485702,"team":"MIN","name":"M. Shabanov","historical_goal_games":5,"historical_goals":6,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8480800,"team":"MIN","name":"Q. Hughes","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8474564,"team":"NSH","name":"S. Stamkos","historical_goal_games":7,"historical_goals":8,"historical_team_games":13,"not_verified_in_lineup":true},{"player_id":8476887,"team":"NSH","name":"F. Forsberg","historical_goal_games":4,"historical_goals":6,"historical_team_games":13,"not_verified_in_lineup":true},{"player_id":8479525,"team":"NSH","name":"R. Colton","historical_goal_games":4,"historical_goals":4,"historical_team_games":13,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":4,"first_period_pick_correct":true,"actual_ml_winner":"MIN","actual_home_goal_margin":4,"first_period_verified_utc":"2026-11-18T02:17:18.470456Z","ml_pick_correct":null,"official_scorers":[{"player_id":8481557,"team":"MIN","name":"M. Boldy","goals":2},{"player_id":8475220,"team":"MIN","name":"M. Foligno","goals":1},{"player_id":8476399,"team":"MIN","name":"B. Coleman","goals":1},{"player_id":8478493,"team":"MIN","name":"J. Eriksson Ek","goals":1},{"player_id":8482122,"team":"MIN","name":"B. Faber","goals":1},{"player_id":8485702,"team":"MIN","name":"M. Shabanov","goals":1},{"player_id":8476539,"team":"NSH","name":"J. Marchessault","goals":1},{"player_id":8476887,"team":"NSH","name":"F. Forsberg","goals":1},{"player_id":8479980,"team":"NSH","name":"N. Hague","goals":1}],"goalscorer_results":[{"player_id":8478864,"team":"MIN","name":"K. Kaprizov","historical_goal_games":6,"historical_goals":6,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8485702,"team":"MIN","name":"M. Shabanov","historical_goal_games":5,"historical_goals":6,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8480800,"team":"MIN","name":"Q. Hughes","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8474564,"team":"NSH","name":"S. Stamkos","historical_goal_games":7,"historical_goals":8,"historical_team_games":13,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8476887,"team":"NSH","name":"F. Forsberg","historical_goal_games":4,"historical_goals":6,"historical_team_games":13,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8479525,"team":"NSH","name":"R. Colton","historical_goal_games":4,"historical_goals":4,"historical_team_games":13,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020342","home":"VGK","away":"DAL","start_utc":"2026-11-18T03:00:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.485957,"p_raw":0.485957,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8476881,"team":"VGK","name":"T. Hertl","historical_goal_games":3,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8475913,"team":"VGK","name":"M. Stone","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478109,"team":"VGK","name":"V. Olofsson","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8480027,"team":"DAL","name":"J. Robertson","historical_goal_games":4,"historical_goals":7,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478420,"team":"DAL","name":"M. Rantanen","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8482740,"team":"DAL","name":"W. Johnston","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":0,"first_period_pick_correct":true,"actual_ml_winner":"DAL","actual_home_goal_margin":-1,"first_period_verified_utc":"2026-11-18T04:18:19.378305Z","ml_pick_correct":null,"official_scorers":[{"player_id":8478420,"team":"DAL","name":"M. Rantanen","goals":1},{"player_id":8480036,"team":"DAL","name":"M. Heiskanen","goals":1},{"player_id":8480878,"team":"DAL","name":"N. Lundkvist","goals":1},{"player_id":8482740,"team":"DAL","name":"W. Johnston","goals":1},{"player_id":8476448,"team":"VGK","name":"W. Karlsson","goals":2},{"player_id":8479353,"team":"VGK","name":"B. Howden","goals":1}],"goalscorer_results":[{"player_id":8476881,"team":"VGK","name":"T. Hertl","historical_goal_games":3,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8475913,"team":"VGK","name":"M. Stone","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8478109,"team":"VGK","name":"V. Olofsson","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8480027,"team":"DAL","name":"J. Robertson","historical_goal_games":4,"historical_goals":7,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8478420,"team":"DAL","name":"M. Rantanen","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8482740,"team":"DAL","name":"W. Johnston","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true}]},{"game_id":"2026020343","home":"SJS","away":"CGY","start_utc":"2026-11-18T03:00:00Z","captured_utc":"2026-11-16T19:05:30.736326Z","p_experimental":0.473988,"p_raw":0.473988,"p_baseline":0.594737,"p_home_ml":null,"ml_model_version":null,"ml_history_home_games":null,"ml_history_away_games":null,"p_home_minus_1_5":null,"p_away_minus_1_5":null,"puck_line_model_version":null,"goalscorer_watchlist":[{"player_id":8484227,"team":"SJS","name":"W. Smith","historical_goal_games":4,"historical_goals":5,"historical_team_games":12,"not_verified_in_lineup":true},{"player_id":8484801,"team":"SJS","name":"M. Celebrini","historical_goal_games":4,"historical_goals":4,"historical_team_games":12,"not_verified_in_lineup":true},{"player_id":8486103,"team":"SJS","name":"I. Stenberg","historical_goal_games":4,"historical_goals":4,"historical_team_games":12,"not_verified_in_lineup":true},{"player_id":8480797,"team":"CGY","name":"J. Farabee","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8484860,"team":"CGY","name":"M. Gridin","historical_goal_games":3,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8474150,"team":"CGY","name":"M. Backlund","historical_goal_games":2,"historical_goals":2,"historical_team_games":11,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-16T22:28:23.722614Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":3,"first_period_pick_correct":false,"actual_ml_winner":"CGY","actual_home_goal_margin":-3,"first_period_verified_utc":"2026-11-18T04:18:19.378305Z","ml_pick_correct":null,"official_scorers":[{"player_id":8484154,"team":"CGY","name":"J. Castagna","goals":2},{"player_id":8481028,"team":"CGY","name":"M. Pospisil","goals":1},{"player_id":8482679,"team":"CGY","name":"M. Coronato","goals":1},{"player_id":8483495,"team":"CGY","name":"S. Nemec","goals":1},{"player_id":8478874,"team":"SJS","name":"A. Gaudette","goals":1},{"player_id":8478975,"team":"SJS","name":"M. Marchment","goals":1}],"goalscorer_results":[{"player_id":8484227,"team":"SJS","name":"W. Smith","historical_goal_games":4,"historical_goals":5,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484801,"team":"SJS","name":"M. Celebrini","historical_goal_games":4,"historical_goals":4,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8486103,"team":"SJS","name":"I. Stenberg","historical_goal_games":4,"historical_goals":4,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8480797,"team":"CGY","name":"J. Farabee","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484860,"team":"CGY","name":"M. Gridin","historical_goal_games":3,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8474150,"team":"CGY","name":"M. Backlund","historical_goal_games":2,"historical_goals":2,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020344","home":"DET","away":"BOS","start_utc":"2026-11-19T00:30:00Z","captured_utc":"2026-11-17T15:52:02.814506Z","p_experimental":0.494917,"p_raw":0.494917,"p_baseline":0.589474,"p_home_ml":0.502586,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.29,"p_away_minus_1_5":0.29,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8482078,"team":"DET","name":"L. Raymond","historical_goal_games":6,"historical_goals":6,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8478042,"team":"DET","name":"V. Arvidsson","historical_goal_games":3,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8477456,"team":"DET","name":"J. Compher","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8477956,"team":"BOS","name":"D. Pastrnak","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8479999,"team":"BOS","name":"C. Mittelstadt","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8477496,"team":"BOS","name":"E. Lindholm","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-17T15:52:02.814506Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":1,"first_period_pick_correct":true,"actual_ml_winner":"BOS","actual_home_goal_margin":-3,"first_period_verified_utc":"2026-11-19T02:14:39.234618Z","ml_pick_correct":false,"official_scorers":[{"player_id":8477956,"team":"BOS","name":"D. Pastrnak","goals":1},{"player_id":8478401,"team":"BOS","name":"P. Zacha","goals":1},{"player_id":8479999,"team":"BOS","name":"C. Mittelstadt","goals":1},{"player_id":8482175,"team":"BOS","name":"J. Peterka","goals":1},{"player_id":8482078,"team":"DET","name":"L. Raymond","goals":1}],"goalscorer_results":[{"player_id":8482078,"team":"DET","name":"L. Raymond","historical_goal_games":6,"historical_goals":6,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8478042,"team":"DET","name":"V. Arvidsson","historical_goal_games":3,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477456,"team":"DET","name":"J. Compher","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477956,"team":"BOS","name":"D. Pastrnak","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8479999,"team":"BOS","name":"C. Mittelstadt","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8477496,"team":"BOS","name":"E. Lindholm","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020345","home":"NJD","away":"MTL","start_utc":"2026-11-19T00:30:00Z","captured_utc":"2026-11-17T15:52:02.814506Z","p_experimental":0.602718,"p_raw":0.51662,"p_baseline":0.589474,"p_home_ml":0.576969,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.315,"p_away_minus_1_5":0.29,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8481559,"team":"NJD","name":"J. Hughes","historical_goal_games":5,"historical_goals":7,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8477015,"team":"NJD","name":"C. Brown","historical_goal_games":4,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8478542,"team":"NJD","name":"E. Rodrigues","historical_goal_games":3,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8481540,"team":"MTL","name":"C. Caufield","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8476981,"team":"MTL","name":"J. Anderson","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8476479,"team":"MTL","name":"P. Danault","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-17T15:52:02.814506Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":4,"first_period_pick_correct":true,"actual_ml_winner":"MTL","actual_home_goal_margin":-1,"first_period_verified_utc":"2026-11-19T02:14:39.234618Z","ml_pick_correct":false,"official_scorers":[{"player_id":8478133,"team":"MTL","name":"J. Evans","goals":1},{"player_id":8480018,"team":"MTL","name":"N. Suzuki","goals":1},{"player_id":8481618,"team":"MTL","name":"A. Newhook","goals":1},{"player_id":8478414,"team":"NJD","name":"T. Meier","goals":1},{"player_id":8482146,"team":"NJD","name":"L. Evangelista","goals":1}],"goalscorer_results":[{"player_id":8481559,"team":"NJD","name":"J. Hughes","historical_goal_games":5,"historical_goals":7,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477015,"team":"NJD","name":"C. Brown","historical_goal_games":4,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8478542,"team":"NJD","name":"E. Rodrigues","historical_goal_games":3,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8481540,"team":"MTL","name":"C. Caufield","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8476981,"team":"MTL","name":"J. Anderson","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8476479,"team":"MTL","name":"P. Danault","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020346","home":"UTA","away":"COL","start_utc":"2026-11-19T03:00:00Z","captured_utc":"2026-11-17T15:52:02.814506Z","p_experimental":0.456223,"p_raw":0.540095,"p_baseline":0.589474,"p_home_ml":0.465142,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.19,"p_away_minus_1_5":0.39,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8483431,"team":"UTA","name":"L. Cooley","historical_goal_games":5,"historical_goals":10,"historical_team_games":12,"not_verified_in_lineup":true},{"player_id":8484386,"team":"UTA","name":"D. Simashev","historical_goal_games":3,"historical_goals":4,"historical_team_games":12,"not_verified_in_lineup":true},{"player_id":8479410,"team":"UTA","name":"M. Sergachev","historical_goal_games":3,"historical_goals":3,"historical_team_games":12,"not_verified_in_lineup":true},{"player_id":8477476,"team":"COL","name":"A. Lehkonen","historical_goal_games":5,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8475172,"team":"COL","name":"N. Kadri","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8475768,"team":"COL","name":"J. Schwartz","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-17T15:52:02.814506Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":0,"first_period_pick_correct":true,"actual_ml_winner":"UTA","actual_home_goal_margin":3,"first_period_verified_utc":"2026-11-19T04:22:11.987457Z","ml_pick_correct":false,"official_scorers":[{"player_id":8480448,"team":"COL","name":"P. Kelly","goals":1},{"player_id":8476389,"team":"UTA","name":"V. Trocheck","goals":1},{"player_id":8477070,"team":"UTA","name":"L. O'Brien","goals":1},{"player_id":8478831,"team":"UTA","name":"K. Stenlund","goals":1},{"player_id":8484386,"team":"UTA","name":"D. Simashev","goals":1}],"goalscorer_results":[{"player_id":8483431,"team":"UTA","name":"L. Cooley","historical_goal_games":5,"historical_goals":10,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484386,"team":"UTA","name":"D. Simashev","historical_goal_games":3,"historical_goals":4,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8479410,"team":"UTA","name":"M. Sergachev","historical_goal_games":3,"historical_goals":3,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477476,"team":"COL","name":"A. Lehkonen","historical_goal_games":5,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8475172,"team":"COL","name":"N. Kadri","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8475768,"team":"COL","name":"J. Schwartz","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020347","home":"TOR","away":"LAK","start_utc":"2026-11-20T00:00:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.484442,"p_raw":0.484442,"p_baseline":0.578947,"p_home_ml":0.483841,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.24,"p_away_minus_1_5":0.365,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8478458,"team":"TOR","name":"J. Roslovic","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8477939,"team":"TOR","name":"W. Nylander","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8479318,"team":"TOR","name":"A. Matthews","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8482124,"team":"LAK","name":"Q. Byfield","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8476469,"team":"LAK","name":"J. Armia","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8470621,"team":"LAK","name":"C. Perry","historical_goal_games":2,"historical_goals":2,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":2,"first_period_pick_correct":false,"actual_ml_winner":"LAK","actual_home_goal_margin":-1,"first_period_verified_utc":"2026-11-20T00:55:05.617829Z","ml_pick_correct":true,"official_scorers":[{"player_id":8475287,"team":"LAK","name":"E. Haula","goals":1},{"player_id":8481532,"team":"LAK","name":"A. Turcotte","goals":1},{"player_id":8482155,"team":"LAK","name":"A. Laferriere","goals":1},{"player_id":8475166,"team":"TOR","name":"J. Tavares","goals":1},{"player_id":8478057,"team":"TOR","name":"D. Joshua","goals":1},{"player_id":8479318,"team":"TOR","name":"A. Matthews","goals":1}],"goalscorer_results":[{"player_id":8478458,"team":"TOR","name":"J. Roslovic","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477939,"team":"TOR","name":"W. Nylander","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8479318,"team":"TOR","name":"A. Matthews","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8482124,"team":"LAK","name":"Q. Byfield","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8476469,"team":"LAK","name":"J. Armia","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8470621,"team":"LAK","name":"C. Perry","historical_goal_games":2,"historical_goals":2,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020348","home":"OTT","away":"PHI","start_utc":"2026-11-20T00:00:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.451487,"p_raw":0.451487,"p_baseline":0.578947,"p_home_ml":0.576969,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.29,"p_away_minus_1_5":0.24,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8481596,"team":"OTT","name":"S. Pinto","historical_goal_games":6,"historical_goals":7,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8480208,"team":"OTT","name":"D. Batherson","historical_goal_games":5,"historical_goals":7,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8478020,"team":"OTT","name":"M. Amadio","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8484142,"team":"PHI","name":"D. Barkey","historical_goal_games":3,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8477948,"team":"PHI","name":"T. Sanheim","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8480220,"team":"PHI","name":"N. Cates","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":2,"first_period_pick_correct":false,"actual_ml_winner":"PHI","actual_home_goal_margin":-1,"first_period_verified_utc":"2026-11-20T00:55:05.617829Z","ml_pick_correct":false,"official_scorers":[{"player_id":8481528,"team":"OTT","name":"D. Cozens","goals":2},{"player_id":8473512,"team":"OTT","name":"C. Giroux","goals":1},{"player_id":8480208,"team":"OTT","name":"D. Batherson","goals":1},{"player_id":8481577,"team":"OTT","name":"P. Tomasino","goals":1},{"player_id":8481546,"team":"PHI","name":"C. York","goals":2},{"player_id":8478439,"team":"PHI","name":"T. Konecny","goals":1},{"player_id":8480015,"team":"PHI","name":"O. Tippett","goals":1},{"player_id":8482142,"team":"PHI","name":"J. Drysdale","goals":1},{"player_id":8482159,"team":"PHI","name":"T. Foerster","goals":1}],"goalscorer_results":[{"player_id":8481596,"team":"OTT","name":"S. Pinto","historical_goal_games":6,"historical_goals":7,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8480208,"team":"OTT","name":"D. Batherson","historical_goal_games":5,"historical_goals":7,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8478020,"team":"OTT","name":"M. Amadio","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484142,"team":"PHI","name":"D. Barkey","historical_goal_games":3,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477948,"team":"PHI","name":"T. Sanheim","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8480220,"team":"PHI","name":"N. Cates","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020350","home":"PIT","away":"STL","start_utc":"2026-11-20T00:00:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.598943,"p_raw":0.471088,"p_baseline":0.578947,"p_home_ml":0.521323,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.29,"p_away_minus_1_5":0.265,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8476483,"team":"PIT","name":"R. Rakell","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478438,"team":"PIT","name":"T. Novak","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8471675,"team":"PIT","name":"S. Crosby","historical_goal_games":2,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8483516,"team":"STL","name":"J. Snuggerud","historical_goal_games":4,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8480023,"team":"STL","name":"R. Thomas","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8481598,"team":"STL","name":"P. Broberg","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":1,"first_period_pick_correct":false,"actual_ml_winner":"STL","actual_home_goal_margin":-3,"first_period_verified_utc":"2026-11-20T00:55:05.617829Z","ml_pick_correct":false,"official_scorers":[{"player_id":8476483,"team":"PIT","name":"R. Rakell","goals":2},{"player_id":8482077,"team":"STL","name":"D. Holloway","goals":2},{"player_id":8483516,"team":"STL","name":"J. Snuggerud","goals":2},{"player_id":8482111,"team":"STL","name":"J. Barron","goals":1}],"goalscorer_results":[{"player_id":8476483,"team":"PIT","name":"R. Rakell","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":2,"scored":true},{"player_id":8478438,"team":"PIT","name":"T. Novak","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8471675,"team":"PIT","name":"S. Crosby","historical_goal_games":2,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8483516,"team":"STL","name":"J. Snuggerud","historical_goal_games":4,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":2,"scored":true},{"player_id":8480023,"team":"STL","name":"R. Thomas","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8481598,"team":"STL","name":"P. Broberg","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020351","home":"WSH","away":"BUF","start_utc":"2026-11-20T00:00:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.553911,"p_raw":0.553911,"p_baseline":0.578947,"p_home_ml":0.558566,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.24,"p_away_minus_1_5":0.29,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8477949,"team":"WSH","name":"A. Tuch","historical_goal_games":5,"historical_goals":7,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8479400,"team":"WSH","name":"P. Dubois","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8484186,"team":"WSH","name":"R. Leonard","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8479420,"team":"BUF","name":"T. Thompson","historical_goal_games":5,"historical_goals":8,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8482097,"team":"BUF","name":"J. Quinn","historical_goal_games":4,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8482659,"team":"BUF","name":"J. Doan","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":5,"first_period_pick_correct":true,"actual_ml_winner":"BUF","actual_home_goal_margin":-3,"first_period_verified_utc":"2026-11-20T00:55:05.617829Z","ml_pick_correct":false,"official_scorers":[{"player_id":8482097,"team":"BUF","name":"J. Quinn","goals":2},{"player_id":8479359,"team":"BUF","name":"B. Malenstyn","goals":1},{"player_id":8479420,"team":"BUF","name":"T. Thompson","goals":1},{"player_id":8480839,"team":"BUF","name":"R. Dahlin","goals":1},{"player_id":8484145,"team":"BUF","name":"Z. Benson","goals":1},{"player_id":8476432,"team":"WSH","name":"B. Jenner","goals":1},{"player_id":8477949,"team":"WSH","name":"A. Tuch","goals":1},{"player_id":8484186,"team":"WSH","name":"R. Leonard","goals":1}],"goalscorer_results":[{"player_id":8477949,"team":"WSH","name":"A. Tuch","historical_goal_games":5,"historical_goals":7,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8479400,"team":"WSH","name":"P. Dubois","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484186,"team":"WSH","name":"R. Leonard","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8479420,"team":"BUF","name":"T. Thompson","historical_goal_games":5,"historical_goals":8,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8482097,"team":"BUF","name":"J. Quinn","historical_goal_games":4,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":2,"scored":true},{"player_id":8482659,"team":"BUF","name":"J. Doan","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020352","home":"CAR","away":"MTL","start_utc":"2026-11-20T00:00:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.644611,"p_raw":0.515382,"p_baseline":0.578947,"p_home_ml":0.576969,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.34,"p_away_minus_1_5":0.265,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8478427,"team":"CAR","name":"S. Aho","historical_goal_games":5,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8482702,"team":"CAR","name":"L. Stankoven","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8482809,"team":"CAR","name":"J. Blake","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8481540,"team":"MTL","name":"C. Caufield","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8476981,"team":"MTL","name":"J. Anderson","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8476479,"team":"MTL","name":"P. Danault","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":0,"first_period_pick_correct":false,"actual_ml_winner":"MTL","actual_home_goal_margin":-1,"first_period_verified_utc":"2026-11-20T00:55:05.617829Z","ml_pick_correct":false,"official_scorers":[{"player_id":8477940,"team":"CAR","name":"N. Ehlers","goals":1},{"player_id":8483457,"team":"MTL","name":"L. Hutson","goals":2}],"goalscorer_results":[{"player_id":8478427,"team":"CAR","name":"S. Aho","historical_goal_games":5,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8482702,"team":"CAR","name":"L. Stankoven","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8482809,"team":"CAR","name":"J. Blake","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8481540,"team":"MTL","name":"C. Caufield","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8476981,"team":"MTL","name":"J. Anderson","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8476479,"team":"MTL","name":"P. Danault","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020354","home":"WPG","away":"NYI","start_utc":"2026-11-20T00:00:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.511747,"p_raw":0.511747,"p_baseline":0.578947,"p_home_ml":0.558566,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.29,"p_away_minus_1_5":0.29,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8478398,"team":"WPG","name":"K. Connor","historical_goal_games":6,"historical_goals":8,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8476460,"team":"WPG","name":"M. Scheifele","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8482110,"team":"WPG","name":"D. Mercer","historical_goal_games":3,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8485366,"team":"NYI","name":"M. Schaefer","historical_goal_games":5,"historical_goals":8,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8475170,"team":"NYI","name":"B. Schenn","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8477500,"team":"NYI","name":"B. Horvat","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":4,"first_period_pick_correct":true,"actual_ml_winner":"WPG","actual_home_goal_margin":1,"first_period_verified_utc":"2026-11-20T00:55:05.617829Z","ml_pick_correct":true,"official_scorers":[{"player_id":8475151,"team":"NYI","name":"K. Palmieri","goals":1},{"player_id":8477407,"team":"NYI","name":"A. Duclair","goals":1},{"player_id":8482476,"team":"NYI","name":"E. Heineman","goals":1},{"player_id":8477504,"team":"WPG","name":"J. Morrissey","goals":1},{"player_id":8478398,"team":"WPG","name":"K. Connor","goals":1},{"player_id":8480289,"team":"WPG","name":"M. Barron","goals":1},{"player_id":8482149,"team":"WPG","name":"C. Perfetti","goals":1}],"goalscorer_results":[{"player_id":8478398,"team":"WPG","name":"K. Connor","historical_goal_games":6,"historical_goals":8,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8476460,"team":"WPG","name":"M. Scheifele","historical_goal_games":4,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8482110,"team":"WPG","name":"D. Mercer","historical_goal_games":3,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8485366,"team":"NYI","name":"M. Schaefer","historical_goal_games":5,"historical_goals":8,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8475170,"team":"NYI","name":"B. Schenn","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8477500,"team":"NYI","name":"B. Horvat","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020349","home":"TBL","away":"EDM","start_utc":"2026-11-20T00:30:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.470519,"p_raw":0.470519,"p_baseline":0.578947,"p_home_ml":0.521323,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.29,"p_away_minus_1_5":0.315,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8477404,"team":"TBL","name":"J. Guentzel","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8479542,"team":"TBL","name":"B. Hagel","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8474590,"team":"TBL","name":"J. Carlson","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8477934,"team":"EDM","name":"L. Draisaitl","historical_goal_games":7,"historical_goals":11,"historical_team_games":12,"not_verified_in_lineup":true},{"player_id":8478402,"team":"EDM","name":"C. McDavid","historical_goal_games":6,"historical_goals":7,"historical_team_games":12,"not_verified_in_lineup":true},{"player_id":8480803,"team":"EDM","name":"E. Bouchard","historical_goal_games":5,"historical_goals":5,"historical_team_games":12,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"graded","actual_over":0,"actual_first_period_goals":0,"first_period_pick_correct":true,"actual_ml_winner":"TBL","actual_home_goal_margin":2,"first_period_verified_utc":"2026-11-20T02:04:10.148939Z","ml_pick_correct":true,"official_scorers":[{"player_id":8482166,"team":"EDM","name":"S. Mukhamadullin","goals":1},{"player_id":8474590,"team":"TBL","name":"J. Carlson","goals":1},{"player_id":8476453,"team":"TBL","name":"N. Kucherov","goals":1},{"player_id":8481624,"team":"TBL","name":"I. Mikheyev","goals":1}],"goalscorer_results":[{"player_id":8477404,"team":"TBL","name":"J. Guentzel","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8479542,"team":"TBL","name":"B. Hagel","historical_goal_games":4,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8474590,"team":"TBL","name":"J. Carlson","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8477934,"team":"EDM","name":"L. Draisaitl","historical_goal_games":7,"historical_goals":11,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8478402,"team":"EDM","name":"C. McDavid","historical_goal_games":6,"historical_goals":7,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8480803,"team":"EDM","name":"E. Bouchard","historical_goal_games":5,"historical_goals":5,"historical_team_games":12,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020353","home":"CHI","away":"CBJ","start_utc":"2026-11-20T01:00:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.554861,"p_raw":0.554861,"p_baseline":0.578947,"p_home_ml":0.54,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.29,"p_away_minus_1_5":0.29,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8484144,"team":"CHI","name":"C. Bedard","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8484390,"team":"CHI","name":"R. Kantserov","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8483493,"team":"CHI","name":"F. Nazar","historical_goal_games":4,"historical_goals":7,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8482660,"team":"CBJ","name":"K. Johnson","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478460,"team":"CBJ","name":"Z. Werenski","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478500,"team":"CBJ","name":"I. Provorov","historical_goal_games":2,"historical_goals":2,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":2,"first_period_pick_correct":true,"actual_ml_winner":"CBJ","actual_home_goal_margin":-2,"first_period_verified_utc":"2026-11-20T02:04:10.148939Z","ml_pick_correct":false,"official_scorers":[{"player_id":8478460,"team":"CBJ","name":"Z. Werenski","goals":1},{"player_id":8482660,"team":"CBJ","name":"K. Johnson","goals":1},{"player_id":8482720,"team":"CBJ","name":"M. Knies","goals":1},{"player_id":8484166,"team":"CBJ","name":"A. Fantilli","goals":1},{"player_id":8482062,"team":"CHI","name":"C. Smith","goals":1},{"player_id":8483493,"team":"CHI","name":"F. Nazar","goals":1}],"goalscorer_results":[{"player_id":8484144,"team":"CHI","name":"C. Bedard","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484390,"team":"CHI","name":"R. Kantserov","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8483493,"team":"CHI","name":"F. Nazar","historical_goal_games":4,"historical_goals":7,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8482660,"team":"CBJ","name":"K. Johnson","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8478460,"team":"CBJ","name":"Z. Werenski","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8478500,"team":"CBJ","name":"I. Provorov","historical_goal_games":2,"historical_goals":2,"historical_team_games":10,"not_verified_in_lineup":true,"actual_goals":0,"scored":false}]},{"game_id":"2026020355","home":"CGY","away":"MIN","start_utc":"2026-11-20T01:00:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.465365,"p_raw":0.465365,"p_baseline":0.578947,"p_home_ml":0.483841,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.19,"p_away_minus_1_5":0.415,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8480797,"team":"CGY","name":"J. Farabee","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8484860,"team":"CGY","name":"M. Gridin","historical_goal_games":3,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8481028,"team":"CGY","name":"M. Pospisil","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8485702,"team":"MIN","name":"M. Shabanov","historical_goal_games":5,"historical_goals":6,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8478493,"team":"MIN","name":"J. Eriksson Ek","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8478864,"team":"MIN","name":"K. Kaprizov","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"graded","actual_over":1,"actual_first_period_goals":3,"first_period_pick_correct":false,"actual_ml_winner":"MIN","actual_home_goal_margin":-3,"first_period_verified_utc":"2026-11-20T02:04:10.148939Z","ml_pick_correct":true,"official_scorers":[{"player_id":8483495,"team":"CGY","name":"S. Nemec","goals":1},{"player_id":8478493,"team":"MIN","name":"J. Eriksson Ek","goals":1},{"player_id":8478864,"team":"MIN","name":"K. Kaprizov","goals":1},{"player_id":8480800,"team":"MIN","name":"Q. Hughes","goals":1},{"player_id":8481557,"team":"MIN","name":"M. Boldy","goals":1}],"goalscorer_results":[{"player_id":8480797,"team":"CGY","name":"J. Farabee","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8484860,"team":"CGY","name":"M. Gridin","historical_goal_games":3,"historical_goals":4,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8481028,"team":"CGY","name":"M. Pospisil","historical_goal_games":3,"historical_goals":3,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8485702,"team":"MIN","name":"M. Shabanov","historical_goal_games":5,"historical_goals":6,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":0,"scored":false},{"player_id":8478493,"team":"MIN","name":"J. Eriksson Ek","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":1,"scored":true},{"player_id":8478864,"team":"MIN","name":"K. Kaprizov","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true,"actual_goals":1,"scored":true}]},{"game_id":"2026020356","home":"COL","away":"ANA","start_utc":"2026-11-20T02:00:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.71791,"p_raw":0.590378,"p_baseline":0.578947,"p_home_ml":0.54,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.365,"p_away_minus_1_5":0.29,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8477476,"team":"COL","name":"A. Lehkonen","historical_goal_games":5,"historical_goals":6,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8475172,"team":"COL","name":"N. Kadri","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8475768,"team":"COL","name":"J. Schwartz","historical_goal_games":3,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8483445,"team":"ANA","name":"C. Gauthier","historical_goal_games":10,"historical_goals":19,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8475798,"team":"ANA","name":"M. Granlund","historical_goal_games":6,"historical_goals":6,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8484762,"team":"ANA","name":"B. Sennecke","historical_goal_games":4,"historical_goals":6,"historical_team_games":11,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"first_period_graded","actual_over":0,"actual_first_period_goals":0,"first_period_pick_correct":false,"actual_ml_winner":null,"actual_home_goal_margin":null,"first_period_verified_utc":"2026-11-20T03:06:43.936335Z","ml_pick_correct":null,"official_scorers":[],"goalscorer_results":[]},{"game_id":"2026020357","home":"SEA","away":"VAN","start_utc":"2026-11-20T02:40:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.684763,"p_raw":0.55581,"p_baseline":0.578947,"p_home_ml":0.558566,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.29,"p_away_minus_1_5":0.29,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8477919,"team":"SEA","name":"F. Gaudreau","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8477986,"team":"SEA","name":"B. Montour","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8482665,"team":"SEA","name":"M. Beniers","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478444,"team":"VAN","name":"B. Boeser","historical_goal_games":5,"historical_goals":5,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8483499,"team":"VAN","name":"L. Ohgren","historical_goal_games":4,"historical_goals":4,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478498,"team":"VAN","name":"J. DeBrusk","historical_goal_games":2,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"first_period_graded","actual_over":1,"actual_first_period_goals":2,"first_period_pick_correct":true,"actual_ml_winner":null,"actual_home_goal_margin":null,"first_period_verified_utc":"2026-11-20T04:18:09.427522Z","ml_pick_correct":null,"official_scorers":[],"goalscorer_results":[]},{"game_id":"2026020358","home":"VGK","away":"DAL","start_utc":"2026-11-20T03:00:00Z","captured_utc":"2026-11-18T15:55:35.864679Z","p_experimental":0.438264,"p_raw":0.438264,"p_baseline":0.578947,"p_home_ml":0.521323,"ml_model_version":"recent10_winform_home054_v1","ml_history_home_games":10,"ml_history_away_games":10,"p_home_minus_1_5":0.29,"p_away_minus_1_5":0.24,"puck_line_model_version":"margin10_beta28_v1","goalscorer_watchlist":[{"player_id":8475913,"team":"VGK","name":"M. Stone","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478109,"team":"VGK","name":"V. Olofsson","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478403,"team":"VGK","name":"J. Eichel","historical_goal_games":3,"historical_goals":3,"historical_team_games":10,"not_verified_in_lineup":true},{"player_id":8478420,"team":"DAL","name":"M. Rantanen","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8482740,"team":"DAL","name":"W. Johnston","historical_goal_games":5,"historical_goals":5,"historical_team_games":11,"not_verified_in_lineup":true},{"player_id":8480027,"team":"DAL","name":"J. Robertson","historical_goal_games":4,"historical_goals":7,"historical_team_games":11,"not_verified_in_lineup":true}],"scorer_captured_utc":"2026-11-18T15:55:35.864679Z","grade_status":"first_period_graded","actual_over":1,"actual_first_period_goals":2,"first_period_pick_correct":false,"actual_ml_winner":null,"actual_home_goal_margin":null,"first_period_verified_utc":"2026-11-20T04:18:09.427522Z","ml_pick_correct":null,"official_scorers":[],"goalscorer_results":[]}],"historical":null,"sources":"Official NHL results + archived frozen Test 22 forecasts","season_record":{"correct":13,"incorrect":15,"accuracy":0.464286},"official_goal_log":[{"player_id":8476479,"team":"MTL","name":"P. Danault","goals":1,"game_id":"2026020331"},{"player_id":8482157,"team":"NYR","name":"W. Cuylle","goals":2,"game_id":"2026020331"},{"player_id":8482666,"team":"NYR","name":"S. Morrow","goals":1,"game_id":"2026020331"},{"player_id":8476389,"team":"UTA","name":"V. Trocheck","goals":1,"game_id":"2026020332"},{"player_id":8480849,"team":"UTA","name":"B. Hayton","goals":1,"game_id":"2026020332"},{"player_id":8478444,"team":"VAN","name":"B. Boeser","goals":1,"game_id":"2026020332"},{"player_id":8478498,"team":"VAN","name":"J. DeBrusk","goals":1,"game_id":"2026020332"},{"player_id":8480078,"team":"VAN","name":"F. Chytil","goals":1,"game_id":"2026020332"},{"player_id":8475692,"team":"LAK","name":"M. Zuccarello","goals":1,"game_id":"2026020333"},{"player_id":8476979,"team":"LAK","name":"E. Gustafsson","goals":1,"game_id":"2026020333"},{"player_id":8481732,"team":"LAK","name":"A. Lee","goals":1,"game_id":"2026020333"},{"player_id":8481617,"team":"EDM","name":"V. Podkolzin","goals":2,"game_id":"2026020335"},{"player_id":8477934,"team":"EDM","name":"L. Draisaitl","goals":1,"game_id":"2026020335"},{"player_id":8477953,"team":"EDM","name":"K. Kapanen","goals":1,"game_id":"2026020335"},{"player_id":8478402,"team":"EDM","name":"C. McDavid","goals":1,"game_id":"2026020335"},{"player_id":8479314,"team":"FLA","name":"M. Tkachuk","goals":2,"game_id":"2026020335"},{"player_id":8478460,"team":"CBJ","name":"Z. Werenski","goals":1,"game_id":"2026020336"},{"player_id":8485366,"team":"NYI","name":"M. Schaefer","goals":3,"game_id":"2026020336"},{"player_id":8477407,"team":"NYI","name":"A. Duclair","goals":1,"game_id":"2026020336"},{"player_id":8477950,"team":"NYI","name":"T. DeAngelo","goals":1,"game_id":"2026020336"},{"player_id":8479420,"team":"BUF","name":"T. Thompson","goals":1,"game_id":"2026020337"},{"player_id":8480807,"team":"BUF","name":"M. Samuelsson","goals":1,"game_id":"2026020337"},{"player_id":8483468,"team":"BUF","name":"J.Kulich","goals":1,"game_id":"2026020337"},{"player_id":8477948,"team":"PHI","name":"T. Sanheim","goals":1,"game_id":"2026020337"},{"player_id":8477989,"team":"PHI","name":"C. Dvorak","goals":1,"game_id":"2026020337"},{"player_id":8480015,"team":"PHI","name":"O. Tippett","goals":1,"game_id":"2026020337"},{"player_id":8482142,"team":"PHI","name":"J. Drysdale","goals":1,"game_id":"2026020337"},{"player_id":8480208,"team":"OTT","name":"D. Batherson","goals":1,"game_id":"2026020341"},{"player_id":8482674,"team":"OTT","name":"T. Boucher","goals":1,"game_id":"2026020341"},{"player_id":8486025,"team":"WPG","name":"V. Björck","goals":1,"game_id":"2026020341"},{"player_id":8477404,"team":"TBL","name":"J. Guentzel","goals":2,"game_id":"2026020334"},{"player_id":8478519,"team":"TBL","name":"A. Cirelli","goals":1,"game_id":"2026020334"},{"player_id":8480426,"team":"TBL","name":"C. D'Astous","goals":1,"game_id":"2026020334"},{"player_id":8484770,"team":"TBL","name":"S. O'Reilly","goals":1,"game_id":"2026020334"},{"player_id":8477949,"team":"WSH","name":"A. Tuch","goals":1,"game_id":"2026020334"},{"player_id":8484186,"team":"WSH","name":"R. Leonard","goals":1,"game_id":"2026020334"},{"player_id":8477479,"team":"CHI","name":"T. Bertuzzi","goals":2,"game_id":"2026020338"},{"player_id":8483493,"team":"CHI","name":"F. Nazar","goals":2,"game_id":"2026020338"},{"player_id":8484144,"team":"CHI","name":"C. Bedard","goals":1,"game_id":"2026020338"},{"player_id":8484197,"team":"CHI","name":"O. Moore","goals":1,"game_id":"2026020338"},{"player_id":8475166,"team":"TOR","name":"J. Tavares","goals":1,"game_id":"2026020338"},{"player_id":8476927,"team":"TOR","name":"T. Blueger","goals":1,"game_id":"2026020338"},{"player_id":8484158,"team":"TOR","name":"E. Cowan","goals":1,"game_id":"2026020338"},{"player_id":8483445,"team":"ANA","name":"C. Gauthier","goals":3,"game_id":"2026020339"},{"player_id":8473986,"team":"ANA","name":"A. Killorn","goals":1,"game_id":"2026020339"},{"player_id":8475798,"team":"ANA","name":"M. Granlund","goals":1,"game_id":"2026020339"},{"player_id":8482178,"team":"ANA","name":"I. Moore","goals":1,"game_id":"2026020339"},{"player_id":8477402,"team":"STL","name":"P. Buchnevich","goals":1,"game_id":"2026020339"},{"player_id":8480023,"team":"STL","name":"R. Thomas","goals":1,"game_id":"2026020339"},{"player_id":8481013,"team":"STL","name":"J. Berggren","goals":1,"game_id":"2026020339"},{"player_id":8481580,"team":"STL","name":"C. McMichael","goals":1,"game_id":"2026020339"},{"player_id":8481598,"team":"STL","name":"P. Broberg","goals":1,"game_id":"2026020339"},{"player_id":8482089,"team":"STL","name":"J. Neighbours","goals":1,"game_id":"2026020339"},{"player_id":8482733,"team":"STL","name":"L. Mailloux","goals":1,"game_id":"2026020339"},{"player_id":8484164,"team":"STL","name":"D. Dvorsky","goals":1,"game_id":"2026020339"},{"player_id":8481557,"team":"MIN","name":"M. Boldy","goals":2,"game_id":"2026020340"},{"player_id":8475220,"team":"MIN","name":"M. Foligno","goals":1,"game_id":"2026020340"},{"player_id":8476399,"team":"MIN","name":"B. Coleman","goals":1,"game_id":"2026020340"},{"player_id":8478493,"team":"MIN","name":"J. Eriksson Ek","goals":1,"game_id":"2026020340"},{"player_id":8482122,"team":"MIN","name":"B. Faber","goals":1,"game_id":"2026020340"},{"player_id":8485702,"team":"MIN","name":"M. Shabanov","goals":1,"game_id":"2026020340"},{"player_id":8476539,"team":"NSH","name":"J. Marchessault","goals":1,"game_id":"2026020340"},{"player_id":8476887,"team":"NSH","name":"F. Forsberg","goals":1,"game_id":"2026020340"},{"player_id":8479980,"team":"NSH","name":"N. Hague","goals":1,"game_id":"2026020340"},{"player_id":8478420,"team":"DAL","name":"M. Rantanen","goals":1,"game_id":"2026020342"},{"player_id":8480036,"team":"DAL","name":"M. Heiskanen","goals":1,"game_id":"2026020342"},{"player_id":8480878,"team":"DAL","name":"N. Lundkvist","goals":1,"game_id":"2026020342"},{"player_id":8482740,"team":"DAL","name":"W. Johnston","goals":1,"game_id":"2026020342"},{"player_id":8476448,"team":"VGK","name":"W. Karlsson","goals":2,"game_id":"2026020342"},{"player_id":8479353,"team":"VGK","name":"B. Howden","goals":1,"game_id":"2026020342"},{"player_id":8484154,"team":"CGY","name":"J. Castagna","goals":2,"game_id":"2026020343"},{"player_id":8481028,"team":"CGY","name":"M. Pospisil","goals":1,"game_id":"2026020343"},{"player_id":8482679,"team":"CGY","name":"M. Coronato","goals":1,"game_id":"2026020343"},{"player_id":8483495,"team":"CGY","name":"S. Nemec","goals":1,"game_id":"2026020343"},{"player_id":8478874,"team":"SJS","name":"A. Gaudette","goals":1,"game_id":"2026020343"},{"player_id":8478975,"team":"SJS","name":"M. Marchment","goals":1,"game_id":"2026020343"},{"player_id":8477956,"team":"BOS","name":"D. Pastrnak","goals":1,"game_id":"2026020344"},{"player_id":8478401,"team":"BOS","name":"P. Zacha","goals":1,"game_id":"2026020344"},{"player_id":8479999,"team":"BOS","name":"C. Mittelstadt","goals":1,"game_id":"2026020344"},{"player_id":8482175,"team":"BOS","name":"J. Peterka","goals":1,"game_id":"2026020344"},{"player_id":8482078,"team":"DET","name":"L. Raymond","goals":1,"game_id":"2026020344"},{"player_id":8478133,"team":"MTL","name":"J. Evans","goals":1,"game_id":"2026020345"},{"player_id":8480018,"team":"MTL","name":"N. Suzuki","goals":1,"game_id":"2026020345"},{"player_id":8481618,"team":"MTL","name":"A. Newhook","goals":1,"game_id":"2026020345"},{"player_id":8478414,"team":"NJD","name":"T. Meier","goals":1,"game_id":"2026020345"},{"player_id":8482146,"team":"NJD","name":"L. Evangelista","goals":1,"game_id":"2026020345"},{"player_id":8480448,"team":"COL","name":"P. Kelly","goals":1,"game_id":"2026020346"},{"player_id":8476389,"team":"UTA","name":"V. Trocheck","goals":1,"game_id":"2026020346"},{"player_id":8477070,"team":"UTA","name":"L. O'Brien","goals":1,"game_id":"2026020346"},{"player_id":8478831,"team":"UTA","name":"K. Stenlund","goals":1,"game_id":"2026020346"},{"player_id":8484386,"team":"UTA","name":"D. Simashev","goals":1,"game_id":"2026020346"},{"player_id":8475287,"team":"LAK","name":"E. Haula","goals":1,"game_id":"2026020347"},{"player_id":8481532,"team":"LAK","name":"A. Turcotte","goals":1,"game_id":"2026020347"},{"player_id":8482155,"team":"LAK","name":"A. Laferriere","goals":1,"game_id":"2026020347"},{"player_id":8475166,"team":"TOR","name":"J. Tavares","goals":1,"game_id":"2026020347"},{"player_id":8478057,"team":"TOR","name":"D. Joshua","goals":1,"game_id":"2026020347"},{"player_id":8479318,"team":"TOR","name":"A. Matthews","goals":1,"game_id":"2026020347"},{"player_id":8481528,"team":"OTT","name":"D. Cozens","goals":2,"game_id":"2026020348"},{"player_id":8473512,"team":"OTT","name":"C. Giroux","goals":1,"game_id":"2026020348"},{"player_id":8480208,"team":"OTT","name":"D. Batherson","goals":1,"game_id":"2026020348"},{"player_id":8481577,"team":"OTT","name":"P. Tomasino","goals":1,"game_id":"2026020348"},{"player_id":8481546,"team":"PHI","name":"C. York","goals":2,"game_id":"2026020348"},{"player_id":8478439,"team":"PHI","name":"T. Konecny","goals":1,"game_id":"2026020348"},{"player_id":8480015,"team":"PHI","name":"O. Tippett","goals":1,"game_id":"2026020348"},{"player_id":8482142,"team":"PHI","name":"J. Drysdale","goals":1,"game_id":"2026020348"},{"player_id":8482159,"team":"PHI","name":"T. Foerster","goals":1,"game_id":"2026020348"},{"player_id":8476483,"team":"PIT","name":"R. Rakell","goals":2,"game_id":"2026020350"},{"player_id":8482077,"team":"STL","name":"D. Holloway","goals":2,"game_id":"2026020350"},{"player_id":8483516,"team":"STL","name":"J. Snuggerud","goals":2,"game_id":"2026020350"},{"player_id":8482111,"team":"STL","name":"J. Barron","goals":1,"game_id":"2026020350"},{"player_id":8482097,"team":"BUF","name":"J. Quinn","goals":2,"game_id":"2026020351"},{"player_id":8479359,"team":"BUF","name":"B. Malenstyn","goals":1,"game_id":"2026020351"},{"player_id":8479420,"team":"BUF","name":"T. Thompson","goals":1,"game_id":"2026020351"},{"player_id":8480839,"team":"BUF","name":"R. Dahlin","goals":1,"game_id":"2026020351"},{"player_id":8484145,"team":"BUF","name":"Z. Benson","goals":1,"game_id":"2026020351"},{"player_id":8476432,"team":"WSH","name":"B. Jenner","goals":1,"game_id":"2026020351"},{"player_id":8477949,"team":"WSH","name":"A. Tuch","goals":1,"game_id":"2026020351"},{"player_id":8484186,"team":"WSH","name":"R. Leonard","goals":1,"game_id":"2026020351"},{"player_id":8477940,"team":"CAR","name":"N. Ehlers","goals":1,"game_id":"2026020352"},{"player_id":8483457,"team":"MTL","name":"L. Hutson","goals":2,"game_id":"2026020352"},{"player_id":8475151,"team":"NYI","name":"K. Palmieri","goals":1,"game_id":"2026020354"},{"player_id":8477407,"team":"NYI","name":"A. Duclair","goals":1,"game_id":"2026020354"},{"player_id":8482476,"team":"NYI","name":"E. Heineman","goals":1,"game_id":"2026020354"},{"player_id":8477504,"team":"WPG","name":"J. Morrissey","goals":1,"game_id":"2026020354"},{"player_id":8478398,"team":"WPG","name":"K. Connor","goals":1,"game_id":"2026020354"},{"player_id":8480289,"team":"WPG","name":"M. Barron","goals":1,"game_id":"2026020354"},{"player_id":8482149,"team":"WPG","name":"C. Perfetti","goals":1,"game_id":"2026020354"},{"player_id":8482166,"team":"EDM","name":"S. Mukhamadullin","goals":1,"game_id":"2026020349"},{"player_id":8474590,"team":"TBL","name":"J. Carlson","goals":1,"game_id":"2026020349"},{"player_id":8476453,"team":"TBL","name":"N. Kucherov","goals":1,"game_id":"2026020349"},{"player_id":8481624,"team":"TBL","name":"I. Mikheyev","goals":1,"game_id":"2026020349"},{"player_id":8478460,"team":"CBJ","name":"Z. Werenski","goals":1,"game_id":"2026020353"},{"player_id":8482660,"team":"CBJ","name":"K. Johnson","goals":1,"game_id":"2026020353"},{"player_id":8482720,"team":"CBJ","name":"M. Knies","goals":1,"game_id":"2026020353"},{"player_id":8484166,"team":"CBJ","name":"A. Fantilli","goals":1,"game_id":"2026020353"},{"player_id":8482062,"team":"CHI","name":"C. Smith","goals":1,"game_id":"2026020353"},{"player_id":8483493,"team":"CHI","name":"F. Nazar","goals":1,"game_id":"2026020353"},{"player_id":8483495,"team":"CGY","name":"S. Nemec","goals":1,"game_id":"2026020355"},{"player_id":8478493,"team":"MIN","name":"J. Eriksson Ek","goals":1,"game_id":"2026020355"},{"player_id":8478864,"team":"MIN","name":"K. Kaprizov","goals":1,"game_id":"2026020355"},{"player_id":8480800,"team":"MIN","name":"Q. Hughes","goals":1,"game_id":"2026020355"},{"player_id":8481557,"team":"MIN","name":"M. Boldy","goals":1,"game_id":"2026020355"}],"credit_usage":0,"notice":"Experimental and raw first-period Over 1.5 probabilities are unvalidated as profitable betting signals."}</script>
+<script>
+"use strict";
+const data=JSON.parse(document.getElementById('payload').textContent);
+const byId=new Map(data.games.map(g=>[String(g.game_id),g]));
+const fmtPct=p=>Number.isFinite(p)?(p*100).toFixed(1)+'%':'—';
+const fmtNum=n=>Number.isFinite(n)?n.toFixed(4):'—';
+const stamp=s=>s?new Date(s).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'}):'—';
+function escaped(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+/* Test 31: locally saved bet journal. No server, account login or wagers. */
+const BET_KEY='nhl-intelligence-local-bets-v1';
+const ESPN_CACHE_KEY='nhl-bet-score-cache-v1';
+const secondaryResults=new Map();
+let checkingScores=false,lastScoreCheck=0;
+const BET_MARKETS={
+ p1_over:{label:'1st period Over 1.5',prob:g=>g.p_experimental},
+ p1_under:{label:'1st period Under 1.5',prob:g=>1-g.p_experimental},
+ ml_home:{label:'Home moneyline',prob:g=>g.p_home_ml},
+ ml_away:{label:'Away moneyline',prob:g=>1-g.p_home_ml},
+ puck_home_minus:{label:'Home -1.5',prob:g=>g.p_home_minus_1_5},
+ puck_home_plus:{label:'Home +1.5',prob:g=>1-g.p_away_minus_1_5},
+ puck_away_minus:{label:'Away -1.5',prob:g=>g.p_away_minus_1_5},
+ puck_away_plus:{label:'Away +1.5',prob:g=>1-g.p_home_minus_1_5}
+};
+const betStatus=document.getElementById('bets-status');
+const betFormStatus=document.getElementById('bet-form-status');
+let currentTracking=null;
+let savedBets=[];
+let storageReady=true;
+function validBet(b){
+ return !!b&&typeof b==='object'&&typeof b.id==='string'&&b.id.length>3&&b.id.length<150
+ &&typeof b.game_id==='string'&&/^\d{7,12}$/.test(b.game_id)
+ &&typeof b.market==='string'&&Object.hasOwn(BET_MARKETS,b.market)
+ &&typeof b.stake==='number'&&Number.isFinite(b.stake)&&b.stake>0&&b.stake<=1000000
+ &&Number.isInteger(b.odds)&&Math.abs(b.odds)>=100&&Math.abs(b.odds)<=100000
+ &&typeof b.placed==='boolean'&&typeof b.created_at==='string'
+ &&Number.isFinite(Date.parse(b.created_at))&&typeof b.book==='string'&&b.book.length<=80
+ &&(b.voided===undefined||typeof b.voided==='boolean');
+}
+function readBets(){
+ try{
+  const raw=localStorage.getItem(BET_KEY);
+  if(raw===null)return [];
+  const stored=JSON.parse(raw);
+  if(!Array.isArray(stored)||stored.length>3000||stored.some(b=>!validBet(b)))throw Error('Invalid local bet records');
+  return stored;
+ }catch(err){
+  storageReady=false;
+  betStatus.textContent='Local storage is unavailable or the saved data needs recovery. Do not clear browser data; export may still require recovery. '+String(err.message);
+  return [];
+ }
+}
+savedBets=readBets();
+function persistBets(){
+ if(!storageReady){betStatus.textContent='Cannot save: local storage is unavailable or saved data is invalid.';return false;}
+ try{localStorage.setItem(BET_KEY,JSON.stringify(savedBets));return true;}
+ catch(err){betStatus.textContent='Unable to save this entry on your device: '+String(err.message);return false;}
+}
+function marketLabel(g,key){
+ const suffix=key.startsWith('ml_')?' ML':'';
+ const team=key.includes('home')?g.home:key.includes('away')?g.away:null;
+ return (team?team+' '+BET_MARKETS[key].label.replace(/^Home |^Away /,'')+suffix:BET_MARKETS[key].label);
+}
+function trackButtons(g,markets){
+ const buttons=markets.filter(k=>BET_MARKETS[k]&&Number.isFinite(BET_MARKETS[k].prob(g)))
+  .map(k=>'<button type="button" data-track-game="'+escaped(g.game_id)+'" data-track-market="'+escaped(k)+'">Track '+escaped(marketLabel(g,k))+'</button>');
+ return buttons.length?'<div class="track-actions">'+buttons.join('')+'</div>':'';
+}
+function gradeRow(b){
+ const g=byId.get(b.game_id);
+ if(!g)return null;
+ const r=secondaryResults.get(String(b.game_id));
+ if(!r)return g;
+ // NHL official results are authoritative, including first period separately.
+ return {...r,...Object.fromEntries(['actual_over','actual_ml_winner','actual_home_goal_margin','actual_first_period_goals'].filter(k=>g[k]!==undefined&&g[k]!==null).map(k=>[k,g[k]])),home:g.home,away:g};
+}
+function resultOrigin(b){
+ const g=byId.get(b.game_id);
+ if(!g)return 'Unavailable';
+ const official=b.market.startsWith('p1_')?(g.actual_over===0||g.actual_over===1):
+   b.market.startsWith('ml_')?(g.actual_ml_winner===g.home||g.actual_ml_winner===g.away):
+   Number.isInteger(g.actual_home_goal_margin);
+ return official?'Official NHL result':secondaryResults.has(String(b.game_id))?'ESPN provisional final':'Awaiting verified final';
+}
+function settledOutcome(b){
+ if(b.voided===true)return 'void';
+ const g=gradeRow(b);
+ if(!g)return 'pending';
+ if(b.market==='p1_over'||b.market==='p1_under'){
+  if(g.actual_over!==0&&g.actual_over!==1)return 'pending';
+  return (b.market==='p1_over'?(g.actual_over===1):(g.actual_over===0))?'win':'loss';
+ }
+ if(b.market==='ml_home'||b.market==='ml_away'){
+  if(g.actual_ml_winner!==g.home&&g.actual_ml_winner!==g.away)return 'pending';
+  return (g.actual_ml_winner===(b.market==='ml_home'?g.home:g.away))?'win':'loss';
+ }
+ if(!Number.isInteger(g.actual_home_goal_margin))return 'pending';
+ const margin=g.actual_home_goal_margin;
+ const win=b.market==='puck_home_minus'?margin>=2:
+           b.market==='puck_home_plus'?margin>=-1:
+           b.market==='puck_away_minus'?margin<=-2:margin<=1;
+ return win?'win':'loss';
+}
+
+/* Automated free ESPN NHL scoreboard check, only while the web page is active.
+   Official NHL gradebook, if present, takes precedence over ESPN. */
+function espnTeam(s){
+ const a=String(s||'').toUpperCase();
+ return ({UTM:'UTA',LA:'LAK',TB:'TBL',SJ:'SJS',NJ:'NJD'})[a]||a;
+}
+function parseEspnFinal(ev,g){
+ if(ev?.status?.type?.completed!==true)return null;
+ const competition=ev.competitions?.[0];
+ const sides=competition?.competitors;
+ if(!Array.isArray(sides)||sides.length!==2)return null;
+ const when=Date.parse(ev.date),scheduled=Date.parse(g.start_utc);
+ if(!Number.isFinite(when)||Math.abs(when-scheduled)>6*3600000)return null;
+ const h=sides.find(c=>c.homeAway==='home'),a=sides.find(c=>c.homeAway==='away');
+ if(!h||!a||espnTeam(h.team?.abbreviation)!==g.home||espnTeam(a.team?.abbreviation)!==g.away)return null;
+ const hs=Number(h.score),as=Number(a.score);
+ if(!Number.isInteger(hs)||!Number.isInteger(as)||hs<0||as<0||hs===as)return null;
+ const periodOne=c=>{
+  const list=c.linescores;
+  if(!Array.isArray(list)||!list.length)return null;
+  const p=list.find(v=>v.period===1||v.period?.number===1)||list[0];
+  const n=Number(p?.value);
+  return p?.value!==null&&p?.value!==undefined&&Number.isInteger(n)&&n>=0?n:null;
+ };
+ const h1=periodOne(h),a1=periodOne(a),total=h1!==null&&a1!==null?h1+a1:null;
+ return {actual_ml_winner:hs>as?g.home:g.away,actual_home_goal_margin:hs-as,
+  actual_over:total===null?null:Number(total>=2),actual_first_period_goals:total,
+  checked_at:new Date().toISOString()};
+}
+function loadScoreCache(){
+ try{
+  const saved=JSON.parse(localStorage.getItem(ESPN_CACHE_KEY)||'{}');
+  for(const [id,v] of Object.entries(saved)){
+   if(byId.has(id)&&v&&Number.isInteger(v.actual_home_goal_margin)&&
+      Date.now()-Date.parse(v.checked_at)<7*86400000)secondaryResults.set(id,v);
+  }
+ }catch(_){}
+}
+function saveScoreCache(){
+ try{localStorage.setItem(ESPN_CACHE_KEY,JSON.stringify(Object.fromEntries(secondaryResults)));}catch(_){}
+}
+async function checkBetScores(force=false){
+ if(checkingScores||(!force&&Date.now()-lastScoreCheck<5*60000))return;
+ lastScoreCheck=Date.now();
+ const status=document.getElementById('scores-check-status');
+ const outstanding=[...new Set(savedBets.filter(b=>!b.voided&&settledOutcome(b)==='pending').map(b=>b.game_id))]
+  .map(id=>byId.get(id)).filter(g=>g&&Date.parse(g.start_utc)<=Date.now()-90*60000);
+ if(!outstanding.length){
+  status.textContent='No completed games with unresolved tracked bets to check.';return;
+ }
+ checkingScores=true;
+ status.textContent='Checking NHL final results for '+outstanding.length+' games…';
+ const scoreboardDates=new Set();
+ for(const game of outstanding){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(game.start_utc));
+  const val=key=>parts.find(p=>p.type===key)?.value;
+  scoreboardDates.add(val('year')+val('month')+val('day'));
+ }
+ let events=[],errors=0,matched=0,conflicts=0;
+ for(const date of [...scoreboardDates].slice(0,15)){
+  try{
+   const response=await fetch('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates='+date,{cache:'no-store'});
+   if(!response.ok)throw Error('HTTP '+response.status);
+   const report=await response.json();
+   if(!Array.isArray(report?.events))throw Error('Invalid NHL scoreboard');
+   events=events.concat(report.events);
+  }catch(_){errors++;}
+ }
+ for(const g of outstanding){
+  const results=events.map(ev=>parseEspnFinal(ev,g)).filter(Boolean);
+  if(results.length!==1)continue; // avoid ambiguous matchup matches
+  const v=results[0];
+  if(Number.isInteger(g.actual_home_goal_margin)&&g.actual_home_goal_margin!==v.actual_home_goal_margin){conflicts++;continue;}
+  if((g.actual_over===0||g.actual_over===1)&&v.actual_over!==null&&g.actual_over!==v.actual_over){conflicts++;continue;}
+  secondaryResults.set(String(g.game_id),v);matched++;
+ }
+ saveScoreCache();
+ checkingScores=false;
+ drawBets();
+ status.textContent='Score check: '+matched+' final games matched, '+errors+' date requests unavailable, '+conflicts+' mismatches. ESPN results are provisional until verified with official NHL scores. Last checked: '+stamp(new Date().toISOString())+'.';
+}
+loadScoreCache();
+document.getElementById('scores-check').addEventListener('click',()=>checkBetScores(true));
+window.addEventListener('focus',()=>checkBetScores());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkBetScores();});
+setInterval(()=>{if(!document.hidden)checkBetScores();},5*60000);
+function betReturn(b){
+ const outcome=settledOutcome(b);
+ if(outcome==='void')return 0;
+ if(outcome==='pending')return null;
+ if(outcome==='loss')return -b.stake;
+ return b.stake*(b.odds>0?b.odds/100:100/Math.abs(b.odds));
+}
+function money(x){return (x<0?'−':'')+'$'+Math.abs(x).toFixed(2);}
+function localDayKey(utc){
+ const d=new Date(utc);
+ if(Number.isNaN(d.getTime()))return '';
+ return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+}
+function betDayKey(b){
+ const game=byId.get(b.game_id);
+ return localDayKey(game?.start_utc||b.created_at);
+}
+const nowCalendar=new Date();
+let calYear=nowCalendar.getFullYear(),calMonth=nowCalendar.getMonth(),calSelected='';
+function dayJournal(){
+ const days=new Map();
+ for(const b of savedBets.filter(b=>b.placed&&!b.voided)){
+  const day=betDayKey(b);
+  if(!day)continue;
+  if(!days.has(day))days.set(day,{bets:[],settled:0,open:0,pl:0});
+  const d=days.get(day),result=settledOutcome(b),pl=betReturn(b);
+  d.bets.push(b);
+  if(result==='win'||result==='loss'){d.settled++;d.pl+=pl;}
+  else if(result==='pending')d.open++;
+ }
+ return days;
+}
+function drawCalendar(){
+ const days=dayJournal();
+ const first=new Date(calYear,calMonth,1),numDays=new Date(calYear,calMonth+1,0).getDate();
+ const name=first.toLocaleString(undefined,{month:'long',year:'numeric'});
+ document.getElementById('cal-month').textContent=name;
+ const prefix=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-';
+ let monthPL=0,monthSettled=0,monthOpen=0;
+ for(const [key,d] of days)if(key.startsWith(prefix)){monthPL+=d.pl;monthSettled+=d.settled;monthOpen+=d.open;}
+ document.getElementById('cal-pl').textContent=money(monthPL);
+ document.getElementById('cal-settled').textContent=monthSettled;
+ document.getElementById('cal-open').textContent=monthOpen;
+ let html=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(w=>'<div class="calendar-weekday">'+w+'</div>').join('');
+ for(let i=0;i<first.getDay();i++)html+='<span aria-hidden="true"></span>';
+ for(let i=1;i<=numDays;i++){
+  const key=prefix+String(i).padStart(2,'0'),d=days.get(key);
+  const state=!d?'':d.pl>0?'cal-win':d.pl<0?'cal-loss':d.open?'cal-pending':'';
+  const pl=d&&d.settled?money(d.pl):'—';
+  html+='<button type="button" class="calendar-day '+state+'" data-cal-day="'+key+'" aria-pressed="'+String(calSelected===key)+'" aria-label="'+key+(d?', '+d.bets.length+' placed bets, '+money(d.pl)+' settled P/L':' no bets')+'"><span class="day-number">'+i+'</span><span class="day-money">'+(d?pl:'')+'</span><span class="day-count">'+(d?d.bets.length+' bets':'')+'</span></button>';
+ }
+ document.getElementById('cal-grid').innerHTML=html;
+ const detail=document.getElementById('cal-detail'),selected=days.get(calSelected);
+ if(!calSelected||!calSelected.startsWith(prefix)){
+  detail.innerHTML='<p class="foot">Tap a date to view its placed bets.</p>';
+ }else if(!selected){
+  detail.innerHTML='<p class="foot">'+escaped(calSelected)+': No placed wagers recorded.</p>';
+ }else{
+  const entries=selected.bets.map(b=>{
+    const result=settledOutcome(b),pl=betReturn(b);
+    return '<div class="track-entry"><strong>'+escaped(b.matchup||b.game_id)+'</strong><span>'+escaped(b.selection||b.market)+' · '+money(b.stake)+' · '+escaped(b.odds>0?'+'+b.odds:b.odds)+'</span><span>'+escaped(result.toUpperCase())+' · '+(pl===null?'P/L pending':money(pl))+'</span></div>';
+  }).join('');
+  detail.innerHTML='<h3>'+escaped(calSelected)+' · '+selected.bets.length+' placed wagers</h3>'+entries;
+ }
+}
+document.getElementById('cal-prev').addEventListener('click',()=>{
+ const d=new Date(calYear,calMonth-1,1);calYear=d.getFullYear();calMonth=d.getMonth();calSelected='';drawCalendar();
+});
+document.getElementById('cal-next').addEventListener('click',()=>{
+ const d=new Date(calYear,calMonth+1,1);calYear=d.getFullYear();calMonth=d.getMonth();calSelected='';drawCalendar();
+});
+document.getElementById('cal-grid').addEventListener('click',e=>{
+ const button=e.target.closest('[data-cal-day]');
+ if(button){calSelected=button.dataset.calDay;drawCalendar();}
+});
+function drawBets(){
+ const placed=savedBets.filter(b=>b.placed&&!b.voided);
+ const graded=placed.filter(b=>settledOutcome(b)==='win'||settledOutcome(b)==='loss');
+ const open=placed.filter(b=>settledOutcome(b)==='pending');
+ const profit=graded.reduce((sum,b)=>sum+betReturn(b),0);
+ document.getElementById('bets-count').textContent=placed.length;
+ document.getElementById('bets-graded').textContent=graded.length;
+ document.getElementById('bets-open').textContent=open.length;
+ document.getElementById('bets-pl').textContent=money(profit);
+ const rows=[...savedBets].sort((a,b)=>b.created_at.localeCompare(a.created_at));
+ document.getElementById('bets-list').innerHTML=rows.map(b=>{
+  const g=byId.get(b.game_id);
+  const name=g?g.away+' @ '+g.home:(b.matchup||'Game '+b.game_id);
+  const side=b.selection||(g?marketLabel(g,b.market):BET_MARKETS[b.market].label);
+  const result=settledOutcome(b);
+  const pl=betReturn(b);
+  const oddsLabel=b.odds>0?'+'+b.odds:String(b.odds);
+  const label=b.placed?'Placed bet':'Paper tracking only';
+  const origin=resultOrigin(b);
+  return '<div class="track-entry"><strong>'+escaped(name)+'</strong><span>'+escaped(side)+' · '+escaped(oddsLabel)+' · Stake '+money(b.stake)+'</span><span class="foot">'+escaped(label)+' · '+escaped(b.book||'Book not specified')+' · Recorded '+escaped(stamp(b.created_at))+'</span><span class="foot">Score source: '+escaped(origin)+'</span><span><strong>'+escaped(result.toUpperCase())+'</strong> · '+(pl===null?'P/L pending':money(pl)+(b.placed?'':' (paper only)'))+'</span><div class="track-actions">'+(b.voided?'':'<button type="button" data-bet-void="'+escaped(b.id)+'">Mark void</button>')+'<button type="button" data-bet-delete="'+escaped(b.id)+'">Delete entry</button></div></div>';
+ }).join('')||'<p class="muted">No saved picks yet. Use Track Bet on a prediction to add your first entry.</p>';
+ if(storageReady)betStatus.textContent=savedBets.length+' locally saved records on this browser. Export a backup before changing devices.';
+ drawCalendar();
+}
+function openBetForm(id,market){
+ const g=byId.get(id);
+ if(!g||!BET_MARKETS[market]||!Number.isFinite(BET_MARKETS[market].prob(g)))return;
+ currentTracking={game:g,market};
+ const form=document.getElementById('bet-form');
+ form.reset();
+ document.getElementById('odds-minus').setAttribute('aria-pressed','false');
+ document.getElementById('odds-plus').setAttribute('aria-pressed','false');
+ document.getElementById('bet-matchup').value=g.away+' @ '+g.home;
+ document.getElementById('bet-selection').value=marketLabel(g,market);
+ betFormStatus.textContent='';
+ form.classList.remove('hidden');
+ const tab=document.querySelector('[data-tab="tracker"]');
+ if(tab)tab.click();
+ document.getElementById('bet-stake').focus();
+}
+document.addEventListener('click',ev=>{
+ const track=ev.target.closest('[data-track-game][data-track-market]');
+ if(track){openBetForm(track.dataset.trackGame,track.dataset.trackMarket);return;}
+ const voidButton=ev.target.closest('[data-bet-void]');
+ const deleteButton=ev.target.closest('[data-bet-delete]');
+ if(voidButton||deleteButton){
+  const id=(voidButton||deleteButton).dataset[voidButton?'betVoid':'betDelete'];
+  const i=savedBets.findIndex(x=>x.id===id);
+  if(i<0)return;
+  const action=voidButton?'mark this entry void':'permanently delete this entry';
+  if(!window.confirm('Are you sure you want to '+action+'?'))return;
+  const before=[...savedBets];
+  if(voidButton)savedBets[i]={...savedBets[i],voided:true};
+  else savedBets.splice(i,1);
+  if(!persistBets())savedBets=before;
+  drawBets();
+ }
+});
+function updateOddsSign(sign){
+ const field=document.getElementById('bet-odds');
+ const digits=field.value.replace(/[^0-9]/g,'').slice(0,6);
+ field.value=sign+digits;
+ document.getElementById('odds-minus').setAttribute('aria-pressed',String(sign==='-'));
+ document.getElementById('odds-plus').setAttribute('aria-pressed',String(sign==='+'));
+}
+document.getElementById('odds-minus').addEventListener('click',()=>updateOddsSign('-'));
+document.getElementById('odds-plus').addEventListener('click',()=>updateOddsSign('+'));
+document.getElementById('bet-odds').addEventListener('input',()=>{
+ const field=document.getElementById('bet-odds');
+ const text=field.value;
+ const sign=text.startsWith('-')?'-':text.startsWith('+')?'+':'';
+ const digits=text.replace(/[^0-9]/g,'').slice(0,6);
+ field.value=sign+digits;
+ document.getElementById('odds-minus').setAttribute('aria-pressed',String(sign==='-'));
+ document.getElementById('odds-plus').setAttribute('aria-pressed',String(sign==='+'));
+});
+document.getElementById('bet-cancel').addEventListener('click',()=>{
+ document.getElementById('bet-form').classList.add('hidden');currentTracking=null;
+});
+document.getElementById('bet-form').addEventListener('submit',ev=>{
+ ev.preventDefault();
+ if(!currentTracking)return;
+ const stake=Number(document.getElementById('bet-stake').value);
+ const oddsRaw=document.getElementById('bet-odds').value;
+ const odds=/^[+-][0-9]{3,6}$/.test(oddsRaw)?Number(oddsRaw):NaN;
+ const book=document.getElementById('bet-book').value.trim();
+ if(!Number.isFinite(stake)||stake<=0||stake>1000000||!Number.isInteger(odds)||Math.abs(odds)<100||Math.abs(odds)>100000){
+  betFormStatus.textContent='Enter your stake and tap − or + next to the odds, then enter digits (example: −110 or +150).';return;
+ }
+ const g=currentTracking.game,market=currentTracking.market;
+ const record={
+  id:Date.now()+'-'+Math.random().toString(36).slice(2),
+  game_id:String(g.game_id),market,stake:Math.round(stake*100)/100,odds,
+  book,placed:document.getElementById('bet-placed').checked,
+  created_at:new Date().toISOString(),
+  matchup:g.away+' @ '+g.home,selection:marketLabel(g,market),
+  model_probability:BET_MARKETS[market].prob(g)
+ };
+ if(!validBet(record)){betFormStatus.textContent='Invalid entry; nothing saved.';return;}
+ savedBets.push(record);
+ if(!persistBets()){savedBets.pop();return;}
+ currentTracking=null;
+ document.getElementById('bet-form').classList.add('hidden');
+ drawBets();
+});
+document.getElementById('bets-export').addEventListener('click',()=>{
+ const backup={format:'nhl-local-bet-tracker-v1',exported_at:new Date().toISOString(),bets:savedBets};
+ const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob);
+ const link=document.createElement('a');
+ link.href=url;link.download='nhl-bet-tracker-backup.json';
+ document.body.appendChild(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),500);
+});
+document.getElementById('bets-import').addEventListener('change',async ev=>{
+ const file=ev.target.files?.[0];if(!file)return;
+ try{
+  if(!storageReady)throw Error('Local storage unavailable or needs recovery');
+  if(file.size>2_000_000)throw Error('Backup too large');
+  const doc=JSON.parse(await file.text());
+  if(doc.format!=='nhl-local-bet-tracker-v1'||!Array.isArray(doc.bets)||doc.bets.length>3000||doc.bets.some(b=>!validBet(b)))
+   throw Error('Incorrect or invalid backup format');
+  const before=[...savedBets],ids=new Set(savedBets.map(b=>b.id));
+  for(const bet of doc.bets)if(!ids.has(bet.id)){savedBets.push(bet);ids.add(bet.id);}
+  if(!persistBets()){savedBets=before;return;}
+  drawBets();
+  betStatus.textContent='Backup merged successfully. '+savedBets.length+' total local records.';
+ }catch(err){betStatus.textContent='Import failed: '+String(err.message);}
+ finally{ev.target.value='';}
+});
+drawBets();
+checkBetScores();
+
+function metric(rows,key){
+ if(!rows.length)return null;
+ const n=rows.length;
+ const brier=rows.reduce((sum,r)=>sum+(r[key]-r.actual_over)**2,0)/n;
+ const log=rows.reduce((sum,r)=>{const p=Math.min(1-1e-8,Math.max(1e-8,r[key]));return sum-r.actual_over*Math.log(p)-(1-r.actual_over)*Math.log(1-p);},0)/n;
+ const acc=rows.filter(r=>(r[key]>=.5)===(r.actual_over===1)).length/n;
+ return {n,brier,log,acc};
+}
+const graded=data.games.filter(g=>g.actual_over===0||g.actual_over===1);
+document.getElementById('count').textContent=data.games.length;
+document.getElementById('graded').textContent=graded.length;
+document.getElementById('brier').textContent=graded.length?fmtNum(metric(graded,'p_experimental').brier):'Pending';
+document.getElementById('capture').textContent=stamp(data.snapshot_at);
+function drawGames(){
+ const search=document.getElementById('search').value.toUpperCase().trim();
+ const filter=document.getElementById('filter').value;
+ const rows=data.games.filter(g=>{
+  if(search&&!([g.home,g.away,g.game_id].join(' ').toUpperCase().includes(search)))return false;
+  if(filter==='over'&&g.p_experimental<.5)return false;
+  if(filter==='under'&&g.p_experimental>=.5)return false;
+  if(filter==='graded'&&g.actual_over!==0&&g.actual_over!==1)return false;
+  if(filter==='pending'&&(g.actual_over===0||g.actual_over===1))return false;
+  return true;
+ });
+ document.getElementById('mobile-game-list').innerHTML=rows.map(g=>{
+  const outcome=g.actual_over===1?'Over ('+escaped(g.actual_first_period_goals)+' goals)':g.actual_over===0?'Under ('+escaped(g.actual_first_period_goals)+' goals)':'Awaiting grade';
+  const picked=g.p_experimental>=.5?'OVER 1.5':'UNDER 1.5';
+  const correct=(g.actual_over===0||g.actual_over===1)
+    ? ((g.p_experimental>=.5)===(g.actual_over===1)) : null;
+  const grade=correct===null?'Awaiting official result':(correct?'CORRECT':'INCORRECT');
+  const audit='<div class="game-meta"><span>Frozen first-period prediction: '+escaped(g.captured_utc?stamp(g.captured_utc):data.snapshot_at?stamp(data.snapshot_at):'Unknown')+'</span><span>Pick: '+picked+'</span></div><div class="game-meta"><span>Grade: '+grade+'</span><span>'+(correct===null?'':('Brier: '+fmtNum((g.p_experimental-g.actual_over)**2)))+'</span></div>'+(g.scorer_captured_utc?'<div class="game-date">Scorer watchlist captured: '+escaped(stamp(g.scorer_captured_utc))+'</div>':'');
+  const watch=(g.goalscorer_watchlist||[]).slice(0,4).map(r=>'<span class="scorer-tag">'+escaped(r.name)+' ('+escaped(r.team)+')</span>').join('');
+  return '<article class="game-card"><div class="game-card-top"><div><div class="game-date">'+escaped(stamp(g.start_utc))+'</div><div class="game-match">'+escaped(g.away+' @ '+g.home)+'</div></div></div><div class="game-probs"><div class="game-prob"><span>Over 1.5</span><strong>'+fmtPct(g.p_experimental)+'</strong></div><div class="game-prob"><span>Under 1.5</span><strong>'+fmtPct(1-g.p_experimental)+'</strong></div></div><div class="game-meta"><span>Baseline Over: '+fmtPct(g.p_baseline)+'</span><span>'+outcome+'</span></div>'+audit+(watch?'<div><small>Historical scorer watchlist</small><div class="scorer-tags">'+watch+'</div></div>':'')+trackButtons(g,['p1_over','p1_under'])+'</article>';
+ }).join('')||'<div class="empty">No matching forecasts</div>';
+ document.getElementById('games').innerHTML=rows.map(g=>'<tr><td>'+escaped(stamp(g.start_utc))+'</td><td>'+escaped(g.away+' @ '+g.home)+'</td><td class="prob">'+fmtPct(g.p_experimental)+'</td><td>'+fmtPct(1-g.p_experimental)+'</td><td>'+fmtPct(g.p_baseline)+'</td><td>'+(g.actual_over===1?'Over ('+escaped(g.actual_first_period_goals)+' goals)':g.actual_over===0?'Under ('+escaped(g.actual_first_period_goals)+' goals)':'Pending grade')+'</td></tr>').join('')||'<tr><td colspan="6" class="empty">No matching forecasts</td></tr>';
+}
+document.getElementById('search').addEventListener('input',drawGames);
+document.getElementById('filter').addEventListener('change',drawGames);drawGames();
+function drawPerformance(){
+ const overall=graded.length?'<div class="scroll"><table><thead><tr><th>Model</th><th>Games</th><th>Brier ↓</th><th>Log loss ↓</th><th>Accuracy</th></tr></thead><tbody>'+[['Experimental','p_experimental'],['Raw','p_raw'],['Baseline','p_baseline']].map(([name,key])=>{const m=metric(graded,key);return '<tr><td>'+name+'</td><td>'+m.n+'</td><td>'+fmtNum(m.brier)+'</td><td>'+fmtNum(m.log)+'</td><td>'+fmtPct(m.acc)+'</td></tr>';}).join('')+'</tbody></table></div>':'<p>No first-period games have been graded yet. Run Test #22 in <code>settle</code> mode after the games conclude, then rebuild this dashboard to incorporate that artifact.</p>';
+ let html='<div><strong>Forward results</strong>'+overall+'</div>';
+ const historic=data.historical;
+ if(historic&&historic.scores){
+  html+='<div><h2>Historical 2025–26 benchmark ('+escaped(historic.games)+' games)</h2><div class="scroll"><table><thead><tr><th>Model</th><th>Accuracy</th><th>Brier ↓</th><th>Log loss ↓</th></tr></thead><tbody>';
+  for(const label of ['experimental','raw','baseline']){
+   const s=historic.scores[label];
+   if(s)html+='<tr><td>'+escaped(label)+'</td><td>'+fmtPct(s.accuracy)+'</td><td>'+fmtNum(s.brier)+'</td><td>'+fmtNum(s.log_loss)+'</td></tr>';
+  }
+  html+='</tbody></table></div><p class="foot">Historical scores are separate from prospective forward scores. They do not establish betting profitability.</p></div>';
+ }
+ document.getElementById('performance-output').innerHTML=html;
+}drawPerformance();
+document.getElementById('about-text').innerHTML='<p><strong>Snapshot time:</strong> '+escaped(stamp(data.snapshot_at))+'</p><p><strong>Settlement artifact:</strong> '+escaped(data.settlement_at?stamp(data.settlement_at):'Not yet provided')+'</p><p><strong>Model version:</strong> '+escaped(data.model_version)+'</p><p><strong>SHA-256:</strong> <code style="overflow-wrap:anywhere">'+escaped(data.snapshot_sha256)+'</code></p><p><strong>Sources:</strong> '+escaped(data.sources)+'</p><p><strong>Limitations:</strong> Saved game schedules are not verified puck-drop times. GitHub artifacts have limited retention. We do not have licensed live odds or proof of profitable bets. Imported odds stay on this device.</p>';
+for(const b of document.querySelectorAll('[data-tab]'))b.addEventListener('click',()=>{
+ for(const button of document.querySelectorAll('[data-tab]'))button.setAttribute('aria-selected',String(button===b));
+ for(const section of document.querySelectorAll('[role=tabpanel]'))section.classList.toggle('hidden',section.id!==b.dataset.tab);
+});
+
+function drawMoneyline(){
+ const forecasted=data.games.filter(g=>Number.isFinite(g.p_home_ml));
+ const graded=forecasted.filter(g=>g.actual_ml_winner===g.home||g.actual_ml_winner===g.away);
+ const correct=graded.filter(g=>(g.p_home_ml>=.5)===(g.actual_ml_winner===g.home)).length;
+ const overview=document.getElementById('ml-overview');
+ overview.textContent=forecasted.length+' frozen ML forecasts; '+graded.length+' graded. '+(graded.length?'Correct '+correct+'/'+graded.length+' · Accuracy '+fmtPct(correct/graded.length):'No ML grades yet.');
+ const root=document.getElementById('ml-games');
+ root.innerHTML=data.games.map(g=>{
+   const available=Number.isFinite(g.p_home_ml);
+   if(!available)return '<div class="game-card"><div class="game-match">'+escaped(g.away+' @ '+g.home)+'</div><div class="foot">No pregame ML forecast was saved for this game. Original first-period prediction is preserved.</div></div>';
+   const pick=g.p_home_ml>=.5?g.home:g.away;
+   const actual=(g.actual_ml_winner===g.home||g.actual_ml_winner===g.away)?g.actual_ml_winner:null;
+   const verdict=actual?('Official winner: '+actual+' · '+(pick===actual?'CORRECT':'INCORRECT')):'Awaiting official final';
+   return '<div class="game-card"><div class="game-match">'+escaped(g.away+' @ '+g.home)+'</div><div class="game-date">'+escaped(stamp(g.start_utc))+'</div><div class="game-probs"><div class="game-prob"><span>'+escaped(g.home)+' ML</span><strong>'+fmtPct(g.p_home_ml)+'</strong></div><div class="game-prob"><span>'+escaped(g.away)+' ML</span><strong>'+fmtPct(1-g.p_home_ml)+'</strong></div></div><div class="game-meta"><span>Model pick: '+escaped(pick)+'</span><span>'+escaped(verdict)+'</span></div><div class="game-date">Forecast frozen: '+escaped(stamp(g.captured_utc))+'</div><div class="foot">Not sportsbook odds · Experimental heuristic · Includes OT/SO</div>'+trackButtons(g,['ml_home','ml_away'])+'</div>';
+ }).join('');
+}drawMoneyline();
+
+function drawPuckline(){
+ const reports=data.games.filter(g=>Number.isFinite(g.p_home_minus_1_5)&&Number.isFinite(g.p_away_minus_1_5));
+ const graded=reports.filter(g=>Number.isInteger(g.actual_home_goal_margin));
+ document.getElementById('puck-overview').textContent=reports.length+' frozen puck-line forecasts; '+graded.length+' officially graded games. Not betting returns.';
+ document.getElementById('puck-games').innerHTML=data.games.map(g=>{
+   if(!Number.isFinite(g.p_home_minus_1_5)||!Number.isFinite(g.p_away_minus_1_5))
+     return '<div class="game-card"><div class="game-match">'+escaped(g.away+' @ '+g.home)+'</div><div class="foot">No pregame puck-line probabilities frozen for this matchup.</div></div>';
+   const margin=Number.isInteger(g.actual_home_goal_margin)?g.actual_home_goal_margin:null;
+   const options=[
+     [g.home+' -1.5',g.p_home_minus_1_5,margin!==null?margin>=2:null],
+     [g.home+' +1.5',1-g.p_away_minus_1_5,margin!==null?margin>=-1:null],
+     [g.away+' -1.5',g.p_away_minus_1_5,margin!==null?margin<=-2:null],
+     [g.away+' +1.5',1-g.p_home_minus_1_5,margin!==null?margin<=1:null]
+   ];
+   const cards=options.map(([label,p,win])=>'<div class="game-prob"><span>'+escaped(label)+'</span><strong>'+fmtPct(p)+'</strong><small>'+(win===null?'Pending final':win?'COVER':'NO COVER')+'</small></div>').join('');
+   return '<div class="game-card"><div class="game-match">'+escaped(g.away+' @ '+g.home)+'</div><div class="game-date">'+escaped(stamp(g.start_utc))+'</div><div class="game-probs">'+cards+'</div><div class="game-meta"><span>'+(margin===null?'Awaiting official final':'Official margin, home minus away: '+(margin>0?'+':'')+margin)+'</span><span>Frozen: '+escaped(stamp(g.captured_utc))+'</span></div><div class="foot">Experimental model · Not sportsbook prices · Includes OT/SO</div>'+trackButtons(g,['puck_home_minus','puck_home_plus','puck_away_minus','puck_away_plus'])+'</div>';
+ }).join('');
+}drawPuckline();
+
+function drawScorers(){
+ const all=data.games.filter(g=>(g.goalscorer_watchlist||[]).length>0);
+ const withResults=data.games.filter(g=>g.actual_over===0||g.actual_over===1);
+ const entries=all.map(g=>{
+   const watch=g.goalscorer_watchlist||[];
+   const outcomes=new Map((g.goalscorer_results||[]).map(x=>[String(x.player_id),x]));
+   const rows=watch.map(r=>{
+     const graded=outcomes.get(String(r.player_id));
+     return '<tr><td>'+escaped(r.name)+'</td><td>'+escaped(r.team)+'</td><td>'+escaped(r.historical_goal_games)+'/'+escaped(r.historical_team_games)+' history</td><td>'+(graded?(graded.scored?'Scored ('+escaped(graded.actual_goals)+')':'No goal'):'Pending')+'</td></tr>';
+   }).join('');
+   return '<div class="panel"><h2>'+escaped(g.away+' @ '+g.home)+'</h2><p class="muted">'+escaped(stamp(g.start_utc))+'</p><p class="game-date">'+(g.scorer_captured_utc?'Watchlist frozen: '+escaped(stamp(g.scorer_captured_utc)):'Historical watchlist timestamp unavailable')+'</p><div class="scroll"><table><thead><tr><th>Player</th><th>Team</th><th>Prior goal games</th><th>Official result</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+ });
+ document.getElementById('scorer-overview').textContent=all.length+' games with scorer candidates; '+withResults.length+' graded games. No verified player-prop odds or probabilities.';
+ document.getElementById('scorer-games').innerHTML=entries.join('')||'<p class="muted">No scorer watchlist recorded for this snapshot. New Test 26 pregame snapshots will include candidates.</p>';
+}drawScorers();
+
+
+
+/* Local-only historical odds comparison, 24 hours through 1 hour before schedule. */
+function parseOddsHistory(doc){
+ const quotes=Array.isArray(doc)?doc:Array.isArray(doc?.quotes)?doc.quotes:null;
+ if(!quotes||quotes.length>25000)throw Error('Requires quotes array (25,000 max)');
+ const grouped=new Map(),rejected={invalid:0,outside:0,unknown:0};
+ for(const q of quotes){
+  if(!q||typeof q!=='object'){rejected.invalid++;continue;}
+  const g=byId.get(String(q.nhl_game_id||''));
+  if(!g){rejected.unknown++;continue;}
+  const utc=Date.parse(q.observed_at_utc),start=Date.parse(g.start_utc);
+  const book=String(q.bookmaker||'').trim().slice(0,60);
+  const market=String(q.market||'');
+  const selection=String(q.selection||'');
+  const odds=Number(q.american_odds);
+  if(!Number.isFinite(utc)||!Number.isFinite(start)||!book||!BET_MARKETS[market]
+   ||!Number.isInteger(odds)||Math.abs(odds)<100||Math.abs(odds)>100000
+   ||selection!==market){rejected.invalid++;continue;}
+  const hours=(start-utc)/3600000;
+  if(hours<1||hours>24){rejected.outside++;continue;}
+  const key=[g.game_id,book,market].join('|');
+  if(!grouped.has(key))grouped.set(key,{g,book,market,observations:new Map()});
+  const group=grouped.get(key);
+  group.observations.set(q.observed_at_utc,{time:utc,hours,odds});
+ }
+ const groups=[...grouped.values()].map(group=>({
+  ...group,points:[...group.observations.values()].sort((a,b)=>a.time-b.time)
+ })).sort((a,b)=>a.g.start_utc.localeCompare(b.g.start_utc));
+ return {groups,rejected};
+}
+function drawMovement(result){
+ const root=document.getElementById('movement-list');
+ root.innerHTML=result.groups.map(group=>{
+  const points=group.points;
+  const start=points[0],end=points[points.length-1];
+  const d1=start.odds>0?1+start.odds/100:1+100/-start.odds;
+  const d2=end.odds>0?1+end.odds/100:1+100/-end.odds;
+  const movement=((1/d2-1/d1)*100).toFixed(2);
+  const rows=points.map(p=>'<tr><td>'+escaped(stamp(new Date(p.time).toISOString()))+'</td><td>'+p.hours.toFixed(2)+'h</td><td>'+escaped(p.odds>0?'+'+p.odds:p.odds)+'</td><td>'+fmtPct(1/(p.odds>0?1+p.odds/100:1+100/-p.odds))+'</td></tr>').join('');
+  return '<div class="game-card"><div class="game-match">'+escaped(group.g.away+' @ '+group.g.home)+'</div><div class="foot">'+escaped(group.book)+' · '+escaped(marketLabel(group.g,group.market))+'</div><div class="game-meta"><span>First observed: '+escaped(start.odds>0?'+'+start.odds:start.odds)+'</span><span>Last observed: '+escaped(end.odds>0?'+'+end.odds:end.odds)+'</span></div><div class="foot">Implied break-even change: '+(Number(movement)>0?'+':'')+movement+' percentage points (not no-vig)</div><div class="scroll"><table><thead><tr><th>Quote time</th><th>Before game</th><th>American odds</th><th>Break-even</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+ }).join('')||'<p class="muted">No matching quotes in the 24h-to-1h window.</p>';
+ document.getElementById('movement-status').textContent=
+ result.groups.length+' market/books matched. Excluded '+result.rejected.invalid+' malformed, '+
+ result.rejected.unknown+' unknown games, '+result.rejected.outside+' outside the 24h-to-1h window. No live feed.';
+}
+document.getElementById('odds-history').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>2500000)throw Error('File exceeds 2.5 MB');
+  drawMovement(parseOddsHistory(JSON.parse(await file.text())));
+ }catch(err){document.getElementById('movement-status').textContent='Could not load historical odds: '+err.message;}
+ finally{e.target.value='';}
+});
+
+const marketNames=new Set(['h2h_first_period_totals','totals_1st_period','first_period_totals','period_1_totals','nhl_first_period_totals']);
+function quote(book,outcome){
+ const offers=[];
+ for(const m of book?.markets||[]){
+  if(!marketNames.has(String(m.key||'').toLowerCase()))continue;
+  const side=(m.outcomes||[]).find(o=>String(o.name||'').toLowerCase()===outcome&&Number(o.point)===1.5&&Number(o.price)>1&&Number(o.price)<100);
+  if(side)offers.push(Number(side.price));
+ }
+ return offers.length===1?offers[0]:null;
+}
+document.getElementById('quotes').addEventListener('change',async ev=>{
+ const status=document.getElementById('odds-status');
+ const tbody=document.getElementById('odds-rows');tbody.textContent='';
+ const file=ev.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>2000000)throw Error('File exceeds 2 MB');
+  const parsed=JSON.parse(await file.text());
+  const events=Array.isArray(parsed)?parsed:Array.isArray(parsed.events)?parsed.events:[parsed];
+  const matches=[];
+  for(const event of events){
+   const g=byId.get(String(event.nhl_game_id||''));
+   if(!g)continue;
+   const books=Object.fromEntries((event.bookmakers||[]).filter(b=>b&&b.key).map(b=>[b.key,b]));
+   if(!books.draftkings||!books.pinnacle)continue;
+   const dko=quote(books.draftkings,'over'),dku=quote(books.draftkings,'under');
+   const pno=quote(books.pinnacle,'over'),pnu=quote(books.pinnacle,'under');
+   if([dko,dku,pno,pnu].some(x=>x===null))continue;
+   const fair=(1/pno)/((1/pno)+(1/pnu));
+   matches.push('<tr><td>'+escaped(g.away+' @ '+g.home)+'</td><td>'+dko.toFixed(2)+'</td><td>'+dku.toFixed(2)+'</td><td>'+pno.toFixed(2)+'</td><td>'+pnu.toFixed(2)+'</td><td>'+fmtPct(fair)+'</td><td>'+((g.p_experimental-fair)>=0?'+':'')+((g.p_experimental-fair)*100).toFixed(1)+' pp</td></tr>');
+  }
+  tbody.innerHTML=matches.join('')||'<tr><td colspan="7" class="empty">No matching game/period/line quotes. Requires nhl_game_id, decimal odds, and exact first-period 1.5 markets.</td></tr>';
+  status.textContent=matches.length+' matched events from local file. Quotes are not verified as current, available, or executable.';
+ }catch(err){status.textContent='Could not read odds: '+err.message;}
+});
+</script></body></html>
