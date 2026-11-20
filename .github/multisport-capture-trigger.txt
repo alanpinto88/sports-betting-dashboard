@@ -1,0 +1,1 @@
+Trigger one-time multi-sport snapshot 2026-11-20. Manual only; no scheduled recurring API usage.
