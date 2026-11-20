@@ -75,10 +75,9 @@ export default {
         const upstream=await fetch('https://prizepicksapi.com/api/v1/coverage',{
           headers:{
             'Authorization':`Bearer ${env.PRIZEPICKS_API_KEY}`,
-            'Accept':'application/json',
-            'X-User-Request':'Verify supported player prop leagues for an EV Sports discrepancy dashboard'
+            'Accept':'application/json'
           },
-          signal:AbortSignal.timeout(12000)
+        signal:AbortSignal.timeout(12000)
         });
         const result={
           ok:upstream.ok,
