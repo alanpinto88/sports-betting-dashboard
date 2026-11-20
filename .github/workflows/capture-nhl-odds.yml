@@ -1,6 +1,9 @@
 name: Capture NHL odds (manual, quota-controlled)
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/odds-capture-trigger.txt'
 permissions:
   contents: write
 concurrency:
