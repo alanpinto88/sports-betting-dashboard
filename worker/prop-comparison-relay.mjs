@@ -47,6 +47,25 @@ export default {
         },200,headers);
       }
     }
+    if(path==='/coverage-network-check'){
+      // Zero-credit unauthenticated connectivity probe of the exact coverage URL.
+      // No API key, no user-controlled upstream URL, no response body disclosed.
+      try{
+        const upstream=await fetch('https://prizepicksapi.com/api/v1/coverage',{
+          method:'GET',headers:{'Accept':'application/json'},
+          redirect:'manual',signal:AbortSignal.timeout(10000)
+        });
+        return json({ok:true,status:'coverage_http_response',
+          providerHttpStatus:upstream.status,
+          note:'Any HTTP status proves the exact endpoint is reachable; 401/403 is expected without a key.',
+          paidRequestsEnabled:false},200,headers);
+      }catch(error){
+        const name=String(error?.name||'');
+        return json({ok:false,status:'coverage_network_failure',
+          reason:name==='TimeoutError'?'timeout':name==='TypeError'?'fetch_type_error':'runtime_or_network_error',
+          paidRequestsEnabled:false},200,headers);
+      }
+    }
     if(path==='/provider-check'){
       if(!env.PRIZEPICKS_API_KEY)return json({ok:false,status:'secret_missing',paidRequestsEnabled:false},503,headers);
       // Only provider /coverage is permitted. No client-supplied upstream URL or parameters.
