@@ -6,8 +6,9 @@ for(const token of [
  'Quote player ID mismatch',
  'Quote provenance ID missing',
  'Quote capture timestamps missing, future-dated or stale',
+ 'Quote capture timestamps inconsistent with provider snapshot',
  'x.quote_id||x.id',
  'x.captured_at',
  'No same-book, same-capture two-sided sportsbook pair'
 ])assert.ok(html.includes(token),token);
-console.log('NBA quote provenance and timestamp guards: 7 checks passed');
+console.log('NBA quote provenance and timestamp guards: 8 checks passed');
