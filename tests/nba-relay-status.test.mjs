@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const html=fs.readFileSync('player-props.html','utf8');
+assert.match(html,/RELAY_STATUS_URL='https:\/\/ev-sports-prop-relay\.alansuper2004\.workers\.dev\/live-status'/);
+assert.match(html,/data\.liveComparisonsEnabled===true/);
+assert.match(html,/Backend status could not be verified/);
+assert.match(html,/Live API not connected to GitHub Pages/);
+assert.match(html,/payload\?\.is_demo===true/);
+assert.doesNotMatch(html,/PRIZEPICKS_API_KEY|Authorization:\s*['"`]/);
+console.log('NBA frontend relay safety: 6 checks passed');
