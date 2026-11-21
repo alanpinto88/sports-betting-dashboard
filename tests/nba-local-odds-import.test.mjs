@@ -67,7 +67,7 @@ assert.match(html,/function renderImportedHistory\(\)/);
 assert.match(html,/function drawHistoryChart\(rows\)/);
 assert.match(html,/function validateHistoryRows\(rows\)/);
 assert.match(html,/items\.length>1&&items\[0\]\.event_id&&items\[0\]\.stat&&items\[0\]\.period/);
-assert.match(html,/delta:first\.event_id&&first\.stat&&first\.period\?/);
+assert.match(html,/delta:items\.length>1&&first\.event_id&&first\.stat&&first\.period\?/);
 assert.match(html,/Every quote requires event_id, stat, and period/);
 assert.match(html,/Duplicate quote at same timestamp/);
 assert.match(html,/Conflicting quotes at same timestamp/);
