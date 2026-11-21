@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {impliedProbability,noVigPair,expectedValue,validateQuote} from '../lib/nba-quote-validation.mjs';
+const now=Date.parse('2026-11-21T18:00:00Z');
+const q={league:'NBA',eventId:'fixture-game',playerId:'fixture-player',stat:'Points',period:'Full game',line:20.5,provider:'fixture',sourceId:'quote-1',sportsbook:'fixture-book',americanOdds:-110,capturedAt:'2026-11-21T17:59:00Z'};
+assert.equal(impliedProbability(-110),110/210);
+assert.equal(impliedProbability(0),null);
+assert.equal(noVigPair({...q,side:'over'},{...q,side:'under',sourceId:'quote-2'},now).marketImpliedOver,0.5);
+assert.equal(noVigPair({...q,side:'over'},{...q,line:21.5,side:'under'},now).ok,false);
+assert.equal(validateQuote({...q,side:'over',capturedAt:'2026-11-21T17:00:00Z'},now).ok,false);
+assert.ok(Math.abs(expectedValue(100,0.6)-0.2)<1e-12);
+console.log('6 NBA quote validation checks passed');
