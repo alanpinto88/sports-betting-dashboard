@@ -1,0 +1,35 @@
+name: NBA quote safety checks
+on:
+  push:
+    paths:
+      - 'player-props.html'
+      - 'tests/nba-quote-gates.test.mjs'
+      - '.github/workflows/nba-quote-safety.yml'
+  pull_request:
+    paths:
+      - 'player-props.html'
+      - 'tests/nba-quote-gates.test.mjs'
+      - '.github/workflows/nba-quote-safety.yml'
+permissions:
+  contents: read
+jobs:
+  quote-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check deterministic quote-gate cases
+        run: node tests/nba-quote-gates.test.mjs
+      - name: Check frontend inline JavaScript syntax
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import vm from 'node:vm';
+          const html=fs.readFileSync('player-props.html','utf8');
+          const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)];
+          if(!scripts.length)throw Error('No inline script found');
+          for(const [i,match] of scripts.entries())new vm.Script(match[1],{filename:'player-props.html#script-'+i});
+          console.log('Inline JavaScript syntax valid');
+          NODE
