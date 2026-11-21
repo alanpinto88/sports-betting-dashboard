@@ -101,6 +101,8 @@ export default {
       }
     }
     if(path==='/provider-check'){
+      // Disabled by default: a public caller must not trigger authenticated provider requests.
+      if(env.ENABLE_PROVIDER_DIAGNOSTIC!=='true')return json({ok:false,status:'diagnostic_disabled',paidRequestsEnabled:false,message:'Authenticated provider checks are disabled by default.'},403,headers);
       if(!env.PRIZEPICKS_API_KEY)return json({ok:false,status:'secret_missing',paidRequestsEnabled:false},503,headers);
       // Only provider /coverage is permitted. No client-supplied upstream URL or parameters.
       // This diagnostic intentionally skips Cache API: it is not available in every
