@@ -5,7 +5,7 @@ const captures=[r('16:00','15:55',-110),r('16:30','15:00',-125),r('17:00','16:55
 assert.equal(filteredObservedChanges(captures,false).length,2);
 assert.equal(filteredObservedChanges(captures,true).length,0,'stale intermediate quote must not be bridged');
 assert.equal(filteredObservedChanges([captures[0],captures[2]],true).length,1);
-assert.throws(()=>filteredObservedChanges(null),/Expected accepted/);
+assert.throws(()=>filteredObservedChanges(null),/Invalid accepted records/);
 console.log('NBA filtered changes preserve adjacency across excluded stale quotes');
 
 assert.equal(filteredObservedChanges([captures[0],captures[2]],false,['2026-11-21T16:30:00.000Z']).length,0,'conflicting intermediate capture blocks false adjacency');
