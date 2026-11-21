@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'player-props.html'
+      - 'worker/prop-comparison-relay.mjs'
       - 'tests/nba-quote-gates.test.mjs'
       - 'tests/nba-market-pairing.test.mjs'
       - 'tests/nba-devig.test.mjs'
@@ -10,10 +11,12 @@ on:
       - 'tests/nba-example-isolation.test.mjs'
       - 'tests/nba-period-isolation.test.mjs'
       - 'tests/nba-provenance.test.mjs'
+      - 'tests/relay-default-deny.test.mjs'
       - '.github/workflows/nba-quote-safety.yml'
   pull_request:
     paths:
       - 'player-props.html'
+      - 'worker/prop-comparison-relay.mjs'
       - 'tests/nba-quote-gates.test.mjs'
       - 'tests/nba-market-pairing.test.mjs'
       - 'tests/nba-devig.test.mjs'
@@ -21,6 +24,7 @@ on:
       - 'tests/nba-example-isolation.test.mjs'
       - 'tests/nba-period-isolation.test.mjs'
       - 'tests/nba-provenance.test.mjs'
+      - 'tests/relay-default-deny.test.mjs'
       - '.github/workflows/nba-quote-safety.yml'
 permissions:
   contents: read
@@ -41,6 +45,7 @@ jobs:
           node tests/nba-example-isolation.test.mjs
           node tests/nba-period-isolation.test.mjs
           node tests/nba-provenance.test.mjs
+          node tests/relay-default-deny.test.mjs
       - name: Check frontend inline JavaScript syntax
         run: |
           node --input-type=module <<'NODE'
