@@ -4,6 +4,10 @@ const selection={eventId:'e1',playerName:'=unsafe',book:'book',market:'player_po
 const changes=[{fromCapturedAt:'2026-11-21T16:00:00Z',toCapturedAt:'2026-11-21T16:30:00Z',elapsedMinutes:30,fromOdds:-110,toOdds:-120,rawImpliedProbabilityChangePoints:2.16,sourceUpdateAdvanced:true,status:'observed_change'}];
 const csv=nbaChangesCsv(changes,selection);
 assert.match(csv,/source_timestamp_advanced,evidence_status/);
+assert.match(csv,/elapsed_minutes,exceeds_gap_threshold/);
+assert.match(nbaChangesCsv(changes,selection,20),/"30","true","-110"/);
+assert.match(nbaChangesCsv(changes,selection,60),/"30","false","-110"/);
+assert.throws(()=>nbaChangesCsv(changes,selection,0),/Invalid gap threshold/);
 assert.match(csv,/"-110","-120"/);
 assert.match(csv,/"'=unsafe"/);
 assert.match(csv,/"observed_change"/);
