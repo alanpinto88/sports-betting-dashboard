@@ -135,7 +135,8 @@ $('oddsCsv').addEventListener('change',async()=>{
   $('historyPlayer').replaceChildren(new Option('Choose imported player',''),...players.map(x=>new Option(x,x.toLowerCase())));
   $('historyPlayer').value=players[0].toLowerCase();
   refreshHistoryEvents();
-  const select=$('historyBook');select.replaceChildren(new Option('All sportsbooks',''),...[...new Set(rows.map(x=>x.book))].sort().map(x=>new Option(x,x)));
+  const bookNames=new Map();for(const row of rows){const key=row.book.toLowerCase();if(!bookNames.has(key))bookNames.set(key,row.book)}
+  const select=$('historyBook');select.replaceChildren(new Option('All sportsbooks',''),...[...bookNames.values()].sort((a,b)=>a.localeCompare(b)).map(x=>new Option(x,x.toLowerCase())));
   $('historyStat').replaceChildren(new Option('All statistics',''),...[...new Set(rows.map(x=>x.stat))].sort().map(x=>new Option(x,x)));
   $('historyPeriod').replaceChildren(new Option('All periods',''),...[...new Set(rows.map(x=>x.period))].sort().map(x=>new Option(x,x)));
   $('historySide').value='';renderImportedHistory();
