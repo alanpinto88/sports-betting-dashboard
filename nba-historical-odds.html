@@ -11,7 +11,7 @@ function matches(){const values=[];for(const snapshot of snapshots)for(const eve
 function update(changed=''){const rows=matches();const filters={};for(const id of ids){const options=[...new Set(rows.filter(r=>ids.slice(0,ids.indexOf(id)).every(k=>r[k]===filters[k])).map(r=>r[id]))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));setOptions(id,options);filters[id]=$(id).value}render()}
 function render(){const svg=$('chart'),tbody=$('rows');svg.replaceChildren();tbody.replaceChildren();const selected={eventId:$('event').value,playerName:$('player').value,book:$('book').value,market:$('market').value,side:$('side').value,line:Number($('line').value)};if(!selected.eventId||!selected.playerName||!selected.book||!selected.market||!$('line').value){$('chartStatus').textContent='No market available for the selected filters.';return}let records=[];let quoteAudit;try{quoteAudit=historicalQuoteAudit(snapshots,selected);records=$('freshOnly').checked?quoteAudit.records.filter(r=>Date.parse(r.capturedAt)-Date.parse(r.sourceUpdatedAt)<=3600000):quoteAudit.records}catch(e){$('chartStatus').textContent=e.message;return}
 $('chartStatus').textContent=records.length===0?'No recorded quotes for this exact selection.':records.length===1?'Only one recorded quote: no movement trend is available.':records.length+' recorded quotes. Only observations within '+Number($('gapThreshold').value)+' minutes are connected; gaps are not estimated.';
-if($('freshOnly').checked)$('chartStatus').textContent+=' Fresh-source filter enabled: '+records.length+' of '+quoteAudit.records.length+' accepted quotes displayed; '+(quoteAudit.records.length-records.length)+' older quote(s) hidden from chart and table; CSV export still includes all accepted quotes.';
+if($('freshOnly').checked)$('chartStatus').textContent+=' Fresh-source filter enabled: '+records.length+' of '+quoteAudit.records.length+' accepted quotes displayed; '+(quoteAudit.records.length-records.length)+' older quote(s) hidden from chart and table; CSV export follows the same filter.';
 if(quoteAudit.conflictingCaptureTimes.length)$('chartStatus').textContent+=' '+quoteAudit.conflictingCaptureTimes.length+' conflicting capture time(s) excluded from chart.';
 if(quoteAudit.duplicateRecordsCollapsed)$('chartStatus').textContent+=' '+quoteAudit.duplicateRecordsCollapsed+' duplicate record(s) collapsed.';
 if(quoteAudit.staleSourceQuotes)$('chartStatus').textContent+=' '+quoteAudit.staleSourceQuotes+' accepted quote(s) have sportsbook source-update timestamps over 60 minutes older than their capture; these may be stale.';
@@ -44,12 +44,12 @@ xs.forEach((x,i)=>{add('circle',{cx:x,cy:ys[i],r:5});if(i===0||i===records.lengt
 function exportMarket(){
 const selection={eventId:$('event').value,playerName:$('player').value,book:$('book').value,market:$('market').value,side:$('side').value,line:Number($('line').value)};
 let records=[];
-try{records=historicalQuoteSeries(snapshots,selection)}catch(error){$('chartStatus').textContent='CSV unavailable: '+error.message;return}
+try{records=historicalQuoteSeries(snapshots,selection);if($('freshOnly').checked)records=records.filter(r=>Date.parse(r.capturedAt)-Date.parse(r.sourceUpdatedAt)<=3600000)}catch(error){$('chartStatus').textContent='CSV unavailable: '+error.message;return}
 if(!records.length){$('chartStatus').textContent='No recorded quotes to export for this selection.';return}
 const csv=nbaMarketCsv(records,selection);
 const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-a.href=url;a.download='evsports-nba-selected-market.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-$('chartStatus').textContent=records.length+' exact-market quote(s) exported as research-only CSV. Player identity remains unverified.';
+a.href=url;a.download=$('freshOnly').checked?'evsports-nba-selected-market-fresh-source-only.csv':'evsports-nba-selected-market-all-accepted.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+$('chartStatus').textContent=records.length+' exact-market quote(s) exported as research-only CSV'+($('freshOnly').checked?' with fresh-source-only filter.': ' including all accepted source ages.')+' Player identity remains unverified.';
 }
 function backup(){
 try{
