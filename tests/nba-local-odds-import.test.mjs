@@ -20,6 +20,9 @@ assert.match(html,/historyEvent'\)\.addEventListener\('change',renderImportedHis
 assert.match(html,/eventSelect\.replaceChildren/);
 assert.match(html,/id="historySide"/);
 assert.match(html,/id="historyRows"/);
+assert.match(html,/id="importedChart"/);
+assert.match(html,/const host=\$\('importedChart'\);host\.replaceChildren\(\)/);
+assert.match(html,/\$\('importedChart'\)\.textContent='No imported historical observations\.'/);
 assert.match(html,/id="historyStat"/);
 assert.match(html,/id="historyPeriod"/);
 assert.match(html,/historyStat'\)\.addEventListener\('change',renderImportedHistory\)/);
@@ -40,4 +43,4 @@ assert.match(html,/setAttribute\('role','img'\)/);
 assert.match(html,/drawHistoryChart\(filtered\)/);
 assert.match(html,/no EV signal/);
 assert.doesNotMatch(html,/fetch\([^\n]*oddsCsv/);
-console.log('NBA local odds import: 39 safety checks passed');
+console.log('NBA local odds import: 42 safety checks passed');
