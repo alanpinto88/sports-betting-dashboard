@@ -130,7 +130,8 @@ $('oddsCsv').addEventListener('change',async()=>{
   const rows=validateHistoryRows(parseCsvRows(await file.text()));if(generation!==importGeneration)return;
   if(!rows.length)throw Error('CSV contains no quotes');
   importedHistory=rows;
-  const players=[...new Set(rows.map(x=>x.player))].sort((a,b)=>a.localeCompare(b));
+  const playerNames=new Map();for(const row of rows){const key=row.player.toLowerCase();if(!playerNames.has(key))playerNames.set(key,row.player)}
+  const players=[...playerNames.values()].sort((a,b)=>a.localeCompare(b));
   $('historyPlayer').replaceChildren(new Option('Choose imported player',''),...players.map(x=>new Option(x,x.toLowerCase())));
   $('historyPlayer').value=players[0].toLowerCase();
   refreshHistoryEvents();
