@@ -33,7 +33,7 @@ $('status').textContent=fresh?'API response received · timestamp within freshne
 // Local CSV research: no upload, no provider calls, and never an EV eligibility source.
 function parseCsvRows(raw){
  const lines=raw.replace(/^\uFEFF/,'').trim().split(/\r?\n/);
- const parseLine=line=>{const fields=[];let value='',quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&quoted&&line[i+1]==='"'){value+='"';i++}else if(c==='"'){quoted=!quoted}else if(c===','&&!quoted){fields.push(value.trim());value=''}else{value+=c}}if(quoted)throw Error('Unclosed CSV quote');fields.push(value.trim());return fields};
+ const parseLine=line=>{const fields=[];let value='',quoted=false,closed=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&quoted&&line[i+1]==='"'){value+='"';i++}else if(c==='"'&&quoted){quoted=false;closed=true}else if(c==='"'&&!quoted&&value===''&&!closed){quoted=true}else if(c===','&&!quoted){fields.push(value.trim());value='';closed=false}else if(closed&&c!==' '&&c!=='\t'){throw Error('Invalid characters after quoted CSV field')}else if(c==='"'){throw Error('Unexpected CSV quote')}else{value+=c}}if(quoted)throw Error('Unclosed CSV quote');fields.push(value.trim());return fields};
  const header=parseLine(lines.shift()||'').map(x=>x.toLowerCase());
  const required=['captured_at','player','book','side','line','american_odds','event_id','stat','period'];
  if(new Set(header).size!==header.length)throw Error('Duplicate CSV header');
