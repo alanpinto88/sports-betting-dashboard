@@ -31,5 +31,5 @@ $('chart').textContent='No time-series observations available. Snapshot data alo
 }
 render(SAMPLE);
 $('refresh').addEventListener('click',async()=>{const player=$('playerInput').value.trim();if(!/^[a-zA-Z .'-]{2,60}$/.test(player)){$('status').textContent='Enter a valid player name.';return}
-$('status').textContent='Checking API…';try{const r=await fetch('/api/prizepicks/compare?league=NBA&stat=Points&player='+encodeURIComponent(player),{headers:{Accept:'application/json'},cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);render(await r.json(),true)}catch(e){$('status').textContent='Live endpoint not configured or unavailable ('+e.message+'). Showing historical reference.';render(SAMPLE)}});
+$('status').textContent='Checking API…';try{const r=await fetch('/api/prizepicks/compare?league=NBA&stat=Points&player='+encodeURIComponent(player),{headers:{Accept:'application/json'},cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);render(await r.json(),true)}catch(e){render(SAMPLE);$('status').textContent='Live endpoint not configured or unavailable ('+e.message+'). Showing historical reference only.'}});
 </script></body></html>
