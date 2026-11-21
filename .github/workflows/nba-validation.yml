@@ -6,6 +6,7 @@ on:
       - 'lib/nba-identity-review.mjs'
       - 'lib/nba-historical-odds.mjs'
       - 'lib/nba-local-backup.mjs'
+      - 'lib/nba-snapshot-coverage.mjs'
       - 'scripts/audit-nba-snapshot.mjs'
       - 'tests/*.test.mjs'
       - '.github/workflows/nba-validation.yml'
