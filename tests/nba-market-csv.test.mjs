@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {csvCell,nbaMarketCsv} from '../lib/nba-market-csv.mjs';
+assert.equal(csvCell('=2+2'),'"\'=2+2"');
+assert.equal(csvCell('+cmd'),'"\'+cmd"');
+assert.equal(csvCell('@SUM(A1)'),'"\'@SUM(A1)"');
+assert.equal(csvCell('-cmd'),'"\'-cmd"');
+assert.equal(csvCell(-120),'"-120"');
+assert.equal(csvCell('+110'),'"\'+110"');
+assert.equal(csvCell('a"b'),'"a""b"');
+const csv=nbaMarketCsv([{capturedAt:'2026-11-21T18:00:00Z',sourceUpdatedAt:'2026-11-21T17:59:00Z',americanOdds:-115}],{eventId:'abc',playerName:'=danger',book:'book',market:'points',side:'Over',line:20.5});
+assert.match(csv,/player_name_unverified/);
+assert.match(csv,/"'=danger"/);
+assert.match(csv,/"-115"/);
+assert.throws(()=>nbaMarketCsv([{capturedAt:'bad',americanOdds:-110}],{}),/Invalid recorded quote/);
+console.log('NBA CSV safety and quote validation passed');
