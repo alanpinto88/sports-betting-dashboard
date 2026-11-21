@@ -62,7 +62,7 @@ const audit=historicalQuoteAudit(snapshots,selection);
 const records=$('freshOnly').checked?audit.records.filter(r=>Date.parse(r.capturedAt)-Date.parse(r.sourceUpdatedAt)<=3600000):audit.records;
 const changes=observedQuoteChanges(records);
 if(!changes.length){$('changesStatus').textContent='No observed adjacent-capture price differences to export under the current filters.';return}
-const blob=new Blob([nbaChangesCsv(changes,selection)],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+const blob=new Blob([nbaChangesCsv(changes,selection,Number($('gapThreshold').value))],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
 a.href=url;a.download=$('freshOnly').checked?'evsports-nba-observed-changes-fresh-only.csv':'evsports-nba-observed-changes-all-accepted.csv';
 document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 $('changesStatus').textContent=changes.length+' recorded price difference(s) exported with evidence flags. No live odds or verified EV implied.';
