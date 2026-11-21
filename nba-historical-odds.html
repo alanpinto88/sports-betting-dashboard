@@ -4,6 +4,7 @@
 import {historicalQuoteSeries} from './lib/nba-historical-odds.mjs';
 import {validateLocalBackup,mergeLocalHistory} from './lib/nba-local-backup.mjs';
 import {snapshotCoverage} from './lib/nba-snapshot-coverage.mjs';
+import {nbaMarketCsv} from './lib/nba-market-csv.mjs';
 const $=id=>document.getElementById(id),ids=['event','player','book','market','line'],historyKey='evsports-nba-local-history-v1';let snapshots=[];
 function setOptions(id,values){const el=$(id),prior=el.value;el.replaceChildren();for(const value of values){const option=document.createElement('option');option.value=String(value);option.textContent=String(value);el.append(option)}if(values.some(v=>String(v)===prior))el.value=prior}
 function matches(){const values=[];for(const snapshot of snapshots)for(const event of snapshot.events||[])for(const book of event.bookmakers||[])for(const market of book.markets||[])for(const o of market.outcomes||[])if(o.description&&Number.isFinite(o.point))values.push({event:String(event.id),player:o.description,book:book.key,market:market.key,line:o.point});return values}
@@ -30,10 +31,8 @@ const selection={eventId:$('event').value,playerName:$('player').value,book:$('b
 let records=[];
 try{records=historicalQuoteSeries(snapshots,selection)}catch(error){$('chartStatus').textContent='CSV unavailable: '+error.message;return}
 if(!records.length){$('chartStatus').textContent='No recorded quotes to export for this selection.';return}
-const esc=v=>{const s=String(v??'');return '"'+(/^[=+@\t\r]/.test(s)||(/^-/ .test(s)&&!Number.isFinite(Number(s)))?"'"+s:s).replaceAll('"','""')+'"'};
-const headers=['captured_at_utc','source_updated_at_utc','american_odds','event_id','player_name_unverified','sportsbook','market','side','threshold','identity_status'];
-const rows=[headers.join(','),...records.map(r=>[r.capturedAt,r.sourceUpdatedAt,r.americanOdds,selection.eventId,selection.playerName,selection.book,selection.market,selection.side,selection.line,'unverified_player_identity'].map(esc).join(','))];
-const blob=new Blob([rows.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+const csv=nbaMarketCsv(records,selection);
+const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
 a.href=url;a.download='evsports-nba-selected-market.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 $('chartStatus').textContent=records.length+' exact-market quote(s) exported as research-only CSV. Player identity remains unverified.';
 }
