@@ -14,6 +14,8 @@ const t1='2026-11-20T18:00:00Z,Jalen Brunson,Book A,over,26.5,-110,game-1,Points
 const t2='2026-11-20T19:00:00Z,Jalen Brunson,Book A,over,27.5,-105,game-1,Points,Full game';
 const rows=context.validate(context.parse([header,t1,t2].join('\n')));
 assert.equal(rows.length,2);
+assert.throws(()=>context.parse([header,t1.replace(',26.5,-110,',',,-110,')].join('\n')),/Invalid quote/);
+assert.throws(()=>context.parse([header,t1.replace(',26.5,-110,',',26.5,,')].join('\n')),/Invalid quote/);
 assert.throws(()=>context.parse([header,t1.replace('2026-11-20T18:00:00Z','2026-02-30T18:00:00Z')].join('\n')),/Invalid quote/);
 assert.throws(()=>context.parse([header,t1.replace('2026-11-20T18:00:00Z','2026-11-20T13:00:00-05:00')].join('\n')),/Invalid quote/);
 assert.equal(context.parse([header,t1.replace('2026-11-20T18:00:00Z','2026-11-20T18:00:00.12Z')].join('\n')).length,1);
@@ -39,4 +41,4 @@ assert.throws(()=>context.parse([header,t1.replace('game-1','')].join('\n')),/In
 assert.throws(()=>context.parse([header,t1.replace('Points','')].join('\n')),/Invalid quote/);
 assert.throws(()=>context.parse([header,t1.replace('Full game','')].join('\n')),/Invalid quote/);
 assert.equal(other.length,2,'Different events must not be mistaken for duplicates');
-console.log('NBA historical CSV parser runtime: 24 assertions passed');
+console.log('NBA historical CSV parser runtime: 26 assertions passed');
