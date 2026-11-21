@@ -52,10 +52,15 @@ $('refresh').addEventListener('click',async()=>{
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),12000);
   let response;
+  // GitHub Pages serves static files only: do not mistake its 404 page for a live API.
+  if(location.hostname.endsWith('.github.io'))throw Error('Live API not connected to GitHub Pages; server-side proxy required');
   try{response=await fetch('/api/prizepicks/compare?league=NBA&stat=Points&player='+encodeURIComponent(player),{headers:{Accept:'application/json'},cache:'no-store',signal:controller.signal})}
   finally{clearTimeout(timeout)}
   if(!response.ok)throw Error('HTTP '+response.status);
+  const mime=response.headers.get('content-type')||'';
+  if(!mime.toLowerCase().includes('application/json'))throw Error('API returned non-JSON response');
   const payload=await response.json();
+  if(payload?.is_demo===true||payload?.paidRequestsEnabled===false)throw Error('Provider response is demo-only or comparisons are disabled');
   if(requestId!==activeRequest)return;
   const items=Array.isArray(payload?.data)?payload.data:[];
   const normalize=name=>String(name||'').trim().toLowerCase().replace(/\s+/g,' ');
