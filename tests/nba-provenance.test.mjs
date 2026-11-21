@@ -17,6 +17,7 @@ for(const token of [
  '(!x.event_id||String(x.event_id)===String(p.event?.id))',
  "Math.abs(x.price.american)>=100&&String(x.quote_id||x.id||'').trim()",
  'Date.now()-Date.parse(x.captured_at)<=600000',
+ 'Math.abs(Date.parse(x.captured_at)-Date.parse(payload.meta.as_of))<=600000',
  'item.projection.line>=0',
  'Number.isInteger(x?.price?.american)&&Math.abs(x.price.american)>=100',
  'Number.isInteger(x.price?.american)&&Math.abs(x.price.american)>=100',
@@ -24,4 +25,4 @@ for(const token of [
  'x.captured_at',
  'No same-book, same-capture two-sided sportsbook pair'
 ])assert.ok(html.includes(token),token);
-console.log('NBA quote provenance and timestamp guards: 21 checks passed');
+console.log('NBA quote provenance and timestamp guards: 22 checks passed');
