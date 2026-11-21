@@ -8,6 +8,6 @@ for(const token of [
  'Quote capture timestamps missing, future-dated or stale',
  'x.quote_id||x.id',
  'x.captured_at',
- 'No same-book two-sided sportsbook pair'
+ 'No same-book, same-capture two-sided sportsbook pair'
 ])assert.ok(html.includes(token),token);
 console.log('NBA quote provenance and timestamp guards: 7 checks passed');
