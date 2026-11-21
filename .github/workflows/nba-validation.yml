@@ -18,7 +18,16 @@ on:
   pull_request:
     paths:
       - 'lib/nba-quote-validation.mjs'
+      - 'lib/nba-identity-review.mjs'
+      - 'lib/nba-historical-odds.mjs'
+      - 'lib/nba-local-backup.mjs'
+      - 'lib/nba-snapshot-coverage.mjs'
+      - 'lib/nba-market-csv.mjs'
       - 'scripts/audit-nba-snapshot.mjs'
+      - 'scripts/check-nba-page-modules.mjs'
+      - 'nba-historical-odds.html'
+      - 'nba-props.html'
+      - 'nba-audit.html'
       - 'tests/*.test.mjs'
       - '.github/workflows/nba-validation.yml'
   workflow_dispatch:
