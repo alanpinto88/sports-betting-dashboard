@@ -1,5 +1,6 @@
 name: NBA quote safety checks
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'player-props.html'
