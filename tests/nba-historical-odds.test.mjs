@@ -22,3 +22,7 @@ const duplicateAudit=historicalQuoteAudit([snapshot('2026-11-21T16:00:00Z',-110)
 assert.equal(duplicateAudit.duplicateRecordsCollapsed,1);
 assert.equal(duplicateAudit.records.length,1);
 console.log('NBA recorded-only odds movement and conflict fixtures passed');
+
+const staleAudit=historicalQuoteAudit([snapshot('2026-11-21T16:00:00Z',-110),snapshot('2026-11-21T17:00:00Z',-120)],selection);
+assert.equal(staleAudit.staleSourceQuotes,1,'source updates older than one hour must be flagged');
+assert.equal(historicalQuoteAudit([snapshot('2026-11-21T16:00:00Z',-110)],selection).staleSourceQuotes,0,'exactly one hour is not older than one hour');
