@@ -36,6 +36,9 @@ assert.match(html,/americanProb\(e\.last\.american\)-americanProb\(e\.first\.ame
 assert.match(html,/e\.first\.lineValue===e\.last\.lineValue\?/);
 assert.match(html,/Not comparable — line changed/);
 assert.match(html,/id="importedChart"/);
+assert.match(html,/title\.textContent=q\.book/);
+assert.match(html,/q\.american>0\?'\+':''/);
+assert.match(html,/new Date\(q\.time\)\.toISOString\(\)/);
 assert.match(html,/const host=\$\('importedChart'\);host\.replaceChildren\(\)/);
 assert.match(html,/\$\('importedChart'\)\.textContent='No imported historical observations\.'/);
 assert.match(html,/id="historyStat"/);
