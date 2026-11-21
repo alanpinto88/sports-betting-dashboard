@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {snapshotCoverage} from '../lib/nba-snapshot-coverage.mjs';
+const result=snapshotCoverage([{capture:'2026-11-21T12:00:00Z'},{capture:'2026-11-21T12:00:00Z'},{capture:'2026-11-21T12:30:00Z'},{capture:'2026-11-21T15:00:00Z'}],60);
+assert.equal(result.captures,3);
+assert.equal(result.gaps.length,1);
+assert.equal(result.gaps[0].elapsedMinutes,150);
+assert.equal(result.missingPricesNotInferred,true);
+assert.equal(snapshotCoverage([]).captures,0);
+assert.throws(()=>snapshotCoverage([],0),/Invalid/);
+console.log('NBA snapshot coverage checks passed');
