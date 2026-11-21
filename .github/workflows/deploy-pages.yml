@@ -8,6 +8,8 @@ on:
       - 'public-signals.json'
       - 'recent-market-review.json'
       - 'nba-player-props-review.json'
+      - 'data/nba-player-props-*.json'
+      - 'data/nba-*.json'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
