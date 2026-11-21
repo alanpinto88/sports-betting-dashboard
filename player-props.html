@@ -114,7 +114,14 @@ $('historyBook').addEventListener('change',renderImportedHistory);
 $('historySide').addEventListener('change',renderImportedHistory);
 $('historyStat').addEventListener('change',renderImportedHistory);
 $('historyPeriod').addEventListener('change',renderImportedHistory);
-$('historyPlayer').addEventListener('change',renderImportedHistory);
+function refreshHistoryEvents(){
+ const player=$('historyPlayer').value,previous=$('historyEvent').value;
+ const events=[...new Set(importedHistory.filter(x=>x.player.toLowerCase()===player).map(x=>x.event_id))].sort();
+ $('historyEvent').replaceChildren(new Option('All events',''),...events.map(x=>new Option(x,x)));
+ $('historyEvent').value=events.includes(previous)?previous:'';
+ renderImportedHistory();
+}
+$('historyPlayer').addEventListener('change',refreshHistoryEvents);
 $('oddsCsv').addEventListener('change',async()=>{
  const file=$('oddsCsv').files?.[0],target=$('csvStatus');if(!file)return;
  const generation=++importGeneration;
@@ -126,7 +133,7 @@ $('oddsCsv').addEventListener('change',async()=>{
   const players=[...new Set(rows.map(x=>x.player))].sort((a,b)=>a.localeCompare(b));
   $('historyPlayer').replaceChildren(new Option('Choose imported player',''),...players.map(x=>new Option(x,x.toLowerCase())));
   $('historyPlayer').value=players[0].toLowerCase();
-  const eventSelect=$('historyEvent');eventSelect.replaceChildren(new Option('All events',''),...[...new Set(rows.map(x=>x.event_id||'unknown event'))].sort().map(x=>new Option(x,x)));
+  refreshHistoryEvents();
   const select=$('historyBook');select.replaceChildren(new Option('All sportsbooks',''),...[...new Set(rows.map(x=>x.book))].sort().map(x=>new Option(x,x)));
   $('historyStat').replaceChildren(new Option('All statistics',''),...[...new Set(rows.map(x=>x.stat))].sort().map(x=>new Option(x,x)));
   $('historyPeriod').replaceChildren(new Option('All periods',''),...[...new Set(rows.map(x=>x.period))].sort().map(x=>new Option(x,x)));
