@@ -228,6 +228,7 @@ $('refresh').addEventListener('click',async()=>{
   if(!hasPair)throw Error('No same-book, same-capture two-sided sportsbook pair; fair probability unavailable');
   if(eligiblePrices.some(x=>!String(x.quote_id||x.id||'').trim()))throw Error('Quote provenance ID missing — quarantined');
   if(eligiblePrices.some(x=>{const t=Date.parse(x.captured_at||'');return !Number.isFinite(t)||t> Date.now()||Date.now()-t>600000;}))throw Error('Quote capture timestamps missing, future-dated or stale');
+  if(eligiblePrices.some(x=>{const t=Date.parse(x.captured_at||'');return t<capturedAt-600000||t>capturedAt+600000;}))throw Error('Quote capture timestamps inconsistent with provider snapshot — quarantined');
   render({...payload,data:[matched]},true);
  }catch(error){
   if(requestId===activeRequest)showUnavailable(player,'No verified results for '+player+' ('+(error.name==='AbortError'?'request timed out':error.message)+').');
