@@ -10,7 +10,7 @@ assert.match(html,/nba-odds-history-template\.csv/);
 assert.match(html,/URL\.revokeObjectURL\(url\)/);
 assert.match(html,/parseCsvRows\(raw\)/);
 assert.match(html,/captured_at','player','book','side','line','american_odds/);
-assert.match(html,/lines\.length>1000/);
+assert.match(html,/dataLines\.length>1000/);
 assert.match(html,/file\.size>200000/);
 assert.match(html,/row\.player\.toLowerCase\(\)===selected/);
 assert.match(html,/User-supplied research only/);
