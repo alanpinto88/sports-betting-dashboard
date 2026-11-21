@@ -11,7 +11,7 @@
 <script>
 'use strict';
 const SAMPLE={data:[{projection:{league:'NBA',player:{name:'Jalen Brunson',team:'NYK'},market:{stat:'Points',period:'Full game'},line:26.5},prices:[{book:'betrivers',side:'over',line:26.5,price:{american:-120},derived:{implied_probability:.54348}},{book:'betrivers',side:'under',line:26.5,price:{american:-114},derived:{implied_probability:114/214}},{book:'kalshi',side:'under',line:24.5,price:{american:null,probability:.46},derived:{american:117,implied_probability:.46}}],no_vig_fair:{over_probability:.50538,under_probability:.49462}}],meta:{as_of:'2026-10-28T22:20:40.000Z',stale_after_seconds:600}};
-const $=id=>document.getElementById(id);const pct=x=>Number.isFinite(x)?(100*x).toFixed(2)+'%':'—';const odds=x=>Number.isFinite(x)?(x>0?'+':'')+x:'—';
+const $=id=>document.getElementById(id);const pct=x=>Number.isFinite(x)?(100*x).toFixed(2)+'%':'—';const odds=x=>Number.isInteger(x)&&Math.abs(x)>=100?(x>0?'+':'')+x:'—';
 function americanProb(x){if(typeof x!=='number'||!Number.isFinite(x)||x===0)return null;return x<0?-x/(-x+100):100/(x+100)}
 function render(payload,live=false){ $('gameLogStatus').textContent='Unavailable — game logs require a separate verified statistics source.'; $('evGate').textContent='Disabled — quote freshness alone does not validate player identity, market settlement, or a predictive model.';
 const item=payload?.data?.[0],p=item?.projection;if(!p||!Array.isArray(item.prices))throw Error('Missing projection or prices');
