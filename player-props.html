@@ -68,6 +68,10 @@ $('refresh').addEventListener('click',async()=>{
  const player=$('playerInput').value.trim();
  if(!/^[a-zA-Z .'-]{2,60}$/.test(player)){$('status').textContent='Enter a valid player name.';return}
  const requestId=++activeRequest;
+ if(location.hostname.endsWith('.github.io')){
+  showUnavailable(player,'Live search unavailable: this GitHub Pages site has no connected quote API. No provider credits were used.');
+  return;
+ }
  showUnavailable(player,'Checking configured API for '+player+'…');
  $('refresh').disabled=true;
  try{
