@@ -30,7 +30,7 @@ const selection={eventId:$('event').value,playerName:$('player').value,book:$('b
 let records=[];
 try{records=historicalQuoteSeries(snapshots,selection)}catch(error){$('chartStatus').textContent='CSV unavailable: '+error.message;return}
 if(!records.length){$('chartStatus').textContent='No recorded quotes to export for this selection.';return}
-const esc=v=>{const s=String(v??'');return '"'+(/^[=+@\-\t\r]/.test(s)?"'"+s:s).replaceAll('"','""')+'"'};
+const esc=v=>{const s=String(v??'');return '"'+(/^[=+@\t\r]/.test(s)||(/^-/ .test(s)&&!Number.isFinite(Number(s)))?"'"+s:s).replaceAll('"','""')+'"'};
 const headers=['captured_at_utc','source_updated_at_utc','american_odds','event_id','player_name_unverified','sportsbook','market','side','threshold','identity_status'];
 const rows=[headers.join(','),...records.map(r=>[r.capturedAt,r.sourceUpdatedAt,r.americanOdds,selection.eventId,selection.playerName,selection.book,selection.market,selection.side,selection.line,'unverified_player_identity'].map(esc).join(','))];
 const blob=new Blob([rows.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
