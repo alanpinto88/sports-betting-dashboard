@@ -30,6 +30,8 @@ assert.throws(()=>context.parse([header,t1.replace('Book A','   ')].join('\n')),
 assert.equal(rows[0].event_id,'game-1');
 assert.equal(rows[1].lineValue,27.5);
 assert.throws(()=>context.validate(context.parse([header,t1,t1].join('\n'))),/Duplicate quote/);
+assert.throws(()=>context.validate(context.parse([header,t1,t1.replace('Book A','book a')].join('\n'))),/Duplicate quote/);
+assert.throws(()=>context.validate(context.parse([header,t1,t1.replace('Jalen Brunson','JALEN BRUNSON')].join('\n'))),/Duplicate quote/);
 assert.throws(()=>context.validate(context.parse([header,t1,t1.replace('-110','-120')].join('\n'))),/Conflicting quotes/);
 assert.throws(()=>context.parse('player,book\nJalen Brunson,Book A'),/Missing CSV columns/);
 assert.throws(()=>context.parse([header,t1.replace('2026-11-20T18:00:00Z','2099-11-20T18:00:00Z')].join('\n')),/Invalid quote/);
