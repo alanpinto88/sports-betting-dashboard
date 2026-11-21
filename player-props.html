@@ -36,9 +36,10 @@ function parseCsvRows(raw){
  const parseLine=line=>{const fields=[];let value='',quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&quoted&&line[i+1]==='"'){value+='"';i++}else if(c==='"'){quoted=!quoted}else if(c===','&&!quoted){fields.push(value.trim());value=''}else{value+=c}}if(quoted)throw Error('Unclosed CSV quote');fields.push(value.trim());return fields};
  const header=parseLine(lines.shift()||'').map(x=>x.toLowerCase());
  const required=['captured_at','player','book','side','line','american_odds'];
+ if(new Set(header).size!==header.length)throw Error('Duplicate CSV header');
  if(!required.every(x=>header.includes(x)))throw Error('Missing CSV columns: '+required.filter(x=>!header.includes(x)).join(', '));
  if(lines.length>1000)throw Error('CSV exceeds 1,000 rows');
- return lines.filter(x=>x.trim()).map(line=>{const fields=parseLine(line);if(fields.length!==header.length)throw Error('Invalid CSV column count');const row=Object.fromEntries(header.map((h,i)=>[h,fields[i]]));const time=Date.parse(row.captured_at),lineValue=Number(row.line),american=Number(row.american_odds);if(!Number.isFinite(time)||time>Date.now()||!row.player||!row.book||!['over','under'].includes(row.side.toLowerCase())||!Number.isFinite(lineValue)||lineValue<0||!Number.isInteger(american)||american===0||Math.abs(american)<100)throw Error('Invalid quote data or timestamp');return {...row,event_id:(row.event_id||'').trim(),time,lineValue,american}}).sort((a,b)=>a.time-b.time);
+ return lines.filter(x=>x.trim()).map(line=>{const fields=parseLine(line);if(fields.length!==header.length)throw Error('Invalid CSV column count');const row=Object.fromEntries(header.map((h,i)=>[h,fields[i]]));const time=Date.parse(row.captured_at),lineValue=Number(row.line),american=Number(row.american_odds);if(!Number.isFinite(time)||time>Date.now()||!row.player||!row.book||!['over','under'].includes(row.side.toLowerCase())||!Number.isFinite(lineValue)||lineValue<0||!Number.isInteger(american)||american===0||Math.abs(american)<100)throw Error('Invalid quote data or timestamp');return {...row,player:row.player.trim(),book:row.book.trim(),side:row.side.toLowerCase(),event_id:(row.event_id||'').trim(),time,lineValue,american}}).sort((a,b)=>a.time-b.time);
 }
 let importedHistory=[];
 function validateHistoryRows(rows){
