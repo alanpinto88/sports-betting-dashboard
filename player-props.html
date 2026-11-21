@@ -124,7 +124,7 @@ $('oddsCsv').addEventListener('change',async()=>{
   $('historyStat').replaceChildren(new Option('All statistics',''),...[...new Set(rows.map(x=>x.stat))].sort().map(x=>new Option(x,x)));
   $('historyPeriod').replaceChildren(new Option('All periods',''),...[...new Set(rows.map(x=>x.period))].sort().map(x=>new Option(x,x)));
   $('historySide').value='';renderImportedHistory();
- }catch(e){target.textContent='Import rejected: '+e.message}
+ }catch(e){target.textContent='Import rejected: '+e.message+(importedHistory.length?' · Previously imported research data remains loaded.':' · No historical data loaded.')}
 });
 
 showUnavailable('NBA Player Finder','No verified NBA quotes loaded. Search requires a connected server API. Historical example is optional.');
