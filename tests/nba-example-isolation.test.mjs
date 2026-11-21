@@ -11,7 +11,7 @@ assert.match(html,/showSample'\)\.addEventListener\('click'/);
 assert.doesNotMatch(html,/^render\(SAMPLE\);/m);
 assert.match(html,/Number\.isFinite\(x\.price\?\.american\)/);
 assert.match(html,/const hasPair=eligiblePrices\.some/);
-assert.match(html,/No same-book two-sided sportsbook pair/);
+assert.match(html,/No same-book, same-capture two-sided sportsbook pair/);
 assert.match(html,/Live search unavailable: this GitHub Pages site has no connected quote API/);
 assert.match(html,/No provider credits were used/);
 console.log('NBA historical example isolation: 13 checks passed');
