@@ -11,3 +11,6 @@ console.log('NBA filtered changes preserve adjacency across excluded stale quote
 assert.equal(filteredObservedChanges([captures[0],captures[2]],false,['2026-11-21T16:30:00.000Z']).length,0,'conflicting intermediate capture blocks false adjacency');
 assert.equal(filteredObservedChanges([captures[0],captures[2]],false,['2026-11-21T16:30:00.000Z','2026-11-21T16:30:00Z']).length,0);
 assert.throws(()=>filteredObservedChanges([],false,null),/Invalid accepted records/);
+
+assert.equal(filteredObservedChanges([r('16:00','15:55',-110),r('16:30','16:25',-120)],true).length,1,'fresh adjacent observations remain visible');
+assert.equal(filteredObservedChanges([r('16:00','15:55',-110),r('16:30','16:25',-120)],false,['2026-11-21T16:30:00.000Z']).length,0,'conflict at an accepted timestamp invalidates the entire capture');
