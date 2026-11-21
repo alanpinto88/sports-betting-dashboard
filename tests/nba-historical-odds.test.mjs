@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {historicalQuoteSeries} from '../lib/nba-historical-odds.mjs';
+import {historicalQuoteSeries,historicalQuoteAudit} from '../lib/nba-historical-odds.mjs';
 const selection={eventId:'e1',playerName:'Fixture Player',book:'book-a',market:'player_points',side:'Over',line:20.5};
 const snapshot=(time,price,point=20.5)=>({source:'The Odds API',captured_at:time,events:[{id:'e1',bookmakers:[{key:'book-a',markets:[{key:'player_points',last_update:'2026-11-21T15:00:00Z',outcomes:[{description:'Fixture Player',name:'Over',point,price}]}]}]}]});
 const result=historicalQuoteSeries([snapshot('2026-11-21T16:00:00Z',-110),snapshot('2026-11-21T17:00:00Z',-120),snapshot('2026-11-21T17:00:00Z',-120),snapshot('2026-11-21T18:00:00Z',-130,21.5)],selection);
@@ -15,4 +15,7 @@ const conflict=historicalQuoteSeries([
 ],selection);
 assert.deepEqual(conflict.map(x=>x.americanOdds),[-120],
   'conflicting odds for the same capture time must be excluded');
+const audit=historicalQuoteAudit([snapshot('2026-11-21T16:00:00Z',-110),snapshot('2026-11-21T16:00:00Z',-125)],selection);
+assert.deepEqual(audit.conflictingCaptureTimes,['2026-11-21T16:00:00.000Z']);
+assert.equal(audit.records.length,0);
 console.log('NBA recorded-only odds movement and conflict fixtures passed');
