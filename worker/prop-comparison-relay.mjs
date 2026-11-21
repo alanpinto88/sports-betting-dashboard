@@ -100,43 +100,10 @@ export default {
         return json({ok:false,status:'demo_unavailable',reason:error?.name==='TimeoutError'?'timeout':'network_or_response_error',is_demo:true},502,headers);
       }
     }
-    if(path==='/provider-check'){
-      // Disabled by default: a public caller must not trigger authenticated provider requests.
-      if(env.ENABLE_PROVIDER_DIAGNOSTIC!=='true')return json({ok:false,status:'diagnostic_disabled',paidRequestsEnabled:false,message:'Authenticated provider checks are disabled by default.'},403,headers);
-      if(!env.PRIZEPICKS_API_KEY)return json({ok:false,status:'secret_missing',paidRequestsEnabled:false},503,headers);
-      // Only provider /coverage is permitted. No client-supplied upstream URL or parameters.
-      // This diagnostic intentionally skips Cache API: it is not available in every
-      // Worker execution context. This endpoint never requests paid comparisons.
-      try{
-        const upstream=await fetch('https://prizepicksapi.com/api/v1/coverage',{
-          headers:{
-            'Authorization':`Bearer ${env.PRIZEPICKS_API_KEY}`,
-            'Accept':'application/json'
-          },
-        signal:AbortSignal.timeout(12000)
-        });
-        const result={
-          ok:upstream.ok,
-          status:upstream.ok?'authenticated_coverage_ok':'provider_rejected',
-          providerHttpStatus:upstream.status,
-          paidRequestsEnabled:false
-        };
-        return json(result,upstream.ok?200:502,headers);
-      }catch(error){
-        // Expose only allowlisted diagnostic categories, never raw provider errors or credentials.
-        const name=String(error?.name||'');
-        const message=String(error?.message||'').toLowerCase();
-        const category=name==='TimeoutError'?'timeout':name==='AbortError'?'aborted':
-          name==='TypeError'?'fetch_type_error':'runtime_error';
-        const hint=/fetch failed|network|connection|connect|dns|resolve|tls|certificate/.test(message)
-          ?'upstream_network_failure'
-          :/invalid url|url parse/.test(message)?'invalid_upstream_url'
-          :/abort|timeout/.test(message)?'request_timeout'
-          :'check_worker_logs';
-        return json({ok:false,status:'provider_unreachable',reason:category,diagnosticHint:hint,
-          paidRequestsEnabled:false},502,headers);
-      }
-    }
+    if(path==='/provider-check')return json({
+      ok:false,status:'diagnostic_disabled',paidRequestsEnabled:false,
+      message:'Authenticated provider diagnostics are unavailable on the public relay.'
+    },403,headers);
     if(path==='/comparisons')return json({
       ok:false,status:'not_configured',rows:[],
       message:'Paid comparisons are disabled pending request authorization, abuse prevention and credit limits.'
