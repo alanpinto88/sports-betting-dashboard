@@ -92,7 +92,7 @@ status.textContent="Checking independent schedules for all loaded snapshot event
 const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
 try{
 if(!propEvents.length){status.textContent="No published snapshot events loaded; cannot check schedule.";return}
-const formatDay=d=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
+const formatDay=d=>{if(Number.isNaN(d.getTime()))throw Error("Invalid snapshot or schedule date");const parts=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d);const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));return p.year+"-"+p.month+"-"+p.day};
 const dates=[...new Set(propEvents.map(g=>formatDay(new Date(g.commence_time)).replaceAll("-","")))];
 if(dates.length>3){status.textContent="More than three game dates in snapshot. Schedule check limited to three dates per manual request.";return}
 const schedules=await Promise.all(dates.map(async day=>{
@@ -113,7 +113,7 @@ if(matches.length!==1){lines.push(game.away_team+" @ "+game.home_team+": "+match
 const match=matches[0],delta=Math.round((new Date(game.commence_time)-new Date(match.date))/60000);
 lines.push(game.away_team+" @ "+game.home_team+": ESPN event "+String(match.id||"unknown")+"; ESPN scheduled "+new Date(match.date).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"medium",timeStyle:"short"})+" ET; snapshot start "+new Date(game.commence_time).toLocaleString("en-US",{timeZone:"America/New_York",timeStyle:"short"})+" ET; difference "+delta+" minutes. "+(delta===0?"Schedule time agrees.":"START-TIME DISCREPANCY — investigate before linking event IDs.") );
 }
-status.textContent=lines.join(" | ")+" Team/date matching is research evidence only. No sportsbook event IDs, individual player markets, participation or EV are verified.";
+status.textContent=lines.join(" | ")+" Team/date matching is research evidence only. A 10-minute time difference may reflect schedule adjustments or feed conventions and does not alone prove a bad event ID. No sportsbook event IDs, individual player markets, participation or EV are verified.";
 }catch(error){status.textContent="Schedule lookup unavailable ("+error.message+"). No verification status changed; no paid sportsbook API was called."}
 finally{clearTimeout(timer);button.disabled=false}
 }
@@ -211,6 +211,7 @@ byId("checkRosters").disabled=false;
 byId("games").textContent=String(propEvents.length);
 byId("captured").textContent=fmtDate(data.captured_at);
 byId("quota").textContent=data.quota_remaining_at_end??"Unknown";
+byId("scheduleStatus").textContent="Snapshot loaded: "+propEvents.length+" event(s). Click the schedule check to compare teams, dates and start times against ESPN. This does not use sportsbook API credits.";
 const books=new Set(propEvents.flatMap(game=>(game.bookmakers||[]).map(b=>b.key)));
 show("NBA raw player-points quotes loaded · "+books.size+" sportsbooks · 0 verified player-event associations. Team/opponent filters locked; raw quotes research only. No picks, comparisons or EV calculations.",false);
 render();
