@@ -15,7 +15,7 @@ const prices=records.map(r=>r.americanOdds),low=Math.min(...prices)-10,high=Math
 for(let i=0;i<4;i++){const y=25+i*57;add('line',{x1:55,y1:y,x2:650,y2:y});add('text',{x:7,y:y+4},Math.round(high-(high-low)*i/3))}
 const times=records.map(r=>Date.parse(r.capturedAt)),first=Math.min(...times),last=Math.max(...times);const xs=times.map(t=>last===first?350:65+(t-first)*570/(last-first)),ys=prices.map(p=>25+(high-p)*171/(high-low));
 if(records.length>1)add('polyline',{points:xs.map((x,i)=>x+','+ys[i]).join(' ')});
-xs.forEach((x,i)=>{add('circle',{cx:x,cy:ys[i],r:5});add('text',{x:Math.min(x,580),y:219},new Date(records[i].capturedAt).toISOString().slice(11,16)+'Z')});
+xs.forEach((x,i)=>{add('circle',{cx:x,cy:ys[i],r:5});if(i===0||i===records.length-1||records.length<=3)add('text',{x:Math.min(x,580),y:219},new Date(records[i].capturedAt).toISOString().slice(11,16)+'Z')});
 }
 function load(){try{const stored=JSON.parse(localStorage.getItem(historyKey)||'[]');snapshots=(Array.isArray(stored)?stored:[]).filter(s=>s?.source==='The Odds API'&&Array.isArray(s.events)).map(s=>({source:s.source,captured_at:s.capture,events:s.events}));$('status').textContent=snapshots.length+' saved historical snapshot(s) found on this device. All player identities remain unverified.';update()}catch(e){snapshots=[];$('status').textContent='Local history unavailable: '+e.message;update()}}
 for(const id of ids)$(id).addEventListener('change',()=>update(id));$('side').addEventListener('change',render);$('refresh').addEventListener('click',load);load();
