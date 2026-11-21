@@ -128,7 +128,7 @@ $('historyPlayer').addEventListener('change',refreshHistoryEvents);
 $('oddsCsv').addEventListener('change',async()=>{
  const file=$('oddsCsv').files?.[0],target=$('csvStatus');if(!file)return;
  const generation=++importGeneration;
- if(file.size>200000){target.textContent='CSV too large (200 KB maximum).';return}
+ if(file.size>200000){target.textContent='CSV too large (200 KB maximum). Previously imported research data, if any, remains loaded.';$('oddsCsv').value='';return}
  try{
   const rows=validateHistoryRows(parseCsvRows(await file.text()));if(generation!==importGeneration)return;
   if(!rows.length)throw Error('CSV contains no quotes');
@@ -143,7 +143,7 @@ $('oddsCsv').addEventListener('change',async()=>{
   $('historyStat').replaceChildren(new Option('All statistics',''),...[...new Set(rows.map(x=>x.stat))].sort().map(x=>new Option(x,x)));
   $('historyPeriod').replaceChildren(new Option('All periods',''),...[...new Set(rows.map(x=>x.period))].sort().map(x=>new Option(x,x)));
   $('historySide').value='';renderImportedHistory();
- }catch(e){if(generation!==importGeneration)return;target.textContent='Import rejected: '+e.message+(importedHistory.length?' · Previously imported research data remains loaded.':' · No historical data loaded.')}
+ }catch(e){if(generation!==importGeneration)return;target.textContent='Import rejected: '+e.message+(importedHistory.length?' · Previously imported research data remains loaded.':' · No historical data loaded.');$('oddsCsv').value=''}
 });
 
 showUnavailable('NBA Player Finder','No verified NBA quotes loaded. Search requires a connected server API. Historical example is optional.');
