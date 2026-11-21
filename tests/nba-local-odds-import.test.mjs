@@ -79,4 +79,7 @@ assert.match(html,/setAttribute\('role','img'\)/);
 assert.match(html,/drawHistoryChart\(filtered\)/);
 assert.match(html,/no EV signal/);
 assert.doesNotMatch(html,/fetch\([^\n]*oddsCsv/);
+assert.match(html,/String\(y\.captured_at\|\|''\)===String\(x\.captured_at\|\|''\)/);
+assert.match(html,/String\(y\.captured_at\|\|''\)===String\(overRow\.captured_at\|\|''\)/);
+assert.match(html,/No synchronized Over\/Under pair from the same sportsbook, threshold, and capture timestamp/);
 console.log('NBA local odds import safety checks passed');
