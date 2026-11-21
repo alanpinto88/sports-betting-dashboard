@@ -6,6 +6,7 @@ on:
       - 'tests/nba-quote-gates.test.mjs'
       - 'tests/nba-market-pairing.test.mjs'
       - 'tests/nba-devig.test.mjs'
+      - 'tests/nba-relay-status.test.mjs'
       - '.github/workflows/nba-quote-safety.yml'
   pull_request:
     paths:
@@ -27,6 +28,7 @@ jobs:
           node tests/nba-quote-gates.test.mjs
           node tests/nba-market-pairing.test.mjs
           node tests/nba-devig.test.mjs
+          node tests/nba-relay-status.test.mjs
       - name: Check frontend inline JavaScript syntax
         run: |
           node --input-type=module <<'NODE'
