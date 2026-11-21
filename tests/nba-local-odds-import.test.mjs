@@ -48,6 +48,8 @@ assert.match(html,/Not comparable — line changed/);
 assert.match(html,/id="importedChart"/);
 assert.match(html,/const markets=new Set\(rows\.map/);
 assert.match(html,/if\(markets\.size>1\)/);
+assert.match(html,/if\(groups\.size>12\)/);
+assert.match(html,/Filter by sportsbook or betting side to show 12 or fewer comparable series/);
 assert.match(html,/Select one event, statistic, and period to chart comparable prop lines/);
 assert.match(html,/title\.textContent=q\.book/);
 assert.match(html,/q\.american>0\?'\+':''/);
