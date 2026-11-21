@@ -19,6 +19,9 @@ assert.throws(()=>context.parse([header,t1.replace(',26.5,-110,',',26.5,,')].joi
 assert.throws(()=>context.parse([header,t1.replace('2026-11-20T18:00:00Z','2026-02-30T18:00:00Z')].join('\n')),/Invalid quote/);
 assert.throws(()=>context.parse([header,t1.replace('2026-11-20T18:00:00Z','2026-11-20T13:00:00-05:00')].join('\n')),/Invalid quote/);
 assert.equal(context.parse([header,t1.replace('2026-11-20T18:00:00Z','2026-11-20T18:00:00.12Z')].join('\n')).length,1);
+assert.throws(()=>context.parse([header,t1.replace('2026-11-20T18:00:00Z','2026-02-29T18:00:00Z')].join('\n')),/Invalid quote/,'Non-leap-year February 29 must be rejected');
+assert.equal(context.parse([header,t1.replace('2026-11-20T18:00:00Z','2024-02-29T18:00:00Z')].join('\n')).length,1,'Leap-year February 29 is valid');
+assert.throws(()=>context.parse([header,t1.replace('2026-11-20T18:00:00Z','2026-11-20T18:00:60Z')].join('\n')),/Invalid quote/,'Out-of-range seconds must be rejected');
 assert.equal(context.parse([header,'',t1,'',t2,''].join('\n')).length,2,'Blank CSV lines must be ignored');
 assert.equal(context.parse([header,t1.replace('Jalen Brunson','"Brunson, Jalen"')].join('\n'))[0].player,'Brunson, Jalen');
 assert.equal(context.parse([header,t1.replace('Book A','"Book ""A"""')].join('\n'))[0].book,'Book "A"');
