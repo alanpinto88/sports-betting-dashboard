@@ -101,15 +101,9 @@ p.eventLabels.add(String(game.away_team||"Unknown")+" @ "+String(game.home_team|
 p.books.add(String(book.title||book.key||"Unknown"));
 }
 }
-const eventGroups=new Map();
-for(const p of players.values())for(const eventId of p.eventIds){
-if(!eventGroups.has(eventId))eventGroups.set(eventId,new Set());
-eventGroups.get(eventId).add(p.name);
-}
-const suspicious=[...eventGroups].filter(([,names])=>names.size>=10);
-byId("identityAnomaly").textContent=suspicious.length
-?"SOURCE ASSOCIATION ANOMALY: "+suspicious.map(([id,names])=>names.size+" distinct player labels share source event "+id).join("; ")+". This is a structural warning, not proof of an invalid player. All player/event assignments remain unverified; do not calculate EV or publish picks."
-:"No high-density event grouping detected by the 10-player screening threshold. This does NOT establish valid player-event associations; independent verification remains required.";
+const groupedEvents=new Map();
+for(const p of players.values())for(const id of p.eventIds){if(!groupedEvents.has(id))groupedEvents.set(id,new Set());groupedEvents.get(id).add(p.name)}
+byId("identityAnomaly").textContent="EVENT GROUPING (RESEARCH): "+[...groupedEvents].map(([id,names])=>names.size+" player labels share source event "+id).join("; ")+". Multiple players per NBA game are normal. Roster research can support team membership, but this snapshot's event date, player participation and odds associations still require independent verification. No EV or picks are enabled.";
 const root=byId("reviewQueue");root.replaceChildren();
 byId("reviewPending").textContent=String(players.size);
 byId("reviewVerified").textContent="0";
