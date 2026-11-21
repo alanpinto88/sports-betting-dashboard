@@ -11,7 +11,7 @@ const context=vm.createContext({Date,Map,JSON,Number,Error,Object});
 vm.runInContext(parser+'\n'+validator+'\nthis.parse=parseCsvRows;this.validate=validateHistoryRows;',context);
 const header='captured_at,player,book,side,line,american_odds,event_id,stat,period';
 const t1='2026-11-20T18:00:00Z,Jalen Brunson,Book A,over,26.5,-110,game-1,Points,Full game';
-const t2='2026-11-20T19:00:00Z,Jalen Brunson,Book A,over,27.5,-105,game-1';
+const t2='2026-11-20T19:00:00Z,Jalen Brunson,Book A,over,27.5,-105,game-1,Points,Full game';
 const rows=context.validate(context.parse([header,t1,t2].join('\n')));
 assert.equal(rows.length,2);
 assert.equal(rows[0].event_id,'game-1');
