@@ -38,9 +38,10 @@ function parseCsvRows(raw){
  const required=['captured_at','player','book','side','line','american_odds','event_id','stat','period'];
  if(new Set(header).size!==header.length)throw Error('Duplicate CSV header');
  if(!required.every(x=>header.includes(x)))throw Error('Missing CSV columns: '+required.filter(x=>!header.includes(x)).join(', '));
- if(lines.length>1000)throw Error('CSV exceeds 1,000 rows');
- if(!lines.some(x=>x.trim()))throw Error('CSV has no quote rows');
- return lines.filter(x=>x.trim()).map(line=>{const fields=parseLine(line);if(fields.length!==header.length)throw Error('Invalid CSV column count');const row=Object.fromEntries(header.map((h,i)=>[h,fields[i]]));const time=Date.parse(row.captured_at),lineValue=Number(row.line),american=Number(row.american_odds);if(!Number.isFinite(time)||time>Date.now()||!row.player||!row.book||!row.event_id?.trim()||!row.stat?.trim()||!row.period?.trim()||!['over','under'].includes((row.side||'').toLowerCase())||!Number.isFinite(lineValue)||lineValue<0||!Number.isInteger(american)||american===0||Math.abs(american)<100)throw Error('Invalid quote data or timestamp');return {...row,player:row.player.trim(),book:row.book.trim(),side:row.side.toLowerCase(),event_id:(row.event_id||'').trim(),stat:(row.stat||'').trim().toLowerCase(),period:(row.period||'').trim().toLowerCase(),time,lineValue,american}}).sort((a,b)=>a.time-b.time);
+ const dataLines=lines.filter(x=>x.trim());
+ if(dataLines.length>1000)throw Error('CSV exceeds 1,000 rows');
+ if(!dataLines.length)throw Error('CSV has no quote rows');
+ return dataLines.map(line=>{const fields=parseLine(line);if(fields.length!==header.length)throw Error('Invalid CSV column count');const row=Object.fromEntries(header.map((h,i)=>[h,fields[i]]));const time=Date.parse(row.captured_at),lineValue=Number(row.line),american=Number(row.american_odds);if(!Number.isFinite(time)||time>Date.now()||!row.player||!row.book||!row.event_id?.trim()||!row.stat?.trim()||!row.period?.trim()||!['over','under'].includes((row.side||'').toLowerCase())||!Number.isFinite(lineValue)||lineValue<0||!Number.isInteger(american)||american===0||Math.abs(american)<100)throw Error('Invalid quote data or timestamp');return {...row,player:row.player.trim(),book:row.book.trim(),side:row.side.toLowerCase(),event_id:(row.event_id||'').trim(),stat:(row.stat||'').trim().toLowerCase(),period:(row.period||'').trim().toLowerCase(),time,lineValue,american}}).sort((a,b)=>a.time-b.time);
 }
 $('downloadCsvTemplate').addEventListener('click',()=>{
  const header='captured_at,player,book,side,line,american_odds,event_id,stat,period';
