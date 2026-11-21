@@ -18,6 +18,7 @@ for(const record of records){const tr=document.createElement('tr');for(const v o
 if(!records.length){$('chartStatus').textContent+=' No verified movement can be inferred.';return;}
 const ns='http://www.w3.org/2000/svg',add=(tag,attrs,text)=>{const el=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));if(text!==undefined)el.textContent=text;svg.append(el);return el};
 const prices=records.map(r=>r.americanOdds),low=Math.min(...prices)-10,high=Math.max(...prices)+10;
+const uniquePrices=new Set(prices);if(records.length>1&&uniquePrices.size===1)$('chartStatus').textContent+=' All recorded quotes have the same price; this does not prove the market stayed unchanged between captures.';
 for(let i=0;i<4;i++){const y=25+i*57;add('line',{x1:55,y1:y,x2:650,y2:y});add('text',{x:7,y:y+4},Math.round(high-(high-low)*i/3))}
 const times=records.map(r=>Date.parse(r.capturedAt)),first=Math.min(...times),last=Math.max(...times);const xs=times.map(t=>last===first?350:65+(t-first)*570/(last-first)),ys=prices.map(p=>25+(high-p)*171/(high-low));
 // Connect only adjacent observations within 60 minutes. A longer interval is unknown, not a trend.
