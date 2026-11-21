@@ -7,3 +7,7 @@ assert.equal(filteredObservedChanges(captures,true).length,0,'stale intermediate
 assert.equal(filteredObservedChanges([captures[0],captures[2]],true).length,1);
 assert.throws(()=>filteredObservedChanges(null),/Expected accepted/);
 console.log('NBA filtered changes preserve adjacency across excluded stale quotes');
+
+assert.equal(filteredObservedChanges([captures[0],captures[2]],false,['2026-11-21T16:30:00.000Z']).length,0,'conflicting intermediate capture blocks false adjacency');
+assert.equal(filteredObservedChanges([captures[0],captures[2]],false,['2026-11-21T16:30:00.000Z','2026-11-21T16:30:00Z']).length,0);
+assert.throws(()=>filteredObservedChanges([],false,null),/Invalid accepted records/);
