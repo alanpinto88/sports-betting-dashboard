@@ -20,7 +20,7 @@ const asof=Date.parse(payload?.meta?.as_of||'');const age=Date.now()-asof;const 
 $('asof').textContent=Number.isFinite(asof)?new Date(asof).toISOString().replace('T',' ').slice(0,19):'Unknown';
 $('freshness').textContent=fresh?'Recent snapshot · verify market availability':'Historical / stale · not live';
 const over=item.no_vig_fair?.over_probability,under=item.no_vig_fair?.under_probability;$('fair').textContent=pct(over);$('under').textContent='Under '+pct(under)+' · source reported';
-const rows=item.prices.map(x=>{const pr=x.price||{},im=x.derived?.implied_probability??pr.probability??americanProb(pr.american);return {...x,im,us:pr.american??x.derived?.american}});const same=rows.filter(x=>x.line===p.line&&x.book_type!=='exchange');const overRow=same.find(x=>x.side==='over'),underRow=same.find(x=>x.side==='under');
+const rows=item.prices.map(x=>{const pr=x.price||{},us=pr.american??x.derived?.american,im=Number.isFinite(us)?americanProb(us):(Number.isFinite(pr.probability)?pr.probability:null);return {...x,im,us}});const same=rows.filter(x=>x.line===p.line&&x.book_type!=='exchange'&&Number.isFinite(x.us));const overRow=same.find(x=>x.side==='over'),underRow=same.find(x=>x.side==='under');
 const overImplied=overRow?americanProb(overRow.us):null,underImplied=underRow?americanProb(underRow.us):null;const calc=overImplied!==null&&underImplied!==null?overImplied/(overImplied+underImplied):null;
 const mismatch=calc!==null&&Number.isFinite(over)&&Math.abs(calc-over)>.00005;
 $('warning').textContent=mismatch?'Data-quality warning: source no-vig '+pct(over)+' differs from price-derived '+pct(calc)+'. Verify the original quotes before using fair probabilities.':same.length<2?'Insufficient same-line sportsbook prices to independently validate fair probabilities.':'No-vig check passed for the displayed same-line quotes; this does not establish positive EV.';
@@ -59,12 +59,13 @@ $('refresh').addEventListener('click',async()=>{
   if(requestId!==activeRequest)return;
   const items=Array.isArray(payload?.data)?payload.data:[];
   const normalize=name=>String(name||'').trim().toLowerCase().replace(/\s+/g,' ');
-  const matched=items.find(item=>normalize(item?.projection?.player?.name)===normalize(player)&&item?.projection?.league==='NBA'&&item?.projection?.market?.stat==='Points'&&Array.isArray(item?.prices));
+  const matched=items.find(item=>normalize(item?.projection?.player?.name)===normalize(player)&&String(item?.projection?.league||'').toUpperCase()==='NBA'&&String(item?.projection?.market?.stat||'').toLowerCase()==='points'&&Number.isFinite(item?.projection?.line)&&Array.isArray(item?.prices));
   if(!matched)throw Error('No exact NBA Points player match in provider response');
   const capturedAt=Date.parse(payload?.meta?.as_of||'');
   const ageMs=Date.now()-capturedAt;
   const staleSeconds=Number(payload?.meta?.stale_after_seconds);
   if(!Number.isFinite(capturedAt)||!Number.isFinite(ageMs)||ageMs<0||!Number.isFinite(staleSeconds)||staleSeconds<=0||ageMs>Math.min(staleSeconds,600)*1000)throw Error('Provider quote timestamp missing, future-dated or stale');
+  if(!matched.prices.some(x=>Number.isFinite(x?.price?.american??x?.derived?.american)))throw Error('No usable American odds quotes');
   render({...payload,data:[matched]},true);
  }catch(error){
   if(requestId===activeRequest)showUnavailable(player,'No verified results for '+player+' ('+(error.name==='AbortError'?'request timed out':error.message)+').');
