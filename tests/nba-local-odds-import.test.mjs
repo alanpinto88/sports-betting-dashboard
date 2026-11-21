@@ -19,6 +19,8 @@ assert.match(html,/id="historyEvent"/);
 assert.match(html,/historyEvent'\)\.addEventListener\('change',renderImportedHistory\)/);
 assert.match(html,/eventSelect\.replaceChildren/);
 assert.match(html,/id="historySide"/);
+assert.match(html,/row\.book\.toLowerCase\(\),row\.side\.toLowerCase\(\)/);
+assert.match(html,/x\.book\.toLowerCase\(\)===book/);
 assert.match(html,/id="historyRows"/);
 assert.match(html,/id="importedChart"/);
 assert.match(html,/const host=\$\('importedChart'\);host\.replaceChildren\(\)/);
