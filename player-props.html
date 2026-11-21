@@ -41,6 +41,25 @@ function parseCsvRows(raw){
  return lines.filter(x=>x.trim()).map(line=>{const fields=parseLine(line);if(fields.length!==header.length)throw Error('Invalid CSV column count');const row=Object.fromEntries(header.map((h,i)=>[h,fields[i]]));const time=Date.parse(row.captured_at),lineValue=Number(row.line),american=Number(row.american_odds);if(!Number.isFinite(time)||time>Date.now()||!row.player||!row.book||!['over','under'].includes(row.side.toLowerCase())||!Number.isFinite(lineValue)||lineValue<0||!Number.isInteger(american)||american===0||Math.abs(american)<100)throw Error('Invalid quote data or timestamp');return {...row,time,lineValue,american}}).sort((a,b)=>a.time-b.time);
 }
 let importedHistory=[];
+function drawHistoryChart(rows){
+ const host=$('chart');host.replaceChildren();
+ if(!rows.length){host.textContent='No matching historical observations for these filters.';return}
+ const times=rows.map(x=>x.time),values=rows.map(x=>x.lineValue);
+ const minTime=Math.min(...times),maxTime=Math.max(...times),minValue=Math.min(...values),maxValue=Math.max(...values);
+ const spanTime=Math.max(1,maxTime-minTime),spanValue=Math.max(1,maxValue-minValue);
+ const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+ svg.setAttribute('viewBox','0 0 640 240');svg.setAttribute('role','img');svg.setAttribute('aria-label','Historical player prop lines by timestamp; user-imported and unverified');
+ svg.style.cssText='display:block;width:100%;height:auto;max-height:260px';
+ const add=(tag,attrs,parent=svg)=>{const el=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));parent.append(el);return el};
+ const x=t=>48+(t-minTime)/spanTime*574,y=v=>202-(v-minValue)/spanValue*166;
+ for(let i=0;i<=4;i++){const yy=36+i*41.5;add('line',{x1:48,y1:yy,x2:622,y2:yy,stroke:'currentColor','stroke-opacity':'.16'});const tick=add('text',{x:42,y:yy+4,'text-anchor':'end',fill:'currentColor','font-size':11});tick.textContent=(maxValue-i*spanValue/4).toFixed(1)}
+ const groups=new Map();for(const row of rows){const key=JSON.stringify([row.book,row.side.toLowerCase()]);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row)}
+ const palette=['#23d5e7','#b48aff','#4fd9aa','#f5b971','#f58fa6','#7eb9ff'];
+ let i=0;for(const [key,items] of groups){const color=palette[i++%palette.length];if(items.length>1)add('polyline',{points:items.map(q=>x(q.time)+','+y(q.lineValue)).join(' '),fill:'none',stroke:color,'stroke-width':2.5,'stroke-linecap':'round','stroke-linejoin':'round'});for(const q of items){const circle=add('circle',{cx:x(q.time),cy:y(q.lineValue),r:3.8,fill:color});const title=add('title',{},circle);title.textContent=q.book+' '+q.side+' · '+q.lineValue+' · '+new Date(q.time).toISOString()}}
+ for(const [tx,label] of [[48,new Date(minTime).toISOString().slice(0,16)],[622,new Date(maxTime).toISOString().slice(0,16)]]){const t=add('text',{x:tx,y:229,'text-anchor':tx===48?'start':'end',fill:'currentColor','font-size':10});t.textContent=label+' UTC'}
+ host.append(svg);
+ const legend=document.createElement('p');legend.className='muted';legend.textContent='Series: '+[...groups.keys()].map((k,j)=>{const [book,side]=JSON.parse(k);return book+' '+side+' ('+palette[j%palette.length]+')'}).join(' · ')+' · User-supplied, not verified; no EV signal.';host.append(legend);
+}
 function renderImportedHistory(){
  const selected=$('playerInput').value.trim().toLowerCase();
  const book=$('historyBook').value,side=$('historySide').value;
@@ -50,7 +69,7 @@ function renderImportedHistory(){
  const entries=[...grouped].map(([key,items])=>{const [venue,direction]=JSON.parse(key),first=items[0],last=items[items.length-1];return {venue,direction,first,last,count:items.length,delta:last.lineValue-first.lineValue}});
  $('historyRows').replaceChildren(...entries.map(e=>{const tr=document.createElement('tr');for(const v of [e.venue,e.direction,e.first.lineValue,e.last.lineValue,(e.delta>0?'+':'')+e.delta.toFixed(1),e.count]){const td=document.createElement('td');td.textContent=String(v);tr.append(td)}return tr}));
  $('csvStatus').textContent='User-supplied research only · '+importedHistory.length+' imported quotes · '+filtered.length+' matching selected filters. Not verified; no EV signal.';
- $('chart').textContent=entries.length?entries.map(e=>e.venue+' '+e.direction+': '+e.first.lineValue+' → '+e.last.lineValue+' ('+(e.delta>0?'+':'')+e.delta.toFixed(1)+')').join(' | '):'No matching historical observations for these filters.';
+ drawHistoryChart(filtered);
 }
 $('historyBook').addEventListener('change',renderImportedHistory);
 $('historySide').addEventListener('change',renderImportedHistory);
