@@ -82,6 +82,8 @@ function validateHistoryRows(rows){
 function drawHistoryChart(rows){
  const host=$('importedChart');host.replaceChildren();
  if(!rows.length){host.textContent='No matching historical observations for these filters.';return}
+ const markets=new Set(rows.map(x=>JSON.stringify([x.event_id,x.stat,x.period])));
+ if(markets.size>1){host.textContent='Select one event, statistic, and period to chart comparable prop lines. The table still shows all matching markets.';return}
  const times=rows.map(x=>x.time),values=rows.map(x=>x.lineValue);
  const minTime=Math.min(...times),maxTime=Math.max(...times),minValue=Math.min(...values),maxValue=Math.max(...values);
  const spanTime=Math.max(1,maxTime-minTime),spanValue=Math.max(1,maxValue-minValue);
