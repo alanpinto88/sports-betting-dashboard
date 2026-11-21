@@ -58,7 +58,9 @@ $('downloadCsvTemplate').addEventListener('click',()=>{
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
 let importedHistory=[];
+let importGeneration=0;
 $('clearImportedOdds').addEventListener('click',()=>{
+ ++importGeneration;
  importedHistory=[];
  $('oddsCsv').value='';
  $('historyRows').replaceChildren();
@@ -115,16 +117,18 @@ $('historyPeriod').addEventListener('change',renderImportedHistory);
 $('playerInput').addEventListener('input',()=>{if(importedHistory.length)renderImportedHistory()});
 $('oddsCsv').addEventListener('change',async()=>{
  const file=$('oddsCsv').files?.[0],target=$('csvStatus');if(!file)return;
+ const generation=++importGeneration;
  if(file.size>200000){target.textContent='CSV too large (200 KB maximum).';return}
  try{
-  const rows=validateHistoryRows(parseCsvRows(await file.text()));if(!rows.length)throw Error('CSV contains no quotes');
+  const rows=validateHistoryRows(parseCsvRows(await file.text()));if(generation!==importGeneration)return;
+  if(!rows.length)throw Error('CSV contains no quotes');
   importedHistory=rows;
   const eventSelect=$('historyEvent');eventSelect.replaceChildren(new Option('All events',''),...[...new Set(rows.map(x=>x.event_id||'unknown event'))].sort().map(x=>new Option(x,x)));
   const select=$('historyBook');select.replaceChildren(new Option('All sportsbooks',''),...[...new Set(rows.map(x=>x.book))].sort().map(x=>new Option(x,x)));
   $('historyStat').replaceChildren(new Option('All statistics',''),...[...new Set(rows.map(x=>x.stat))].sort().map(x=>new Option(x,x)));
   $('historyPeriod').replaceChildren(new Option('All periods',''),...[...new Set(rows.map(x=>x.period))].sort().map(x=>new Option(x,x)));
   $('historySide').value='';renderImportedHistory();
- }catch(e){target.textContent='Import rejected: '+e.message+(importedHistory.length?' · Previously imported research data remains loaded.':' · No historical data loaded.')}
+ }catch(e){if(generation!==importGeneration)return;target.textContent='Import rejected: '+e.message+(importedHistory.length?' · Previously imported research data remains loaded.':' · No historical data loaded.')}
 });
 
 showUnavailable('NBA Player Finder','No verified NBA quotes loaded. Search requires a connected server API. Historical example is optional.');
