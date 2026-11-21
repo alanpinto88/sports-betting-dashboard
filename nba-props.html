@@ -164,7 +164,7 @@ status.textContent=(ageMinutes>15||ageMinutes<0?"HISTORICAL / NOT LIVE — ":"RE
 let quoteArchiveCapture="";
 function exportQuoteArchive(){
 const header=["capture_utc","source_event_id","snapshot_away_label_unverified","snapshot_home_label_unverified","snapshot_start_utc","sportsbook","sportsbook_key","market","player_label_unverified","side","threshold","american_odds","market_updated_utc","verification_status"];
-const rows=[header],clean=v=>String(v??"");
+const rows=[header],clean=v=>{const str=String(v??"");return /^[\\s]*[=+@-]/.test(str)&&!/^[-+]?[0-9]+(?:\\.[0-9]+)?$/.test(str)?"\u0027"+str:str};
 for(const game of propEvents)for(const book of game.bookmakers||[])for(const market of book.markets||[]){
 if(!String(market.key||"").startsWith("player_"))continue;
 for(const outcome of market.outcomes||[]){
@@ -209,6 +209,7 @@ if(quotes.has(key))throw Error("Duplicate selection in archive: "+key.slice(0,10
 quotes.set(key,{price,updated:r[cols.market_updated_utc],player:r[cols.player_label_unverified],book:r[cols.sportsbook_key],market:r[cols.market],side,line});
 }
 if(captures.size!==1)throw Error("Archive contains mixed capture times");
+if(!quotes.size)throw Error("Archive has no valid player quotes");
 return {capture:[...captures][0],quotes};
 }
 const implied=odds=>odds<0?(-odds)/(-odds+100):100/(odds+100);
@@ -220,6 +221,7 @@ if(earlier.size>2000000||later.size>2000000){status.textContent="Each archive mu
 try{
 const a=archiveRows(await earlier.text()),b=archiveRows(await later.text());
 if(Date.parse(a.capture)>=Date.parse(b.capture))throw Error("The earlier file must have an older capture timestamp than the later file");
+if(Date.parse(b.capture)>Date.now()+300000)throw Error("Later archive capture is future-dated; check source clock");
 let matched=0,changed=0;const moves=[];
 for(const [key,prev] of a.quotes){const next=b.quotes.get(key);if(!next)continue;matched++;
 if(!Number.isFinite(Date.parse(prev.updated))||!Number.isFinite(Date.parse(next.updated))||Date.parse(next.updated)<=Date.parse(prev.updated))continue;
