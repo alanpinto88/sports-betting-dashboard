@@ -92,6 +92,8 @@ $('refresh').addEventListener('click',async()=>{
   const identity=matched.projection.player;
   if(!String(identity?.id||'').trim()||!String(identity?.team||'').trim()||!String(matched?.projection?.event?.id||'').trim())throw Error('Provider player/event identity IDs missing — quote quarantined');
   if(!matched.prices.every(x=>!x?.period||String(x.period).toLowerCase()==='full game'))throw Error('Quote period differs from full-game market — quarantined');
+  if(!matched.prices.every(x=>!x?.event_id||String(x.event_id)===String(matched.projection.event.id)))throw Error('Quote event ID mismatch — quarantined');
+  if(!matched.prices.every(x=>!x?.player_id||String(x.player_id)===String(identity.id)))throw Error('Quote player ID mismatch — quarantined');
   const capturedAt=Date.parse(payload?.meta?.as_of||'');
   const ageMs=Date.now()-capturedAt;
   const staleSeconds=Number(payload?.meta?.stale_after_seconds);
@@ -101,6 +103,8 @@ $('refresh').addEventListener('click',async()=>{
   const eligiblePrices=matched.prices.filter(x=>x?.line===matched.projection.line&&(!x.period||String(x.period).toLowerCase()==='full game')&&x?.book_type!=='exchange'&&typeof x?.book==='string'&&x.book.trim()&&['over','under'].includes(x?.side)&&Number.isFinite(x?.price?.american)&&x.price.american!==0);
   const hasPair=eligiblePrices.some(x=>x.side==='over'&&eligiblePrices.some(y=>y.book===x.book&&y.side==='under'));
   if(!hasPair)throw Error('No same-book two-sided sportsbook pair; fair probability unavailable');
+  if(eligiblePrices.some(x=>!String(x.quote_id||x.id||'').trim()))throw Error('Quote provenance ID missing — quarantined');
+  if(eligiblePrices.some(x=>{const t=Date.parse(x.captured_at||'');return !Number.isFinite(t)||t> Date.now()||Date.now()-t>600000;}))throw Error('Quote capture timestamps missing, future-dated or stale');
   render({...payload,data:[matched]},true);
  }catch(error){
   if(requestId===activeRequest)showUnavailable(player,'No verified results for '+player+' ('+(error.name==='AbortError'?'request timed out':error.message)+').');
