@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const html=fs.readFileSync('player-props.html','utf8');
+assert.match(html,/showUnavailable\('NBA Player Finder'/);
+assert.match(html,/id="showSample"/);
+assert.match(html,/showSample'\)\.addEventListener\('click'/);
+assert.doesNotMatch(html,/^render\(SAMPLE\);/m);
+assert.match(html,/Number\.isFinite\(x\.price\?\.american\)/);
+assert.match(html,/const hasPair=eligiblePrices\.some/);
+assert.match(html,/No same-book two-sided sportsbook pair/);
+console.log('NBA historical example isolation: 7 checks passed');
