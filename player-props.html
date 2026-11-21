@@ -64,7 +64,7 @@ $('clearImportedOdds').addEventListener('click',()=>{
  importedHistory=[];
  $('oddsCsv').value='';
  $('historyRows').replaceChildren();
- for(const [id,label] of [['historyEvent','All events'],['historyBook','All sportsbooks'],['historyStat','All statistics'],['historyPeriod','All periods']])$(''+id).replaceChildren(new Option(label,''));
+ for(const [id,label] of [['historyPlayer','Choose imported player'],['historyEvent','All events'],['historyBook','All sportsbooks'],['historyStat','All statistics'],['historyPeriod','All periods']])$(''+id).replaceChildren(new Option(label,''));
  $('historySide').value='';
  $('csvStatus').textContent='Imported odds cleared from this page. No historical quotes loaded.';
  $('importedChart').textContent='No imported historical observations.';
@@ -123,6 +123,9 @@ $('oddsCsv').addEventListener('change',async()=>{
   const rows=validateHistoryRows(parseCsvRows(await file.text()));if(generation!==importGeneration)return;
   if(!rows.length)throw Error('CSV contains no quotes');
   importedHistory=rows;
+  const players=[...new Set(rows.map(x=>x.player))].sort((a,b)=>a.localeCompare(b));
+  $('historyPlayer').replaceChildren(new Option('Choose imported player',''),...players.map(x=>new Option(x,x.toLowerCase())));
+  $('historyPlayer').value=players[0].toLowerCase();
   const eventSelect=$('historyEvent');eventSelect.replaceChildren(new Option('All events',''),...[...new Set(rows.map(x=>x.event_id||'unknown event'))].sort().map(x=>new Option(x,x)));
   const select=$('historyBook');select.replaceChildren(new Option('All sportsbooks',''),...[...new Set(rows.map(x=>x.book))].sort().map(x=>new Option(x,x)));
   $('historyStat').replaceChildren(new Option('All statistics',''),...[...new Set(rows.map(x=>x.stat))].sort().map(x=>new Option(x,x)));
