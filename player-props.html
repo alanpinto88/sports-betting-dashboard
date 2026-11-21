@@ -55,9 +55,11 @@ async function checkRelayStatus(){
   if(!response.ok)throw Error('status unavailable');
   if(!(response.headers.get('content-type')||'').includes('application/json'))throw Error('unexpected response');
   const data=await response.json();
-  if(data?.service!=='ev-sports-prop-relay')throw Error('unexpected service');
+  if(data?.service!=='ev-sports-prop-relay'||data?.ok!==true)throw Error('unexpected service');
   const enabled=data.liveComparisonsEnabled===true;
-  target.textContent=enabled?'Relay reports comparisons enabled; quote verification is still required.':'Backend reachable · live NBA comparisons disabled · no paid calls made.';
+  const creditsEnabled=data.creditSpendingEnabled===true;
+  if(enabled&&creditsEnabled)throw Error('unverified paid API configuration');
+  target.textContent=enabled?'Relay reports comparisons enabled; quote verification is still required.':'Backend reachable · relay reports live NBA comparisons disabled. This status check does not request paid quotes.';
  }catch{
   target.textContent='Backend status could not be verified. Live NBA comparisons remain unavailable.';
  }finally{clearTimeout(timer)}
