@@ -12,10 +12,11 @@ for(const token of [
  'Duplicate sportsbook quote provenance IDs — quarantined',
  'Eligible sportsbook quote identity mismatch — quarantined',
  'Eligible sportsbook quote market mismatch — quarantined',
+ 'item.projection.line>=0',
  'Number.isInteger(x?.price?.american)&&Math.abs(x.price.american)>=100',
  'Number.isInteger(x.price?.american)&&Math.abs(x.price.american)>=100',
  'x.quote_id||x.id',
  'x.captured_at',
  'No same-book, same-capture two-sided sportsbook pair'
 ])assert.ok(html.includes(token),token);
-console.log('NBA quote provenance and timestamp guards: 15 checks passed');
+console.log('NBA quote provenance and timestamp guards: 16 checks passed');
