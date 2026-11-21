@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const worker=fs.readFileSync('worker/prop-comparison-relay.mjs','utf8');
+assert.match(worker,/if\(path==='\/provider-check'\)/);
+assert.match(worker,/env\.ENABLE_PROVIDER_DIAGNOSTIC!=='true'/);
+assert.match(worker,/status:'diagnostic_disabled'/);
+assert.match(worker,/paidRequestsEnabled:false/);
+assert.match(worker,/if\(path==='\/comparisons'\)return json/);
+assert.match(worker,/status:'not_configured'/);
+assert.doesNotMatch(worker,/console\.log\(env\.PRIZEPICKS_API_KEY/);
+console.log('Relay authenticated diagnostic default-deny: 7 checks passed');
