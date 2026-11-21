@@ -16,7 +16,7 @@ function americanProb(x){if(typeof x!=='number'||!Number.isFinite(x)||x===0)retu
 function render(payload,live=false){ $('gameLogStatus').textContent='Unavailable — game logs require a separate verified statistics source.'; $('evGate').textContent='Disabled — quote freshness alone does not validate player identity, market settlement, or a predictive model.';
 const item=payload?.data?.[0],p=item?.projection;if(!p||!Array.isArray(item.prices))throw Error('Missing projection or prices');
 $('player').textContent=p.player?.name||'Unknown player';$('subtitle').textContent=[p.player?.team,p.market?.stat,p.market?.period].filter(Boolean).join(' · ');$('line').textContent=String(p.line);
-const asof=Date.parse(payload?.meta?.as_of||'');const age=Date.now()-asof;const fresh=live&&Number.isFinite(age)&&age>=0&&age<=1000*(payload?.meta?.stale_after_seconds||600);
+const asof=Date.parse(payload?.meta?.as_of||'');const age=Date.now()-asof;const ttl=Number(payload?.meta?.stale_after_seconds);const fresh=live&&Number.isFinite(age)&&age>=0&&Number.isFinite(ttl)&&ttl>0&&age<=1000*Math.min(ttl,600);
 $('asof').textContent=Number.isFinite(asof)?new Date(asof).toISOString().replace('T',' ').slice(0,19):'Unknown';
 $('freshness').textContent=fresh?'Recent snapshot · verify market availability':'Historical / stale · not live';
 const over=item.no_vig_fair?.over_probability,under=item.no_vig_fair?.under_probability;
