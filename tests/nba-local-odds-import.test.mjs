@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const html=fs.readFileSync('player-props.html','utf8');
+assert.match(html,/id="oddsCsv"/);
+assert.match(html,/parseCsvRows\(raw\)/);
+assert.match(html,/captured_at','player','book','side','line','american_odds/);
+assert.match(html,/lines\.length>1000/);
+assert.match(html,/file\.size>200000/);
+assert.match(html,/row\.player\.toLowerCase\(\)===selected/);
+assert.match(html,/Research only; not verified/);
+assert.match(html,/No live or EV signal/);
+assert.doesNotMatch(html,/fetch\([^\n]*oddsCsv/);
+console.log('NBA local odds import: 9 safety checks passed');
