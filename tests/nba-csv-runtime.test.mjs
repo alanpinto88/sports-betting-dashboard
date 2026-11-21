@@ -26,5 +26,8 @@ const markets=context.validate(context.parse([header,t1,t1.replace('Points','Ass
 assert.equal(markets.length,3,'Different stats or periods must remain distinct');
 assert.equal(markets[0].stat,'points');
 assert.equal(markets[2].period,'1st quarter');
+assert.throws(()=>context.parse([header,t1.replace('game-1','')].join('\n')),/Invalid quote/);
+assert.throws(()=>context.parse([header,t1.replace('Points','')].join('\n')),/Invalid quote/);
+assert.throws(()=>context.parse([header,t1.replace('Full game','')].join('\n')),/Invalid quote/);
 assert.equal(other.length,2,'Different events must not be mistaken for duplicates');
-console.log('NBA historical CSV parser runtime: 12 assertions passed');
+console.log('NBA historical CSV parser runtime: 15 assertions passed');
