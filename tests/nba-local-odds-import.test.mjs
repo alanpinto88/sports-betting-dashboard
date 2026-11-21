@@ -22,6 +22,8 @@ assert.match(html,/id="historyPlayer"/);
 assert.match(html,/historyPlayer\x27\)\.addEventListener\(\x27change\x27,refreshHistoryEvents\)/);
 assert.match(html,/const selected=\$\(\x27historyPlayer\x27\)\.value/);
 assert.match(html,/players\[0\]\.toLowerCase\(\)/);
+assert.match(html,/const playerNames=new Map\(\)/);
+assert.match(html,/playerNames\.has\(key\)/);
 assert.match(html,/id="historyEvent"/);
 assert.match(html,/historyEvent'\)\.addEventListener\('change',renderImportedHistory\)/);
 assert.match(html,/function refreshHistoryEvents\(\)/);
