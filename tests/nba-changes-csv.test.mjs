@@ -18,4 +18,6 @@ assert.throws(()=>nbaChangesCsv([{...changes[0],elapsedMinutes:-2}],selection),/
 assert.throws(()=>nbaChangesCsv([{...changes[0],sourceTimestampRegressed:true}],selection),/Invalid observed change/);
 assert.throws(()=>nbaChangesCsv([{...changes[0],sourceUpdateAdvanced:false,status:'observed_change'}],selection),/Invalid observed change/);
 assert.throws(()=>nbaChangesCsv([{...changes[0],status:'unconfirmed_source_timestamp'}],selection),/Invalid observed change/);
+assert.throws(()=>nbaChangesCsv([{...changes[0],fromCapturedAt:0}],selection),/Invalid observed change/);
+assert.throws(()=>nbaChangesCsv([{...changes[0],toCapturedAt:'2026-11-21T15:00:00Z'}],selection),/Invalid observed change/);
 console.log('NBA change CSV evidence and spreadsheet formula protection passed');
