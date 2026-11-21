@@ -29,3 +29,6 @@ assert.equal(historicalQuoteAudit([snapshot('2026-11-21T16:00:00Z',-110)],select
 
 assert.equal(staleAudit.maxSourceAgeMinutes,120,'oldest source update should report elapsed minutes');
 assert.equal(historicalQuoteAudit([],selection).maxSourceAgeMinutes,null,'no records have no source age');
+
+assert.equal(staleAudit.freshSourceQuotes,1,'one source update is within the 60-minute threshold');
+assert.equal(staleAudit.freshSourceQuotes+staleAudit.staleSourceQuotes,staleAudit.records.length,'source age groups must cover all accepted quotes');
