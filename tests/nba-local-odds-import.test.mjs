@@ -17,6 +17,10 @@ assert.match(html,/historyEvent'\)\.addEventListener\('change',renderImportedHis
 assert.match(html,/eventSelect\.replaceChildren/);
 assert.match(html,/id="historySide"/);
 assert.match(html,/id="historyRows"/);
+assert.match(html,/id="historyStat"/);
+assert.match(html,/id="historyPeriod"/);
+assert.match(html,/historyStat'\)\.addEventListener\('change',renderImportedHistory\)/);
+assert.match(html,/historyPeriod'\)\.addEventListener\('change',renderImportedHistory\)/);
 assert.match(html,/event_id,stat,period/);
 assert.match(html,/function renderImportedHistory\(\)/);
 assert.match(html,/function drawHistoryChart\(rows\)/);
@@ -33,4 +37,4 @@ assert.match(html,/setAttribute\('role','img'\)/);
 assert.match(html,/drawHistoryChart\(filtered\)/);
 assert.match(html,/no EV signal/);
 assert.doesNotMatch(html,/fetch\([^\n]*oddsCsv/);
-console.log('NBA local odds import: 32 safety checks passed');
+console.log('NBA local odds import: 36 safety checks passed');
