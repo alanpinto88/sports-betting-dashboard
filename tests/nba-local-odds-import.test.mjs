@@ -33,6 +33,8 @@ assert.match(html,/x\.book\.toLowerCase\(\)===book/);
 assert.match(html,/id="historyRows"/);
 assert.match(html,/<th>First odds<\/th><th>Latest odds<\/th><th>Implied probability change<\/th>/);
 assert.match(html,/americanProb\(e\.last\.american\)-americanProb\(e\.first\.american\)/);
+assert.match(html,/e\.first\.lineValue===e\.last\.lineValue\?/);
+assert.match(html,/Not comparable — line changed/);
 assert.match(html,/id="importedChart"/);
 assert.match(html,/const host=\$\('importedChart'\);host\.replaceChildren\(\)/);
 assert.match(html,/\$\('importedChart'\)\.textContent='No imported historical observations\.'/);
