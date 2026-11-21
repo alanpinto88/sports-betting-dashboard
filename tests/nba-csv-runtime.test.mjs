@@ -9,8 +9,8 @@ const validator=script.match(/function validateHistoryRows\(rows\)\{[\s\S]*?\n\}
 assert.ok(parser&&validator,'Missing import parser or duplicate validator');
 const context=vm.createContext({Date,Map,JSON,Number,Error,Object});
 vm.runInContext(parser+'\n'+validator+'\nthis.parse=parseCsvRows;this.validate=validateHistoryRows;',context);
-const header='captured_at,player,book,side,line,american_odds,event_id';
-const t1='2026-11-20T18:00:00Z,Jalen Brunson,Book A,over,26.5,-110,game-1';
+const header='captured_at,player,book,side,line,american_odds,event_id,stat,period';
+const t1='2026-11-20T18:00:00Z,Jalen Brunson,Book A,over,26.5,-110,game-1,Points,Full game';
 const t2='2026-11-20T19:00:00Z,Jalen Brunson,Book A,over,27.5,-105,game-1';
 const rows=context.validate(context.parse([header,t1,t2].join('\n')));
 assert.equal(rows.length,2);
@@ -22,5 +22,9 @@ assert.throws(()=>context.parse('player,book\nJalen Brunson,Book A'),/Missing CS
 assert.throws(()=>context.parse([header,t1.replace('2026-11-20T18:00:00Z','2099-11-20T18:00:00Z')].join('\n')),/Invalid quote/);
 assert.throws(()=>context.parse([header,t1.replace('26.5','not-a-line')].join('\n')),/Invalid quote/);
 const other=context.validate(context.parse([header,t1,t1.replace('game-1','game-2')].join('\n')));
+const markets=context.validate(context.parse([header,t1,t1.replace('Points','Assists'),t1.replace('Full game','1st quarter')].join('\n')));
+assert.equal(markets.length,3,'Different stats or periods must remain distinct');
+assert.equal(markets[0].stat,'points');
+assert.equal(markets[2].period,'1st quarter');
 assert.equal(other.length,2,'Different events must not be mistaken for duplicates');
-console.log('NBA historical CSV parser runtime: 9 assertions passed');
+console.log('NBA historical CSV parser runtime: 12 assertions passed');
