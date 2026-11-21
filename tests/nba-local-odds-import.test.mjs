@@ -44,6 +44,9 @@ assert.match(html,/americanProb\(e\.last\.american\)-americanProb\(e\.first\.ame
 assert.match(html,/e\.first\.lineValue===e\.last\.lineValue\?/);
 assert.match(html,/Not comparable — line changed/);
 assert.match(html,/id="importedChart"/);
+assert.match(html,/const markets=new Set\(rows\.map/);
+assert.match(html,/if\(markets\.size>1\)/);
+assert.match(html,/Select one event, statistic, and period to chart comparable prop lines/);
 assert.match(html,/title\.textContent=q\.book/);
 assert.match(html,/q\.american>0\?'\+':''/);
 assert.match(html,/new Date\(q\.time\)\.toISOString\(\)/);
