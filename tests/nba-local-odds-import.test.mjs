@@ -38,6 +38,7 @@ assert.match(html,/x\.book\.toLowerCase\(\)===book/);
 assert.match(html,/id="historyRows"/);
 assert.match(html,/<th>First captured \(UTC\)<\/th><th>Latest captured \(UTC\)<\/th>/);
 assert.match(html,/new Date\(e\.first\.time\)\.toISOString\(\),new Date\(e\.last\.time\)\.toISOString\(\)/);
+assert.match(html,/entries\.sort\(\(a,b\)=>b\.last\.time-a\.last\.time/);
 assert.match(html,/<th>First odds<\/th><th>Latest odds<\/th><th>Implied probability change<\/th>/);
 assert.match(html,/americanProb\(e\.last\.american\)-americanProb\(e\.first\.american\)/);
 assert.match(html,/e\.first\.lineValue===e\.last\.lineValue\?/);
