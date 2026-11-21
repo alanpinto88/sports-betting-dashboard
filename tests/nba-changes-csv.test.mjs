@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {nbaChangesCsv} from '../lib/nba-changes-csv.mjs';
+const selection={eventId:'e1',playerName:'=unsafe',book:'book',market:'player_points',side:'Over',line:20.5};
+const changes=[{fromCapturedAt:'2026-11-21T16:00:00Z',toCapturedAt:'2026-11-21T16:30:00Z',elapsedMinutes:30,fromOdds:-110,toOdds:-120,rawImpliedProbabilityChangePoints:2.16,sourceUpdateAdvanced:true,status:'observed_change'}];
+const csv=nbaChangesCsv(changes,selection);
+assert.match(csv,/source_timestamp_advanced,evidence_status/);
+assert.match(csv,/"-110","-120"/);
+assert.match(csv,/"'=unsafe"/);
+assert.match(csv,/"observed_change"/);
+assert.equal(nbaChangesCsv([],selection).trim().split('\n').length,1);
+assert.throws(()=>nbaChangesCsv([{...changes[0],elapsedMinutes:-2}],selection),/Invalid observed change/);
+console.log('NBA change CSV evidence and spreadsheet formula protection passed');
