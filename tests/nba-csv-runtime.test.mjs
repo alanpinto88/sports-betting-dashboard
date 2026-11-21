@@ -25,6 +25,8 @@ assert.equal(context.parse([header,t1.replace('Book A','"Book ""A"""')].join('\n
 assert.throws(()=>context.parse([header,t1.replace('Book A','Bo"ok A')].join('\n')),/Unexpected CSV quote/);
 assert.throws(()=>context.parse(header),/CSV has no quote rows/);
 assert.throws(()=>context.parse([header,t1.replace(',over,',',,')].join('\n')),/Invalid quote/);
+assert.throws(()=>context.parse([header,t1.replace('Jalen Brunson','   ')].join('\n')),/Invalid quote/);
+assert.throws(()=>context.parse([header,t1.replace('Book A','   ')].join('\n')),/Invalid quote/);
 assert.equal(rows[0].event_id,'game-1');
 assert.equal(rows[1].lineValue,27.5);
 assert.throws(()=>context.validate(context.parse([header,t1,t1].join('\n'))),/Duplicate quote/);
