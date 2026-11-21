@@ -1,0 +1,28 @@
+name: NBA quote integrity tests
+on:
+  push:
+    paths:
+      - 'lib/nba-quote-validation.mjs'
+      - 'scripts/audit-nba-snapshot.mjs'
+      - 'tests/*.test.mjs'
+      - '.github/workflows/nba-validation.yml'
+  pull_request:
+    paths:
+      - 'lib/nba-quote-validation.mjs'
+      - 'scripts/audit-nba-snapshot.mjs'
+      - 'tests/*.test.mjs'
+      - '.github/workflows/nba-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate NBA quote and snapshot audit fixtures
+        run: node --test tests/nba-quote-validation.test.mjs tests/audit-nba-snapshot.test.mjs
