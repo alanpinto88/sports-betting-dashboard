@@ -227,15 +227,16 @@ if(next.price===prev.price)continue;changed++;
 moves.push({name:next.player,book:next.book,market:next.market,side:next.side,line:next.line,from:prev.price,to:next.price,delta:100*(implied(next.price)-implied(prev.price))});
 }
 moves.sort((x,y)=>Math.abs(y.delta)-Math.abs(x.delta));
-status.textContent="Historical comparison only: "+matched+" matching selections; "+changed+" price changes with strictly newer market timestamps. Captures "+a.capture+" → "+b.capture+". Unmatched lines are excluded. No event/player identity verification, live alerts, sharp-money claims or EV recommendations.";
-if(!moves.length){const p=document.createElement("p");p.className="muted";p.textContent="No qualifying price movement found.";root.append(p);return}
-for(const move of moves.slice(0,30)){
+const minimum=Math.max(0,Number(byId("threshold").value)||0),visible=moves.filter(m=>Math.abs(m.delta)>=minimum);
+status.textContent="Historical comparison only: "+matched+" matching selections; "+changed+" price changes with strictly newer market timestamps; "+visible.length+" meet the "+minimum+" percentage-point research threshold. Captures "+a.capture+" → "+b.capture+". Unmatched lines are excluded. No event/player identity verification, live alerts, sharp-money claims or EV recommendations.";
+if(!visible.length){const p=document.createElement("p");p.className="muted";p.textContent="No qualifying price movement meets the selected threshold.";root.append(p);return}
+for(const move of visible.slice(0,30)){
 const p=document.createElement("p");p.className="prop-card";
 const sign=x=>x>0?"+"+x:x;
 p.textContent=move.name+" · "+move.book+" · "+move.market+" · "+move.side+" "+move.line+" · "+sign(move.from)+" → "+sign(move.to)+" · implied probability "+(move.delta>=0?"+":"")+move.delta.toFixed(2)+" pp (raw, includes vig; research only)";
 root.append(p);
 }
-if(moves.length>30){const p=document.createElement("p");p.className="muted";p.textContent="Showing 30 largest changes of "+moves.length+".";root.append(p)}
+if(visible.length>30){const p=document.createElement("p");p.className="muted";p.textContent="Showing 30 largest changes of "+visible.length+" meeting the threshold.";root.append(p)}
 }catch(error){status.textContent="Comparison unavailable: "+error.message+". No verification status changed."}
 }
 function auditSnapshot(events, capturedAt){
