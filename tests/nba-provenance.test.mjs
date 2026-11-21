@@ -12,6 +12,7 @@ for(const token of [
  'Duplicate sportsbook quote provenance IDs — quarantined',
  'const pairAmbiguous=',
  'const calc=!pairAmbiguous',
+ 'Conflicting or duplicate sportsbook prices detected. Fair probability is withheld',
  'Ambiguous duplicate sportsbook side at same capture — quarantined',
  'Eligible sportsbook quote identity mismatch — quarantined',
  'Eligible sportsbook quote market mismatch — quarantined',
@@ -28,4 +29,4 @@ for(const token of [
  'x.captured_at',
  'No same-book, same-capture two-sided sportsbook pair'
 ])assert.ok(html.includes(token),token);
-console.log('NBA quote provenance and timestamp guards: 25 checks passed');
+console.log('NBA quote provenance and timestamp guards: 26 checks passed');
