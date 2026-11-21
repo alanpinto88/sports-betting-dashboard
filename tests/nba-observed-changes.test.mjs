@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {observedQuoteChanges} from '../lib/nba-observed-changes.mjs';
+const record=(capture,update,odds)=>({capturedAt:capture,sourceUpdatedAt:update,americanOdds:odds});
+const a=record('2026-11-21T16:00:00Z','2026-11-21T15:55:00Z',-110);
+const b=record('2026-11-21T16:30:00Z','2026-11-21T16:25:00Z',-120);
+const c=record('2026-11-21T17:00:00Z','2026-11-21T16:25:00Z',-130);
+const result=observedQuoteChanges([c,a,b]);
+assert.equal(result.length,2);
+assert.equal(result[0].status,'observed_change');
+assert.equal(result[0].elapsedMinutes,30);
+assert.equal(result[0].rawImpliedProbabilityChangePoints,2.16);
+assert.equal(result[1].status,'unconfirmed_source_timestamp');
+assert.equal(result[1].sourceUpdateAdvanced,false);
+assert.equal(observedQuoteChanges([a,a]).length,0);
+assert.equal(observedQuoteChanges([a,record('2026-11-21T16:30:00Z','2026-11-21T16:25:00Z',-110)]).length,0);
+assert.deepEqual(observedQuoteChanges([]),[]);
+assert.throws(()=>observedQuoteChanges(null),/Expected accepted/);
+console.log('NBA observed change classifications passed');
