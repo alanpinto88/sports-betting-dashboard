@@ -9,6 +9,7 @@ on:
       - 'tests/nba-relay-status.test.mjs'
       - 'tests/nba-example-isolation.test.mjs'
       - 'tests/nba-period-isolation.test.mjs'
+      - 'tests/nba-provenance.test.mjs'
       - '.github/workflows/nba-quote-safety.yml'
   pull_request:
     paths:
@@ -19,6 +20,7 @@ on:
       - 'tests/nba-relay-status.test.mjs'
       - 'tests/nba-example-isolation.test.mjs'
       - 'tests/nba-period-isolation.test.mjs'
+      - 'tests/nba-provenance.test.mjs'
       - '.github/workflows/nba-quote-safety.yml'
 permissions:
   contents: read
@@ -38,6 +40,7 @@ jobs:
           node tests/nba-relay-status.test.mjs
           node tests/nba-example-isolation.test.mjs
           node tests/nba-period-isolation.test.mjs
+          node tests/nba-provenance.test.mjs
       - name: Check frontend inline JavaScript syntax
         run: |
           node --input-type=module <<'NODE'
