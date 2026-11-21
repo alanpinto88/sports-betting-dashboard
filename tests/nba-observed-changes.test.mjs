@@ -18,6 +18,8 @@ assert.equal(observedQuoteChanges([a,a]).length,0);
 assert.equal(observedQuoteChanges([a,record('2026-11-21T16:30:00Z','2026-11-21T16:25:00Z',-110)]).length,0);
 assert.deepEqual(observedQuoteChanges([a,record('2026-11-21T16:30:00Z','2026-11-21T16:31:00Z',-120)]),[],'future source updates cannot be accepted');
 assert.deepEqual(observedQuoteChanges([record('2026-11-21T16:00:00Z','2026-11-21T16:01:00Z',-110),b]),[],'future updates at the earlier endpoint are invalid');
+assert.equal(observedQuoteChanges([a,null,b]).length,1,'invalid entries do not crash observed-change analysis');
+assert.equal(observedQuoteChanges([a,record('2026-11-21T16:15:00Z','2026-11-21T16:16:00Z',-125),b]).length,1,'invalid intervening quote is excluded from the accepted sample');
 assert.deepEqual(observedQuoteChanges([]),[]);
 assert.throws(()=>observedQuoteChanges(null),/Expected accepted/);
 console.log('NBA observed change classifications passed');
