@@ -79,4 +79,4 @@ assert.match(html,/setAttribute\('role','img'\)/);
 assert.match(html,/drawHistoryChart\(filtered\)/);
 assert.match(html,/no EV signal/);
 assert.doesNotMatch(html,/fetch\([^\n]*oddsCsv/);
-console.log('NBA local odds import: 49 safety checks passed');
+console.log('NBA local odds import safety checks passed');
