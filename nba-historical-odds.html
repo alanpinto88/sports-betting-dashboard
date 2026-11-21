@@ -45,7 +45,7 @@ function exportMarket(){
 const selection={eventId:$('event').value,playerName:$('player').value,book:$('book').value,market:$('market').value,side:$('side').value,line:Number($('line').value)};
 let records=[];
 try{records=historicalQuoteSeries(snapshots,selection);if($('freshOnly').checked)records=records.filter(r=>Date.parse(r.capturedAt)-Date.parse(r.sourceUpdatedAt)<=3600000)}catch(error){$('chartStatus').textContent='CSV unavailable: '+error.message;return}
-if(!records.length){$('chartStatus').textContent='No recorded quotes to export for this selection.';return}
+if(!records.length){$('chartStatus').textContent=$('freshOnly').checked?'No quotes meet the fresh-source filter for this selection; disable the filter to export all accepted observations.':'No recorded quotes to export for this selection.';return}
 const csv=nbaMarketCsv(records,selection);
 const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
 a.href=url;a.download=$('freshOnly').checked?'evsports-nba-selected-market-fresh-source-only.csv':'evsports-nba-selected-market-all-accepted.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
