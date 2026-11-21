@@ -5,6 +5,7 @@ on:
       - 'lib/nba-quote-validation.mjs'
       - 'lib/nba-identity-review.mjs'
       - 'lib/nba-historical-odds.mjs'
+      - 'lib/nba-local-backup.mjs'
       - 'scripts/audit-nba-snapshot.mjs'
       - 'tests/*.test.mjs'
       - '.github/workflows/nba-validation.yml'
