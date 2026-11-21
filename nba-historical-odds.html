@@ -43,6 +43,7 @@ if(file.size>12*1024*1024){$('status').textContent='Backup too large (12 MB maxi
 try{
 const parsed=JSON.parse(await file.text());
 const incoming=validateLocalBackup(parsed);
+if(!window.confirm('Restore '+incoming.length+' snapshot(s) from this JSON backup into this browser? Existing captures with matching timestamps will be preserved.'))return;
 const current=JSON.parse(localStorage.getItem(historyKey)||'[]');
 const merged=mergeLocalHistory(current,incoming);
 const saved=merged.snapshots;
