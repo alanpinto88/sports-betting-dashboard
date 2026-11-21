@@ -45,8 +45,9 @@ assert.match(html,/<th>First odds<\/th><th>Latest odds<\/th><th>Implied probabil
 assert.match(html,/americanProb\(e\.last\.american\)-americanProb\(e\.first\.american\)/);
 assert.match(html,/e\.count<2\?'Insufficient observations'/);
 assert.match(html,/delta:items\.length>1/);
-assert.match(html,/e\.first\.lineValue===e\.last\.lineValue\?/);
-assert.match(html,/Not comparable — line changed/);
+assert.match(html,/sameThreshold:items\.every\(q=>q\.lineValue===first\.lineValue\)/);
+assert.match(html,/e\.sameThreshold\?\(\(americanProb/);
+assert.match(html,/Not comparable — threshold changed during series/);
 assert.match(html,/id="importedChart"/);
 assert.match(html,/const markets=new Set\(rows\.map/);
 assert.match(html,/if\(markets\.size>1\)/);
