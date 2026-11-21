@@ -58,9 +58,13 @@ $('refresh').addEventListener('click',async()=>{
   const payload=await response.json();
   if(requestId!==activeRequest)return;
   const items=Array.isArray(payload?.data)?payload.data:[];
-  const normalize=name=>String(name||'').trim().toLowerCase().replace(/\\s+/g,' ');
+  const normalize=name=>String(name||'').trim().toLowerCase().replace(/\s+/g,' ');
   const matched=items.find(item=>normalize(item?.projection?.player?.name)===normalize(player)&&item?.projection?.league==='NBA'&&item?.projection?.market?.stat==='Points'&&Array.isArray(item?.prices));
   if(!matched)throw Error('No exact NBA Points player match in provider response');
+  const capturedAt=Date.parse(payload?.meta?.as_of||'');
+  const ageMs=Date.now()-capturedAt;
+  const staleSeconds=Number(payload?.meta?.stale_after_seconds);
+  if(!Number.isFinite(capturedAt)||!Number.isFinite(ageMs)||ageMs<0||!Number.isFinite(staleSeconds)||staleSeconds<=0||ageMs>Math.min(staleSeconds,600)*1000)throw Error('Provider quote timestamp missing, future-dated or stale');
   render({...payload,data:[matched]},true);
  }catch(error){
   if(requestId===activeRequest)showUnavailable(player,'No verified results for '+player+' ('+(error.name==='AbortError'?'request timed out':error.message)+').');
