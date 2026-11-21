@@ -22,6 +22,8 @@ assert.equal(observedQuoteChanges([a,null,b]).length,1,'invalid entries do not c
 assert.equal(observedQuoteChanges([a,record('2026-11-21T16:15:00Z','2026-11-21T16:16:00Z',-125),b]).length,0,'timestamped invalid intervening quote blocks claims of adjacent observed changes');
 assert.deepEqual(observedQuoteChanges([a,record('2026-11-21T16:00:00Z','2026-11-21T15:58:00Z',-115),b]),[],'ambiguous duplicate capture time blocks adjacent price-change claims');
 assert.deepEqual(observedQuoteChanges([a,{capturedAt:0,sourceUpdatedAt:0,americanOdds:-120},b]).length,1,'numeric timestamps cannot be treated as verified quote captures');
+assert.equal(observedQuoteChanges([a,record('2026-11-21T16:15:00','2026-11-21T16:10:00Z',-125),b]).length,0,'timezone-free capture cannot establish adjacent evidence');
+assert.equal(observedQuoteChanges([a,record('2026-11-21T16:15:00Z','2026-11-21T16:10:00',-125),b]).length,0,'timezone-free source timestamp blocks adjacent evidence');
 assert.deepEqual(observedQuoteChanges([]),[]);
 assert.throws(()=>observedQuoteChanges(null),/Expected accepted/);
 console.log('NBA observed change classifications passed');
