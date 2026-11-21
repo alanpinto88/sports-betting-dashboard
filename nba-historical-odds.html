@@ -31,6 +31,7 @@ if(times[i]-times[i-1]<=Number($('gapThreshold').value)*60000)add('line',{class:
 else disconnected++;
 }
 if(disconnected)$('chartStatus').textContent+=' '+disconnected+' line segment(s) omitted across gaps longer than '+Number($('gapThreshold').value)+' minutes.';
+if(records.length>1&&!disconnected)$('chartStatus').textContent+=' All adjacent recorded observations are within the selected gap threshold; intervening sportsbook prices remain unknown.';
 xs.forEach((x,i)=>{add('circle',{cx:x,cy:ys[i],r:5});if(i===0||i===records.length-1||records.length<=3)add('text',{x:Math.min(x,580),y:219},new Date(records[i].capturedAt).toISOString().slice(11,16)+'Z')});
 }
 function exportMarket(){
