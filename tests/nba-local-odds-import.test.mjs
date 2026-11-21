@@ -43,6 +43,8 @@ assert.match(html,/new Date\(e\.first\.time\)\.toISOString\(\),new Date\(e\.last
 assert.match(html,/entries\.sort\(\(a,b\)=>b\.last\.time-a\.last\.time/);
 assert.match(html,/<th>First odds<\/th><th>Latest odds<\/th><th>Implied probability change<\/th>/);
 assert.match(html,/americanProb\(e\.last\.american\)-americanProb\(e\.first\.american\)/);
+assert.match(html,/e\.count<2\?'Insufficient observations'/);
+assert.match(html,/delta:items\.length>1/);
 assert.match(html,/e\.first\.lineValue===e\.last\.lineValue\?/);
 assert.match(html,/Not comparable — line changed/);
 assert.match(html,/id="importedChart"/);
