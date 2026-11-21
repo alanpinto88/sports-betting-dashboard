@@ -16,6 +16,7 @@ for(const token of [
  'age<=1000*Math.min(ttl,600)',
  'Provider snapshot is stale, expired, or unverified. Fair probability is withheld.',
  'Source fair over (research only): ',
+ "item.prices.filter(x=>x&&typeof x==='object').map",
  "calc!==null?pct(over):'withheld'",
  'const calc=fresh&&!pairAmbiguous',
  'Conflicting or duplicate sportsbook prices detected. Fair probability is withheld',
@@ -35,4 +36,4 @@ for(const token of [
  'x.captured_at',
  'No same-book, same-capture two-sided sportsbook pair'
 ])assert.ok(html.includes(token),token);
-console.log('NBA quote provenance and timestamp guards: 32 checks passed');
+console.log('NBA quote provenance and timestamp guards: 33 checks passed');
