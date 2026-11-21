@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {auditSnapshot} from '../scripts/audit-nba-snapshot.mjs';
+const sample={source:'The Odds API',captured_at:'2026-11-21T18:00:00Z',events:[{bookmakers:[{key:'fixture-book',markets:[{key:'player_points',last_update:'2026-11-21T17:59:00Z',outcomes:[{name:'Over',description:'Fixture Player',point:20.5,price:-110},{name:'Under',description:'Fixture Player',point:20.5,price:-110},{name:'Over',description:'Fixture Player',point:21.5,price:0}]}]}]}]};
+const result=auditSnapshot(sample);
+assert.equal(result.pairedMarkets,1);
+assert.equal(result.unpairedSides,1);
+assert.equal(result.invalidPrices,1);
+assert.equal(result.identityUnverified,3);
+assert.equal(result.verifiedEVPicks,0);
+assert.equal(result.status,'research_only');
+console.log('NBA snapshot audit fixture checks passed');
