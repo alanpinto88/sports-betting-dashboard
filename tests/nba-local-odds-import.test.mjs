@@ -6,6 +6,8 @@ assert.match(html,/id="downloadCsvTemplate"/);
 assert.match(html,/id="clearImportedOdds"/);
 assert.match(html,/let importGeneration=0/);
 assert.match(html,/const generation=\+\+importGeneration/);
+assert.match(html,/CSV too large \(200 KB maximum\)\. Previously imported research data/);
+assert.match(html,/\$\('oddsCsv'\)\.value=''\}/);
 assert.match(html,/if\(generation!==importGeneration\)return/);
 assert.match(html,/Imported odds cleared from this page/);
 assert.match(html,/\$\('oddsCsv'\)\.value=''/);
