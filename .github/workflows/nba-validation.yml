@@ -9,6 +9,10 @@ on:
       - 'lib/nba-snapshot-coverage.mjs'
       - 'lib/nba-market-csv.mjs'
       - 'scripts/audit-nba-snapshot.mjs'
+      - 'scripts/check-nba-page-modules.mjs'
+      - 'nba-historical-odds.html'
+      - 'nba-props.html'
+      - 'nba-audit.html'
       - 'tests/*.test.mjs'
       - '.github/workflows/nba-validation.yml'
   pull_request:
@@ -31,3 +35,5 @@ jobs:
           node-version: '22'
       - name: Validate NBA quote and snapshot audit fixtures
         run: node --test tests/*.test.mjs
+      - name: Check inline NBA page JavaScript syntax
+        run: node scripts/check-nba-page-modules.mjs
