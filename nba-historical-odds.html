@@ -18,6 +18,7 @@ $('chartStatus').textContent+=' Research sample only: no completeness or live-ma
 for(const record of records){const tr=document.createElement('tr');for(const v of [record.capturedAt,record.sourceUpdatedAt,(record.americanOdds>0?'+':'')+record.americanOdds]){const td=document.createElement('td');td.textContent=v;tr.append(td)}tbody.append(tr)}
 if(!records.length){$('chartStatus').textContent+=' No verified movement can be inferred.';return;}
 if(records.length===1)$('chartStatus').textContent+=' A single price cannot establish opening, closing, or directional movement.';
+if(records.length>1&&records.some((r,i)=>i>0&&Date.parse(r.capturedAt)-Date.parse(records[i-1].capturedAt)>3600000))$('chartStatus').textContent+=' This sample contains unobserved intervals longer than one hour.';
 const ns='http://www.w3.org/2000/svg',add=(tag,attrs,text)=>{const el=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));if(text!==undefined)el.textContent=text;svg.append(el);return el};
 const prices=records.map(r=>r.americanOdds),low=Math.min(...prices)-10,high=Math.max(...prices)+10;
 const uniquePrices=new Set(prices);if(records.length>1&&uniquePrices.size===1)$('chartStatus').textContent+=' All recorded quotes have the same price; this does not prove the market stayed unchanged between captures.';
