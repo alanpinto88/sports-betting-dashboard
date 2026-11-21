@@ -161,13 +161,23 @@ byId("auditConflicts").textContent=String(conflicts);
 byId("auditFuture").textContent=String(future);
 byId("auditNote").textContent="Inspected "+outcomes+" player-market outcomes and "+groups.size+" distinct player/book/market/line groups in "+events.length+" published event records. Counts are structural diagnostics, not proof of roster or event validity. 0 independently verified player-to-event assignments; all quotes remain research-only.";
 }
-async function readJson(url){const response=await fetch(url,{cache:"no-store"});if(!response.ok)throw Error("HTTP "+response.status);return response.json()}
+async function readJson(url){
+const controller=new AbortController();
+const timer=setTimeout(()=>controller.abort(),8000);
+try{
+const response=await fetch(url,{cache:"no-store",signal:controller.signal});
+if(!response.ok)throw Error("HTTP "+response.status);
+return await response.json();
+}finally{clearTimeout(timer)}
+}
 async function load(){
-show("Loading NBA player props…",false);
+show("Loading NBA player props… (up to 8 seconds per source)",false);
+byId("auditNote").textContent="Loading published NBA snapshot…";
+byId("reviewQueue").textContent="Loading published NBA snapshot…";
 let data=null;
 try{data=await readJson("./data/nba-player-props-latest.json")}
-catch(error){try{data=await readJson("https://raw.githubusercontent.com/alanpinto88/sports-betting-dashboard/main/data/nba-player-props-latest.json")}catch(fallbackError){show("NBA player props could not load: "+fallbackError.message,false);byId("results").replaceChildren();row(["Snapshot unavailable; try Refresh published data.","","","","","","",""]);return}}
-if(data?.source!=="The Odds API"||!Array.isArray(data.events)){show("Published NBA player-prop snapshot has an unexpected format.",false);return}
+catch(error){try{data=await readJson("https://raw.githubusercontent.com/alanpinto88/sports-betting-dashboard/main/data/nba-player-props-latest.json")}catch(fallbackError){show("NBA player props unavailable. Both published and GitHub fallback sources failed. First source: "+error.message+"; fallback: "+fallbackError.message+". Please retry later.",false);byId("auditNote").textContent="Snapshot unavailable; no player audit can run.";byId("reviewQueue").textContent="Snapshot unavailable; verification queue cannot load.";byId("identityAnomaly").textContent="Snapshot unavailable; grouping cannot be checked.";byId("rosterCheckStatus").textContent="Roster research requires a loaded snapshot.";byId("results").replaceChildren();row(["Snapshot unavailable; try Refresh published data.","","","","","","",""]);return}}
+if(data?.source!=="The Odds API"||!Array.isArray(data.events)){show("Published NBA player-prop snapshot has an unexpected format.",false);byId("auditNote").textContent="Snapshot format invalid.";byId("reviewQueue").textContent="Snapshot format invalid.";return}
 propEvents=data.events;
 auditSnapshot(propEvents,data.captured_at);
 renderIdentityReviewQueue(propEvents);
@@ -185,6 +195,6 @@ byId("checkRosters").addEventListener("click",checkSourceRosters);
 byId("rawQuotes").addEventListener("change",render);
 for(const id of ["player","team","opponent","market","book"])byId(id).addEventListener("input",render);
 byId("refresh").addEventListener("click",load);
-load().catch(error=>show("Data loading error: "+error.message,false));
+load().catch(error=>{show("Data loading error: "+error.message,false);byId("auditNote").textContent="Loading failed; see status at top.";byId("reviewQueue").textContent="Loading failed; see status at top.";});
 })();
 </script></body></html>
