@@ -45,4 +45,7 @@ assert.throws(()=>context.parse([header,t1.replace('game-1','')].join('\n')),/In
 assert.throws(()=>context.parse([header,t1.replace('Points','')].join('\n')),/Invalid quote/);
 assert.throws(()=>context.parse([header,t1.replace('Full game','')].join('\n')),/Invalid quote/);
 assert.equal(other.length,2,'Different events must not be mistaken for duplicates');
+assert.equal(context.validate(context.parse([header,t1,t1.replace(',over,',',under,')].join('\n'))).length,2,'Over and Under are distinct quote sides');
+assert.equal(context.validate(context.parse([header,t1,t1.replace('Book A','Book B')].join('\n'))).length,2,'Different sportsbooks are distinct quote sources');
+assert.equal(context.validate(context.parse([header,t1,t1.replace('Jalen Brunson','Josh Hart')].join('\n'))).length,2,'Different players are distinct quote subjects');
 console.log('NBA historical CSV parser runtime checks passed');
