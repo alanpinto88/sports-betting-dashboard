@@ -15,6 +15,7 @@ for(const token of [
  'Eligible sportsbook quote market mismatch — quarantined',
  '(!x.market?.stat||String(x.market.stat).toLowerCase()===\'points\')',
  '(!x.event_id||String(x.event_id)===String(p.event?.id))',
+ "Math.abs(x.price.american)>=100&&String(x.quote_id||x.id||'').trim()",
  'item.projection.line>=0',
  'Number.isInteger(x?.price?.american)&&Math.abs(x.price.american)>=100',
  'Number.isInteger(x.price?.american)&&Math.abs(x.price.american)>=100',
@@ -22,4 +23,4 @@ for(const token of [
  'x.captured_at',
  'No same-book, same-capture two-sided sportsbook pair'
 ])assert.ok(html.includes(token),token);
-console.log('NBA quote provenance and timestamp guards: 19 checks passed');
+console.log('NBA quote provenance and timestamp guards: 20 checks passed');
