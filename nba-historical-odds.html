@@ -18,5 +18,5 @@ if(records.length>1)add('polyline',{points:xs.map((x,i)=>x+','+ys[i]).join(' ')}
 xs.forEach((x,i)=>{add('circle',{cx:x,cy:ys[i],r:5});add('text',{x:Math.min(x,580),y:219},new Date(records[i].capturedAt).toISOString().slice(11,16)+'Z')});
 }
 function load(){try{const stored=JSON.parse(localStorage.getItem(historyKey)||'[]');snapshots=(Array.isArray(stored)?stored:[]).filter(s=>s?.source==='The Odds API'&&Array.isArray(s.events)).map(s=>({source:s.source,captured_at:s.capture,events:s.events}));$('status').textContent=snapshots.length+' saved historical snapshot(s) found on this device. All player identities remain unverified.';update()}catch(e){snapshots=[];$('status').textContent='Local history unavailable: '+e.message;update()}}
-for(const id of [...ids,'side'])$(id).addEventListener('change',()=>update());$('refresh').addEventListener('click',load);load();
+for(const id of ids)$(id).addEventListener('change',()=>update(id));$('side').addEventListener('change',render);$('refresh').addEventListener('click',load);load();
 </script></body></html>
