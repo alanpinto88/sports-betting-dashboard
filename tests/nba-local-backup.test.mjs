@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {validateLocalBackup,mergeLocalHistory} from '../lib/nba-local-backup.mjs';
+const record=(capture,events=[])=>({source:'The Odds API',capture,events});
+const t='2026-11-21T20:00:00Z';
+assert.equal(validateLocalBackup({format:'evsports-nba-local-history-backup-v1',snapshots:[record(t)]}).length,1);
+assert.throws(()=>validateLocalBackup({format:'other',snapshots:[]}),/Unrecognized/);
+assert.throws(()=>validateLocalBackup({format:'evsports-nba-local-history-backup-v1',snapshots:[record('invalid')]}),/Invalid snapshot/);
+const a=record(t,[{id:'existing'}]),b=record(t,[{id:'imported'}]);
+const result=mergeLocalHistory([a],[b,record('2026-11-21T21:00:00Z')]);
+assert.equal(result.conflicts,1);
+assert.equal(result.added,1);
+assert.deepEqual(result.snapshots[0],a);
+assert.equal(mergeLocalHistory([a],[a]).conflicts,0);
+console.log('NBA backup conflict protection fixtures passed');
