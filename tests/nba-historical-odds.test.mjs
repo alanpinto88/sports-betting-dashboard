@@ -18,4 +18,7 @@ assert.deepEqual(conflict.map(x=>x.americanOdds),[-120],
 const audit=historicalQuoteAudit([snapshot('2026-11-21T16:00:00Z',-110),snapshot('2026-11-21T16:00:00Z',-125)],selection);
 assert.deepEqual(audit.conflictingCaptureTimes,['2026-11-21T16:00:00.000Z']);
 assert.equal(audit.records.length,0);
+const duplicateAudit=historicalQuoteAudit([snapshot('2026-11-21T16:00:00Z',-110),snapshot('2026-11-21T16:00:00Z',-110)],selection);
+assert.equal(duplicateAudit.duplicateRecordsCollapsed,1);
+assert.equal(duplicateAudit.records.length,1);
 console.log('NBA recorded-only odds movement and conflict fixtures passed');
