@@ -233,6 +233,8 @@ $('refresh').addEventListener('click',async()=>{
   if(eligiblePrices.some(x=>{const t=Date.parse(x.captured_at||'');return t<capturedAt-600000||t>capturedAt+600000;}))throw Error('Quote capture timestamps inconsistent with provider snapshot — quarantined');
   const paired=eligiblePrices.filter(x=>eligiblePrices.some(y=>y!==x&&y.book.trim().toLowerCase()===x.book.trim().toLowerCase()&&y.side!==x.side&&String(y.captured_at||'')===String(x.captured_at||'')));
   if(paired.some(x=>!String(x.quote_id||x.id||'').trim()))throw Error('Paired sportsbook quote provenance missing — quarantined');
+  const pairSlots=paired.map(x=>[x.book.trim().toLowerCase(),x.side,String(x.captured_at)].join('|'));
+  if(new Set(pairSlots).size!==pairSlots.length)throw Error('Ambiguous duplicate sportsbook side at same capture — quarantined');
   const pairedIds=paired.map(x=>String(x.quote_id||x.id).trim());
   if(new Set(pairedIds).size!==pairedIds.length)throw Error('Duplicate sportsbook quote provenance IDs — quarantined');
   render({...payload,data:[matched]},true);
