@@ -16,7 +16,13 @@ const ns='http://www.w3.org/2000/svg',add=(tag,attrs,text)=>{const el=document.c
 const prices=records.map(r=>r.americanOdds),low=Math.min(...prices)-10,high=Math.max(...prices)+10;
 for(let i=0;i<4;i++){const y=25+i*57;add('line',{x1:55,y1:y,x2:650,y2:y});add('text',{x:7,y:y+4},Math.round(high-(high-low)*i/3))}
 const times=records.map(r=>Date.parse(r.capturedAt)),first=Math.min(...times),last=Math.max(...times);const xs=times.map(t=>last===first?350:65+(t-first)*570/(last-first)),ys=prices.map(p=>25+(high-p)*171/(high-low));
-if(records.length>1)add('polyline',{points:xs.map((x,i)=>x+','+ys[i]).join(' ')});
+// Connect only adjacent observations within 60 minutes. A longer interval is unknown, not a trend.
+let disconnected=0;
+for(let i=1;i<records.length;i++){
+if(times[i]-times[i-1]<=60*60*1000)add('line',{x1:xs[i-1],y1:ys[i-1],x2:xs[i],y2:ys[i]});
+else disconnected++;
+}
+if(disconnected)$('chartStatus').textContent+=' '+disconnected+' line segment(s) omitted across gaps longer than 60 minutes.';
 xs.forEach((x,i)=>{add('circle',{cx:x,cy:ys[i],r:5});if(i===0||i===records.length-1||records.length<=3)add('text',{x:Math.min(x,580),y:219},new Date(records[i].capturedAt).toISOString().slice(11,16)+'Z')});
 }
 function backup(){
