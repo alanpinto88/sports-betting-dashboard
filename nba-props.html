@@ -180,7 +180,7 @@ const select=byId(id),old=select.value;select.replaceChildren();
 for(const item of records){const opt=document.createElement("option");opt.value=item.capture;opt.textContent=new Date(item.capture).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"short",timeStyle:"short"})+" ET";select.append(opt)}
 if(records.some(x=>x.capture===old))select.value=old;
 }
-if(records.length>1){if(!byId("localEarlier").value)byId("localEarlier").value=records[0].capture;if(!byId("localLater").value||byId("localLater").value===byId("localEarlier").value)byId("localLater").value=records[records.length-1].capture}
+if(records.length>1){const early=byId("localEarlier"),late=byId("localLater");if(!records.some(x=>x.capture===early.value)||early.value===late.value)early.value=records[0].capture;if(!records.some(x=>x.capture===late.value)||late.value===early.value)late.value=records[records.length-1].capture}
 byId("compareLocalHistory").disabled=records.length<2;
 }
 function localArchive(record){
@@ -201,7 +201,7 @@ return {capture:record.capture,quotes};
 }
 function compareLocalHistory(){
 const records=localHistory(),a=records.find(x=>x.capture===byId("localEarlier").value),b=records.find(x=>x.capture===byId("localLater").value);
-try{compareArchiveData(localArchive(a),localArchive(b))}catch(error){byId("archiveCompareStatus").textContent="Saved-history comparison unavailable: "+error.message}
+try{compareArchiveData(localArchive(a),localArchive(b));byId("archiveCompareResults").scrollIntoView({behavior:"smooth",block:"nearest"})}catch(error){byId("archiveCompareStatus").textContent="Saved-history comparison unavailable: "+error.message;byId("archiveCompareResults").replaceChildren()}
 }
 function showLocalHistory(message=""){
 const records=localHistory(),status=byId("localHistoryStatus");
