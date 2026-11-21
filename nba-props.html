@@ -60,7 +60,12 @@ if(!entries.has(key))entries.set(key,{name,eventId:String(game.id||"MISSING"),ev
 entries.get(key).books.add(String(book.title||book.key||"Unknown"));
 }}
 for(const p of [...entries.values()].sort((a,b)=>a.name.localeCompare(b.name)))lines.push([p.name,p.eventId,p.eventLabel,[...p.books].sort().join("; "),"PENDING - NOT VERIFIED"]);
-const safe=v=>'"'+String(v??"").replace(/^[=+@\-\t\r]/,"'async function checkSourceRosters(){
+const safe=v=>'"'+String(v??"").replace(/^[=+@\\-\\t\\r]/,"'$&").replaceAll('"','""')+'"';
+const csv=lines.map(line=>line.map(safe).join(",")).join("\r\n");
+const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob);
+const a=document.createElement("a");a.href=url;a.download="nba-player-identity-review.csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function checkSourceRosters(){
 const status=byId("rosterCheckStatus"),button=byId("checkRosters");
 button.disabled=true;status.textContent="Checking ESPN roster responses for Charlotte and Atlanta…";
 try{
@@ -80,11 +85,6 @@ for(const name of [...names].sort()){const teams=results.filter(t=>t.names.has(n
 status.textContent="ESPN roster research only — listed on one of the two teams: "+matched.length+" ["+(matched.join("; ")||"none")+"]. Not listed on either returned roster: "+notListed.length+" ["+(notListed.join("; ")||"none")+"]. This is NOT event verification: rosters can change, a missing name is not proof of invalid odds, and source event/player mapping remains unverified. Verified count stays 0.";
 }catch(error){status.textContent="Independent roster check unavailable: "+error.message+". No verification status changed. ESPN may block browser requests; no sportsbook API credits were used."}
 finally{button.disabled=false}
-}
-function renderIdentityReviewQueue(events){").replaceAll('"','""')+'"';
-const csv=lines.map(line=>line.map(safe).join(",")).join("\r\n");
-const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob);
-const a=document.createElement("a");a.href=url;a.download="nba-player-identity-review.csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function renderIdentityReviewQueue(events){
 const players=new Map();
