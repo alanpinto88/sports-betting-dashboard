@@ -30,6 +30,42 @@ $('status').textContent=fresh?'API response received · timestamp within freshne
 $('chart').textContent='No time-series observations available. Snapshot data alone cannot establish odds movement.';
 }
 render(SAMPLE);
-$('refresh').addEventListener('click',async()=>{const player=$('playerInput').value.trim();if(!/^[a-zA-Z .'-]{2,60}$/.test(player)){$('status').textContent='Enter a valid player name.';return}
-$('status').textContent='Checking API…';try{const r=await fetch('/api/prizepicks/compare?league=NBA&stat=Points&player='+encodeURIComponent(player),{headers:{Accept:'application/json'},cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);render(await r.json(),true)}catch(e){render(SAMPLE);$('player').textContent=player; $('subtitle').textContent='NBA · No verified quotes available';$('line').textContent='—';$('fair').textContent='—';$('under').textContent='No verified fair probability';$('asof').textContent='—';$('freshness').textContent='Unavailable · not live';$('prices').replaceChildren();$('notes').textContent='No verified market quotes for this search. Historical sample hidden to prevent incorrect player attribution.';$('warning').textContent='API unavailable or response invalid. No current market data or EV recommendation is displayed.';$('status').textContent='Live endpoint unavailable ('+e.message+'). No verified results for '+player+'.';}});
+function showUnavailable(player,message){
+ $('player').textContent=player;
+ $('subtitle').textContent='NBA · No verified quotes available';
+ $('line').textContent='—';$('fair').textContent='—';$('under').textContent='No verified fair probability';
+ $('asof').textContent='—';$('freshness').textContent='Unavailable · not live';
+ $('prices').replaceChildren();
+ $('notes').textContent='No verified market quotes for this search. Historical reference data is not substituted for a different player.';
+ $('warning').textContent='Data unavailable or unverified. No current market data or EV recommendation is displayed.';
+ $('chart').textContent='No verified time-series observations available.';
+ $('status').textContent=message;
+}
+let activeRequest=0;
+$('refresh').addEventListener('click',async()=>{
+ const player=$('playerInput').value.trim();
+ if(!/^[a-zA-Z .'-]{2,60}$/.test(player)){$('status').textContent='Enter a valid player name.';return}
+ const requestId=++activeRequest;
+ showUnavailable(player,'Checking configured API for '+player+'…');
+ $('refresh').disabled=true;
+ try{
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),12000);
+  let response;
+  try{response=await fetch('/api/prizepicks/compare?league=NBA&stat=Points&player='+encodeURIComponent(player),{headers:{Accept:'application/json'},cache:'no-store',signal:controller.signal})}
+  finally{clearTimeout(timeout)}
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const payload=await response.json();
+  if(requestId!==activeRequest)return;
+  const items=Array.isArray(payload?.data)?payload.data:[];
+  const normalize=name=>String(name||'').trim().toLowerCase().replace(/\\s+/g,' ');
+  const matched=items.find(item=>normalize(item?.projection?.player?.name)===normalize(player)&&item?.projection?.league==='NBA'&&item?.projection?.market?.stat==='Points'&&Array.isArray(item?.prices));
+  if(!matched)throw Error('No exact NBA Points player match in provider response');
+  render({...payload,data:[matched]},true);
+ }catch(error){
+  if(requestId===activeRequest)showUnavailable(player,'No verified results for '+player+' ('+(error.name==='AbortError'?'request timed out':error.message)+').');
+ }finally{
+  if(requestId===activeRequest)$('refresh').disabled=false;
+ }
+});
 </script></body></html>
