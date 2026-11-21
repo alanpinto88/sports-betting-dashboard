@@ -32,3 +32,5 @@ assert.equal(historicalQuoteAudit([],selection).maxSourceAgeMinutes,null,'no rec
 
 assert.equal(staleAudit.freshSourceQuotes,1,'one source update is within the 60-minute threshold');
 assert.equal(staleAudit.freshSourceQuotes+staleAudit.staleSourceQuotes,staleAudit.records.length,'source age groups must cover all accepted quotes');
+
+assert.deepEqual(staleAudit.sourceAgeMinutesByCapture.map(r=>r.ageMinutes),[60,120],'each accepted capture retains its source update age');
