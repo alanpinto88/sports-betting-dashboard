@@ -20,6 +20,8 @@ for(const token of [
  "x.price&&typeof x.price==='object'?x.price:{}",
  'im=Number.isInteger(us)&&Math.abs(us)>=100?americanProb(us):null',
  "const odds=x=>Number.isInteger(x)&&Math.abs(x)>=100",
+ 'Unknown sportsbook',
+ 'Unknown side',
  "calc!==null?pct(over):'withheld'",
  'const calc=fresh&&!pairAmbiguous',
  'Conflicting or duplicate sportsbook prices detected. Fair probability is withheld',
@@ -39,4 +41,4 @@ for(const token of [
  'x.captured_at',
  'No same-book, same-capture two-sided sportsbook pair'
 ])assert.ok(html.includes(token),token);
-console.log('NBA quote provenance and timestamp guards: 36 checks passed');
+console.log('NBA quote provenance and timestamp guards: 38 checks passed');
