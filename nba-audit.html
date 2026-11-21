@@ -11,7 +11,7 @@ if(!response.ok)throw Error('Snapshot HTTP '+response.status);
 const data=await response.json(),audit=auditSnapshot(data);
 document.getElementById('captured').textContent='Snapshot capture: '+(data.captured_at||'unknown');
 status.textContent='Historical audit completed · research-only · zero verified player quotes';
-const labels=[['Events',audit.events],['Sportsbooks',audit.books],['Raw outcomes',audit.outcomes],['Paired markets',audit.pairedMarkets],['Unpaired sides',audit.unpairedSides],['Invalid prices',audit.invalidPrices],['Invalid thresholds',audit.invalidThresholds],['Stale / undated markets',audit.staleOrUndatedMarkets],['Unverified identities',audit.identityUnverified],['Verified EV picks',audit.verifiedEVPicks]];
+const labels=[['Events',audit.events],['Sportsbooks',audit.books],['Raw outcomes',audit.outcomes],['Paired markets',audit.pairedMarkets],['Unpaired sides',audit.unpairedSides],['Invalid prices',audit.invalidPrices],['Invalid thresholds',audit.invalidThresholds],['Stale / undated markets',audit.staleOrUndatedMarkets],['Unverified identities',audit.identityUnverified],['Names across multiple events',audit.playersAcrossMultipleEvents],['Verified EV picks',audit.verifiedEVPicks]];
 for(const [label,value] of labels){const div=document.createElement('div');div.className='metric';const name=document.createElement('span');name.className='muted';name.textContent=label;const count=document.createElement('strong');count.textContent=String(value);div.append(name,count);metrics.append(div)}
 }catch(error){status.textContent='Audit unavailable: '+error.message+'. No values are assumed.';document.getElementById('captured').textContent='';metrics.textContent='No verified data.'}
 }
