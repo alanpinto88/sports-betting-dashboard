@@ -96,6 +96,9 @@ $('refresh').addEventListener('click',async()=>{
   if(!Number.isFinite(capturedAt)||!Number.isFinite(ageMs)||ageMs<0||!Number.isFinite(staleSeconds)||staleSeconds<=0||ageMs>Math.min(staleSeconds,600)*1000)throw Error('Provider quote timestamp missing, future-dated or stale');
   if(!matched.prices.some(x=>Number.isFinite(x?.price?.american??x?.derived?.american)))throw Error('No usable American odds quotes');
   if(!matched.prices.some(x=>x?.line===matched.projection.line&&x?.book_type!=='exchange'&&['over','under'].includes(x?.side)&&Number.isFinite(x?.price?.american)&&x.price.american!==0))throw Error('No comparable sportsbook price at the projection threshold');
+  const eligiblePrices=matched.prices.filter(x=>x?.line===matched.projection.line&&x?.book_type!=='exchange'&&typeof x?.book==='string'&&x.book.trim()&&['over','under'].includes(x?.side)&&Number.isFinite(x?.price?.american)&&x.price.american!==0);
+  const hasPair=eligiblePrices.some(x=>x.side==='over'&&eligiblePrices.some(y=>y.book===x.book&&y.side==='under'));
+  if(!hasPair)throw Error('No same-book two-sided sportsbook pair; fair probability unavailable');
   render({...payload,data:[matched]},true);
  }catch(error){
   if(requestId===activeRequest)showUnavailable(player,'No verified results for '+player+' ('+(error.name==='AbortError'?'request timed out':error.message)+').');
