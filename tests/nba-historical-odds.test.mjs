@@ -8,4 +8,11 @@ assert.deepEqual(result.map(x=>x.americanOdds),[-110,-120]);
 assert.ok(result.every(x=>x.status==='unverified_player_identity'));
 assert.deepEqual(historicalQuoteSeries([],selection),[]);
 assert.throws(()=>historicalQuoteSeries([],{}),/Missing selection/);
-console.log('NBA recorded-only odds movement fixtures passed');
+const conflict=historicalQuoteSeries([
+  snapshot('2026-11-21T16:00:00Z',-110),
+  snapshot('2026-11-21T16:00:00Z',-125),
+  snapshot('2026-11-21T17:00:00Z',-120)
+],selection);
+assert.deepEqual(conflict.map(x=>x.americanOdds),[-120],
+  'conflicting odds for the same capture time must be excluded');
+console.log('NBA recorded-only odds movement and conflict fixtures passed');
