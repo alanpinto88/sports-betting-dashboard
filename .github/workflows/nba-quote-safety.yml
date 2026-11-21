@@ -4,6 +4,7 @@ on:
     paths:
       - 'player-props.html'
       - 'tests/nba-quote-gates.test.mjs'
+      - 'tests/nba-market-pairing.test.mjs'
       - '.github/workflows/nba-quote-safety.yml'
   pull_request:
     paths:
@@ -21,7 +22,9 @@ jobs:
         with:
           node-version: '22'
       - name: Check deterministic quote-gate cases
-        run: node tests/nba-quote-gates.test.mjs
+        run: |
+          node tests/nba-quote-gates.test.mjs
+          node tests/nba-market-pairing.test.mjs
       - name: Check frontend inline JavaScript syntax
         run: |
           node --input-type=module <<'NODE'
