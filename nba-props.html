@@ -183,8 +183,15 @@ if(records.some(x=>x.capture===old))select.value=old;
 if(records.length>1){const early=byId("localEarlier"),late=byId("localLater");if(!records.some(x=>x.capture===early.value)||early.value===late.value)early.value=records[0].capture;if(!records.some(x=>x.capture===late.value)||late.value===early.value)late.value=records[records.length-1].capture}
 byId("compareLocalHistory").disabled=records.length<2;
 }
+function validateQuoteTimestamp(updated,capture){
+const marketTime=Date.parse(String(updated||"")),captureTime=Date.parse(String(capture||""));
+if(!Number.isFinite(marketTime)||!Number.isFinite(captureTime))throw Error("Missing or invalid market/capture timestamp");
+if(marketTime>captureTime+60000)throw Error("Market timestamp is later than its capture by more than 60 seconds");
+return marketTime;
+}
 function localArchive(record){
 if(!record||!Array.isArray(record.events))throw Error("Saved snapshot is invalid");
+if(!Number.isFinite(Date.parse(record.capture)))throw Error("Saved capture timestamp is invalid");
 const quotes=new Map();
 for(const game of record.events)for(const book of game.bookmakers||[])for(const market of book.markets||[]){
 if(!String(market.key||"").startsWith("player_"))continue;
@@ -192,6 +199,8 @@ for(const o of market.outcomes||[]){
 const side=String(o.name||"").toLowerCase(),line=Number(o.point),price=Number(o.price);
 if(!["over","under"].includes(side)||!Number.isFinite(line)||!Number.isInteger(price)||Math.abs(price)<100)continue;
 const player=String(o.description||o.player||"").trim();if(!player)continue;
+validateQuoteTimestamp(market.last_update||book.last_update,record.capture);
+if(!String(game.id||"").trim()||!String(book.key||"").trim()||!String(market.key||"").trim())throw Error("Saved quote is missing source identity fields");
 const key=JSON.stringify([game.id,book.key,market.key,player.toLowerCase(),side,line]);
 if(quotes.has(key))throw Error("Duplicate saved selection");
 quotes.set(key,{price,updated:market.last_update||book.last_update,player,book:book.key,market:market.key,side,line});
@@ -268,6 +277,8 @@ captures.add(capture);
 const side=r[cols.side].toLowerCase();if(!["over","under"].includes(side))continue;
 const price=Number(r[cols.american_odds]),line=Number(r[cols.threshold]);
 if(!Number.isInteger(price)||price===0||Math.abs(price)<100||!Number.isFinite(line))continue;
+validateQuoteTimestamp(r[cols.market_updated_utc],capture);
+if(!r[cols.source_event_id]?.trim()||!r[cols.sportsbook_key]?.trim()||!r[cols.market]?.trim()||!r[cols.player_label_unverified]?.trim())throw Error("CSV quote is missing source identity fields");
 const key=JSON.stringify([r[cols.source_event_id],r[cols.sportsbook_key],r[cols.market],r[cols.player_label_unverified].toLowerCase(),side,line]);
 if(quotes.has(key))throw Error("Duplicate selection in archive: "+key.slice(0,100));
 quotes.set(key,{price,updated:r[cols.market_updated_utc],player:r[cols.player_label_unverified],book:r[cols.sportsbook_key],market:r[cols.market],side,line});
@@ -292,6 +303,7 @@ const status=byId("archiveCompareStatus"),root=byId("archiveCompareResults");roo
 if(!a||!b)throw Error("Select two valid captures");
 if(Date.parse(a.capture)>=Date.parse(b.capture))throw Error("The earlier file must have an older capture timestamp than the later file");
 if(Date.parse(b.capture)>Date.now()+300000)throw Error("Later archive capture is future-dated; check source clock");
+if(Date.parse(a.capture)>Date.now()+300000)throw Error("Earlier archive capture is future-dated; check source clock");
 let matched=0,changed=0;const moves=[];
 for(const [key,prev] of a.quotes){const next=b.quotes.get(key);if(!next)continue;matched++;
 if(!Number.isFinite(Date.parse(prev.updated))||!Number.isFinite(Date.parse(next.updated))||Date.parse(next.updated)<=Date.parse(prev.updated))continue;
