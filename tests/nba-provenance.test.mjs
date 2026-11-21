@@ -8,10 +8,11 @@ for(const token of [
  'Quote capture timestamps missing, future-dated or stale',
  'Quote capture timestamps inconsistent with provider snapshot',
  'No usable sportsbook American odds quotes',
+ 'Paired sportsbook quote provenance missing — quarantined',
  'Number.isInteger(x?.price?.american)&&Math.abs(x.price.american)>=100',
  'Number.isInteger(x.price?.american)&&Math.abs(x.price.american)>=100',
  'x.quote_id||x.id',
  'x.captured_at',
  'No same-book, same-capture two-sided sportsbook pair'
 ])assert.ok(html.includes(token),token);
-console.log('NBA quote provenance and timestamp guards: 11 checks passed');
+console.log('NBA quote provenance and timestamp guards: 12 checks passed');
