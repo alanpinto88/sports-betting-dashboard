@@ -32,17 +32,24 @@ const ns='http://www.w3.org/2000/svg',add=(tag,attrs,text)=>{const el=document.c
 const prices=records.map(r=>r.americanOdds),low=Math.min(...prices)-10,high=Math.max(...prices)+10;
 const observedLow=Math.min(...prices),observedHigh=Math.max(...prices);$('chartStatus').textContent+=' Observed price range: '+(observedLow>0?'+':'')+observedLow+' to '+(observedHigh>0?'+':'')+observedHigh+' (American odds); unobserved extremes are unknown.';
 const distinctObservedPrices=new Set(prices).size;$('chartStatus').textContent+=' '+distinctObservedPrices+' distinct observed price'+(distinctObservedPrices===1?'':'s')+' across '+records.length+' valid capture'+(records.length===1?'':'s')+'.';
-const observedChanges=prices.slice(1).reduce((n,p,i)=>n+(p!==prices[i]?1:0),0);$('chartStatus').textContent+=' '+observedChanges+' price difference'+(observedChanges===1?'':'s')+' between adjacent captures; intervening changes cannot be counted.';
+const observedChanges=allChanges.length;$('chartStatus').textContent+=' '+observedChanges+' price difference'+(observedChanges===1?'':'s')+' between defensibly adjacent captures; excluded or hidden captures are not bridged.';
 const uniquePrices=new Set(prices);if(records.length>1&&uniquePrices.size===1)$('chartStatus').textContent+=' All recorded quotes have the same price; this does not prove the market stayed unchanged between captures.';
 for(let i=0;i<4;i++){const y=25+i*57;add('line',{x1:55,y1:y,x2:650,y2:y});add('text',{x:7,y:y+4},Math.round(high-(high-low)*i/3))}
 const times=records.map(r=>Date.parse(r.capturedAt)),first=Math.min(...times),last=Math.max(...times);const xs=times.map(t=>last===first?350:65+(t-first)*570/(last-first)),ys=prices.map(p=>25+(high-p)*171/(high-low));
-// Connect only adjacent observations within the selected gap threshold. Longer intervals are unknown.
-let disconnected=0;
+// Chart connections require adjacency in the FULL accepted capture timeline.
+// Hidden stale captures and excluded conflicting captures break continuity.
+const fullCaptureTimes=quoteAudit.records.map(r=>Date.parse(r.capturedAt));
+const conflictingTimes=quoteAudit.conflictingCaptureTimes.map(t=>Date.parse(t));
+let disconnected=0,qualityBarriers=0;
 for(let i=1;i<records.length;i++){
-if(times[i]-times[i-1]<=Number($('gapThreshold').value)*60000)add('line',{class:'quote-segment',x1:xs[i-1],y1:ys[i-1],x2:xs[i],y2:ys[i]});
+const from=times[i-1],to=times[i];
+const hiddenCapture=fullCaptureTimes.some(t=>t>from&&t<to);
+const conflictingCapture=conflictingTimes.some(t=>t>=from&&t<=to);
+if(hiddenCapture||conflictingCapture){disconnected++;qualityBarriers++;}
+else if(to-from<=Number($('gapThreshold').value)*60000)add('line',{class:'quote-segment',x1:xs[i-1],y1:ys[i-1],x2:xs[i],y2:ys[i]});
 else disconnected++;
 }
-if(disconnected)$('chartStatus').textContent+=' '+disconnected+' line segment(s) omitted across gaps longer than '+Number($('gapThreshold').value)+' minutes.';
+if(disconnected)$('chartStatus').textContent+=' '+disconnected+' line segment(s) omitted: '+qualityBarriers+' cross hidden/conflicting captures; '+(disconnected-qualityBarriers)+' exceed the '+Number($('gapThreshold').value)+'-minute gap threshold.';
 if(records.length>1&&!disconnected)$('chartStatus').textContent+=' All adjacent recorded observations are within the selected gap threshold; intervening sportsbook prices remain unknown.';
 xs.forEach((x,i)=>{add('circle',{cx:x,cy:ys[i],r:5});if(i===0||i===records.length-1||records.length<=3)add('text',{x:Math.min(x,580),y:219},new Date(records[i].capturedAt).toISOString().slice(11,16)+'Z')});
 }
