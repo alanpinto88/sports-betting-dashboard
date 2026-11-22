@@ -31,3 +31,12 @@ test('provider player fallback is included in roster research',()=>{
  assert.equal(result.players.length,1);
  assert.equal(result.players[0].status,'current_roster_match_unverified_participation');
 });
+
+test('missing sportsbook event ID fails closed',()=>{
+ const input=structuredClone(snapshot);delete input.events[0].id;
+ assert.throws(()=>reconcileNbaRosters(input,roster()),/Invalid event/);
+});
+test('identical home and away teams fail closed',()=>{
+ const input=structuredClone(snapshot);input.events[0].away_team=input.events[0].home_team;
+ assert.throws(()=>reconcileNbaRosters(input,roster()),/Invalid event teams/);
+});
