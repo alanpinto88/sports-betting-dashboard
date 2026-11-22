@@ -11,6 +11,9 @@ test('normalization rejects missing identity, side and line',()=>{
  assert.equal(normalizeProp(raw('push')),null);
  assert.equal(normalizeProp(raw('over',-110,{playerId:''})),null);
  assert.equal(normalizeProp(raw('over',-110,{line:-1})),null);
+ assert.equal(normalizeProp(raw('over',-110,{line:null})),null);
+ assert.equal(normalizeProp(raw('over',-110,{line:''})),null);
+ assert.equal(normalizeProp(raw('over',-110,{line:'24.5'})),null);
  assert.equal(normalizeProp(raw('over',-110,{line:'not-a-number'})),null);
 });
 test('exact market equality excludes different thresholds, events and periods',()=>{
