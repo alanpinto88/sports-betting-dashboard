@@ -110,14 +110,15 @@
  }
  search.addEventListener('input',render);market.addEventListener('change',render);significantOnly.addEventListener('change',render);
  try{
-  const {summarizeNbaMovement}=await import('./lib/nba-odds-movement.mjs');
+  const {summarizeNbaMovement,auditNbaHistory}=await import('./lib/nba-odds-movement.mjs');
   const response=await fetch('./data/nba-props-history.json',{cache:'no-store'});
   if(!response.ok)throw Error('Historical snapshot not published');
   const payload=await response.json();
   if(!Array.isArray(payload.quotes))throw Error('Invalid historical snapshot format');
   for(const q of payload.quotes)if(typeof q.player_id==='string'&&typeof q.player_name==='string')names.set(q.player_id,q.player_name);
+  const audit=auditNbaHistory(payload.quotes);
   summaries=summarizeNbaMovement(payload.quotes);
-  status.textContent='Verified historical movement groups: '+summaries.length+' · Significant changes: '+summaries.filter(x=>x.significant).length+' · Research only, not betting recommendations';
+  status.textContent='Historical quotes: '+audit.total+' · Eligible pregame quotes: '+audit.eligible+' · Rejected: '+(audit.total-audit.eligible)+' · Movement groups: '+summaries.length+' · Significant: '+summaries.filter(x=>x.significant).length+' · Research only; no betting recommendations';
  }catch(err){status.textContent='NBA movement history unavailable: '+err.message+' · No live API calls or recommendations.'}
  render();
 })();
