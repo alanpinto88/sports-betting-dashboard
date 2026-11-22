@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {crossBookGroups,verifiedCrossBookGroups} from '../lib/nba-quote-validation.mjs';
+import {crossBookGroups,verifiedCrossBookGroups,noVigPair} from '../lib/nba-quote-validation.mjs';
 const now=Date.parse('2026-11-21T20:00:00Z');
 const q={league:'NBA',eventId:'game1',playerId:'player1',stat:'points',period:'full_game',line:26.5,side:'over',provider:'trusted-ingest',sourceId:'quote1',sportsbook:'Book A',americanOdds:-110,capturedAt:'2026-11-21T19:59:00Z'};
 test('independent books with identical market and side group',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],now).length,1));
@@ -78,4 +78,15 @@ test('invalid verification clock fails closed',()=>{
  });
  assert.equal(result.enabled,false);
  assert.equal(result.reason,'invalid_verification_inputs');
+});
+
+test('no-vig pair rejects identical source record reused as both sides',()=>{
+ const result=noVigPair(q,{...q,side:'under'},now);
+ assert.equal(result.ok,false);
+ assert.equal(result.reason,'duplicate_source_record');
+});
+test('no-vig pair accepts independently identified over and under records',()=>{
+ const result=noVigPair(q,{...q,side:'under',sourceId:'quote-under'},now);
+ assert.equal(result.ok,true);
+ assert.equal(result.label,'No-vig market-implied probabilities; not predictive probabilities');
 });
