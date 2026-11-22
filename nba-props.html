@@ -48,7 +48,7 @@ const byId=id=>document.getElementById(id);
 let propEvents=[];
 let scheduleResearch=null,rosterResearch=null,combinedResearch=null;
 let snapshotRevision=0;
-const playerResearchKey=(eventId,name)=>JSON.stringify([String(eventId),String(name).trim().toLocaleLowerCase('en-US')]);
+const playerResearchKey=(eventId,name)=>JSON.stringify([String(eventId),String(name).trim().replace(/\s+/g,' ').toLocaleLowerCase('en-US')]);
 async function renderCombinedResearch(){
  const target=byId('combinedResearchStatus');
  if(!target)return;
