@@ -13,6 +13,9 @@ try {
 } catch(error) {
  status.textContent='Validator unavailable · comparisons disabled · EV disabled';
 }
+window.addEventListener('evsports:nba-snapshot-unavailable',()=>{
+ status.textContent='Snapshot unavailable or invalid · 0 eligible comparisons · EV disabled';
+});
 window.addEventListener('evsports:nba-snapshot-loaded',event=>{
  if(!loaded)return;
  const count=Number.isInteger(event.detail?.rawQuoteCount)&&event.detail.rawQuoteCount>=0?event.detail.rawQuoteCount:0;
@@ -392,6 +395,7 @@ return await response.json();
 }finally{clearTimeout(timer)}
 }
 async function load(){
+window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));
 show("Loading NBA player props… (up to 8 seconds per source)",false);
 byId("auditNote").textContent="Loading published NBA snapshot…";
 byId("reviewQueue").textContent="Loading published NBA snapshot…";
@@ -434,6 +438,6 @@ byId("compareArchives").addEventListener("click",compareArchives);
 byId("rawQuotes").addEventListener("change",render);
 for(const id of ["player","team","opponent","market","book"])byId(id).addEventListener("input",render);
 byId("refresh").addEventListener("click",load);
-load().catch(error=>{show("Data loading error: "+error.message,false);byId("auditNote").textContent="Loading failed; see status at top.";byId("reviewQueue").textContent="Loading failed; see status at top.";});
+load().catch(error=>{window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));show("Data loading error: "+error.message,false);byId("auditNote").textContent="Loading failed; see status at top.";byId("reviewQueue").textContent="Loading failed; see status at top.";});
 })();
 </script></body></html>
