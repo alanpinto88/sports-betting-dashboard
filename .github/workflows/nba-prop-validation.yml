@@ -4,6 +4,8 @@ on:
     paths:
       - 'lib/nba-prop-validation.mjs'
       - 'lib/nba-published-adapter.mjs'
+      - 'lib/nba-odds-movement.mjs'
+      - 'tests/nba-odds-movement.test.mjs'
       - 'tests/nba-published-adapter.test.mjs'
       - 'tests/nba-prop-validation.test.mjs'
       - '.github/workflows/nba-prop-validation.yml'
@@ -11,6 +13,8 @@ on:
     paths:
       - 'lib/nba-prop-validation.mjs'
       - 'lib/nba-published-adapter.mjs'
+      - 'lib/nba-odds-movement.mjs'
+      - 'tests/nba-odds-movement.test.mjs'
       - 'tests/nba-published-adapter.test.mjs'
       - 'tests/nba-prop-validation.test.mjs'
       - '.github/workflows/nba-prop-validation.yml'
@@ -27,4 +31,4 @@ jobs:
         with:
           node-version: '22'
       - name: Run NBA prop validation regression tests
-        run: node --test tests/nba-prop-validation.test.mjs tests/nba-published-adapter.test.mjs
+        run: node --test tests/nba-prop-validation.test.mjs tests/nba-published-adapter.test.mjs tests/nba-odds-movement.test.mjs
