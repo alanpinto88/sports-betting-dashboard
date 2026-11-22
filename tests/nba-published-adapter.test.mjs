@@ -5,7 +5,7 @@ const now=Date.parse('2026-11-22T01:00:00Z');
 const quote=(overrides={})=>({verified:true,player_id:'p1',event_id:'e1',market:'Points',period:'Full game',side:'over',line:24.5,american_odds:-110,sportsbook:'bookA',source_id:'a1',captured_at:'2026-11-22T00:55:00Z',...overrides});
 test('accepts complete verified fresh quote',()=>assert.equal(validatePublishedQuote(quote(),now).ok,true));
 test('fails closed for missing provenance and invalid prices',()=>{
- for(const changes of [{source_id:null},{verified:false},{american_odds:-99},{player_id:''},{line:NaN},{captured_at:'2026-11-22T01:01:00Z'},{captured_at:'2026-11-22T00:40:00Z'}])
+ for(const changes of [{source_id:null},{source_id:0},{source_id:''},{source_id:'   '},{verified:false},{american_odds:-99},{player_id:''},{line:NaN},{captured_at:'2026-11-22T01:01:00Z'},{captured_at:'2026-11-22T00:40:00Z'}])
   assert.equal(validatePublishedQuote(quote(changes),now).ok,false);
 });
 test('matches exact lines across distinct books only',()=>{
