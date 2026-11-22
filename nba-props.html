@@ -150,6 +150,13 @@ if(!response.ok)throw Error("ESPN "+day+" HTTP "+response.status);
 const data=await response.json();return data.events||[];
 }));
 const schedule=schedules.flat(),lines=[];
+const {reconcileNbaSchedule}=await import('./lib/nba-schedule-reconciliation.mjs');
+const independentGames=schedule.map(e=>{
+ const competitors=e.competitions?.[0]?.competitors||[];
+ return {homeTeam:competitors.find(c=>c.homeAway==='home')?.team?.displayName,
+  awayTeam:competitors.find(c=>c.homeAway==='away')?.team?.displayName,startTime:e.date};
+});
+const reconciliation=reconcileNbaSchedule({events:propEvents},independentGames,{toleranceMinutes:90});
 for(const game of propEvents){
 const home=String(game.home_team||"").toLowerCase().trim(),away=String(game.away_team||"").toLowerCase().trim();
 const matches=schedule.filter(e=>{
@@ -162,7 +169,7 @@ if(matches.length!==1){lines.push(game.away_team+" @ "+game.home_team+": "+match
 const match=matches[0],delta=Math.round((new Date(game.commence_time)-new Date(match.date))/60000);
 lines.push(game.away_team+" @ "+game.home_team+": ESPN event "+String(match.id||"unknown")+"; ESPN scheduled "+new Date(match.date).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"medium",timeStyle:"short"})+" ET; snapshot start "+new Date(game.commence_time).toLocaleString("en-US",{timeZone:"America/New_York",timeStyle:"short"})+" ET; difference "+delta+" minutes. "+(delta===0?"Schedule time agrees.":"START-TIME DISCREPANCY — investigate before linking event IDs.") );
 }
-status.textContent=lines.join(" | ")+" Team/date matching is research evidence only. A 10-minute time difference may reflect schedule adjustments or feed conventions and does not alone prove a bad event ID. No sportsbook event IDs, individual player markets, participation or EV are verified.";
+status.textContent="Schedule reconciliation: "+reconciliation.matched+" matched, "+reconciliation.ambiguous+" ambiguous, "+reconciliation.unmatched+" unmatched. "+lines.join(" | ")+" Team/date matching is research evidence only. A 10-minute time difference may reflect schedule adjustments or feed conventions and does not alone prove a bad event ID. No sportsbook event IDs, individual player markets, participation or EV are verified.";
 }catch(error){status.textContent="Schedule lookup unavailable ("+error.message+"). No verification status changed; no paid sportsbook API was called."}
 finally{clearTimeout(timer);button.disabled=false}
 }
