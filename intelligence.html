@@ -80,7 +80,7 @@
   const payload=await response.json();
   if(!Array.isArray(payload.quotes))throw Error('Invalid NBA props snapshot');
   quotes=payload.quotes.filter(q=>q&&typeof q==='object');
- }catch(e){status.textContent='NBA research feed unavailable: '+e.message+' · No live provider calls made.'}
+ }catch(e){status.textContent='NBA research feed unavailable: '+e.message+' · No live provider calls made.';render();return}
  render();
 })();
 
