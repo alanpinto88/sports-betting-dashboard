@@ -170,6 +170,7 @@ async function checkHistoricalBoxscores(){
   if(!propEvents.length)throw Error('No loaded NBA events');
   if(propEvents.length>3)throw Error('Manual box-score research limited to three games');
   const {reconcileNbaBoxscore}=await import('./lib/nba-boxscore-reconciliation.mjs');
+  const {extractNbaPlayerGameStats}=await import('./lib/nba-player-game-stats.mjs');
   const results=[];
   for(const event of propEvents){
    const start=new Date(event.commence_time);
@@ -193,10 +194,16 @@ async function checkHistoricalBoxscores(){
    const payload=await summary.json();
    const research=reconcileNbaBoxscore(event,payload.boxscore||{});
    const counts={};for(const item of research.findings)counts[item.status]=(counts[item.status]||0)+1;
-   results.push(String(event.away_team)+' @ '+String(event.home_team)+': '+Object.entries(counts).map(([k,v])=>v+' '+k.replaceAll('_',' ')).join(', ')+(research.completeTeamCoverage?'':' (incomplete coverage)'));
+   const statLines=research.findings.filter(p=>p.status==='listed_in_boxscore_unverified_minutes').slice(0,8).map(p=>{
+    const item=extractNbaPlayerGameStats(payload.boxscore,p.playerName);
+    if(item.status!=='stats_available')return p.playerName+': '+item.status.replaceAll('_',' ');
+    const v=item.stats;
+    return p.playerName+': '+v.points+' PTS / '+v.rebounds+' REB / '+v.assists+' AST / '+v.minutes+' MIN';
+   });
+   results.push(String(event.away_team)+' @ '+String(event.home_team)+' ('+String(matches[0].date||'date unavailable')+'): '+Object.entries(counts).map(([k,v])=>v+' '+k.replaceAll('_',' ')).join(', ')+(research.completeTeamCoverage?'':' (incomplete coverage)')+(statLines.length?'. Single-game stats (up to 8 players): '+statLines.join('; '):''));
   }
   if(revision!==snapshotRevision)return;
-  status.textContent=results.join(' | ')+'. Historical research only: sportsbook player/event identities, quote accuracy and EV remain unverified.';
+  status.textContent=results.join(' | ')+'. Single-game research only, NOT last-five averages. Sportsbook player/event identities, quote accuracy and EV remain unverified.';
  }catch(error){if(revision===snapshotRevision)status.textContent='Historical box-score research unavailable: '+error.message+'. No verification changed.'}
  finally{clearTimeout(timer);if(revision===snapshotRevision)button.disabled=false}
 }
