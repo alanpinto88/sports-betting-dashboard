@@ -32,3 +32,13 @@ test('attested provider and identity allow eligible comparison groups',()=>{
  const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B'}],{now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]});
  assert.equal(result.enabled,true);assert.equal(result.groups.length,1);
 });
+
+test('object event identifier is rejected rather than string-coerced',()=>{
+ assert.equal(crossBookGroups([q,{...q,eventId:{id:'game1'},sportsbook:'Book B'}],now).length,0);
+});
+test('object player identifier is rejected rather than string-coerced',()=>{
+ assert.equal(crossBookGroups([q,{...q,playerId:{id:'player1'},sportsbook:'Book B'}],now).length,0);
+});
+test('object market stat is rejected rather than string-coerced',()=>{
+ assert.equal(crossBookGroups([q,{...q,stat:{name:'points'},sportsbook:'Book B'}],now).length,0);
+});
