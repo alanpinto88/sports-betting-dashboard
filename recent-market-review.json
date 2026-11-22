@@ -1,15 +1,15 @@
 {
-  "captured_at": "2026-11-21T23:48:58.005693+00:00",
+  "captured_at": "2026-11-22T14:07:14.552240+00:00",
   "diagnostics": {
     "books_total": 9,
-    "evaluated_prices": 250,
-    "events_total": 17,
+    "evaluated_prices": 90,
+    "events_total": 5,
     "minimum_reference_books": 3,
-    "quotes_total": 270,
+    "quotes_total": 90,
     "reason": "Eligible comparisons were evaluated, but none passed the 2% market-relative review threshold.",
     "review_threshold_pct": 2.0,
     "sport_quote_counts": {
-      "icehockey_nhl": 270
+      "icehockey_nhl": 90
     }
   },
   "disclaimer": "Snapshot only; not live streaming odds, not verified profitable EV, and not betting advice.",
