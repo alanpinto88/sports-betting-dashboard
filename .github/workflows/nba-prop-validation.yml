@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - 'lib/nba-prop-validation.mjs'
+      - 'lib/nba-published-adapter.mjs'
+      - 'tests/nba-published-adapter.test.mjs'
       - 'tests/nba-prop-validation.test.mjs'
       - '.github/workflows/nba-prop-validation.yml'
   pull_request:
@@ -23,4 +25,4 @@ jobs:
         with:
           node-version: '22'
       - name: Run NBA prop validation regression tests
-        run: node --test tests/nba-prop-validation.test.mjs
+        run: node --test tests/nba-prop-validation.test.mjs tests/nba-published-adapter.test.mjs
