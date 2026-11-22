@@ -33,3 +33,12 @@ test('player assigned to a different game is flagged for roster review',()=>{
  assert.ok(report.findings[0].flags.includes('roster_review_required'));
  assert.equal(report.findings[0].evEligible,false);
 });
+
+test('roster normalization handles extra whitespace in provider player names',()=>{
+ const input=structuredClone(snapshot);
+ input.events[0].bookmakers[0].markets[0].outcomes[0].description='  Example   Player  ';
+ const roster=reconcileNbaRosters(input,[{team:'Atlanta Hawks',players:['Example Player']},
+  {team:'Charlotte Hornets',players:[]}]);
+ assert.equal(roster.players.length,1);
+ assert.equal(roster.players[0].status,'current_roster_match_unverified_participation');
+});
