@@ -124,6 +124,7 @@ const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectU
 const a=document.createElement("a");a.href=url;a.download="nba-player-identity-review.csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 async function checkSourceRosters(){
+rosterResearch=null;await renderCombinedResearch();
 const status=byId("rosterCheckStatus"),button=byId("checkRosters");button.disabled=true;
 status.textContent="Checking ESPN rosters for loaded NBA teams…";
 const codes={"Atlanta Hawks":"atl","Boston Celtics":"bos","Brooklyn Nets":"bkn","Charlotte Hornets":"cha","Chicago Bulls":"chi","Cleveland Cavaliers":"cle","Dallas Mavericks":"dal","Denver Nuggets":"den","Detroit Pistons":"det","Golden State Warriors":"gs","Houston Rockets":"hou","Indiana Pacers":"ind","LA Clippers":"lac","Los Angeles Clippers":"lac","Los Angeles Lakers":"lal","Memphis Grizzlies":"mem","Miami Heat":"mia","Milwaukee Bucks":"mil","Minnesota Timberwolves":"min","New Orleans Pelicans":"no","New York Knicks":"ny","Oklahoma City Thunder":"okc","Orlando Magic":"orl","Philadelphia 76ers":"phi","Phoenix Suns":"phx","Portland Trail Blazers":"por","Sacramento Kings":"sac","San Antonio Spurs":"sa","Toronto Raptors":"tor","Utah Jazz":"utah","Washington Wizards":"wsh"};
@@ -154,6 +155,7 @@ status.textContent="ESPN current-roster research for "+results.length+" loaded t
 finally{button.disabled=false}
 }
 async function checkNbaSchedule(){
+scheduleResearch=null;await renderCombinedResearch();
 const button=byId("checkSchedule"),status=byId("scheduleStatus");button.disabled=true;
 status.textContent="Checking independent schedules for all loaded snapshot events…";
 const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
