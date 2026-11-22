@@ -42,3 +42,12 @@ test('NBA live research feed distinguishes eligible and rejected quotes',()=>{
  assert.match(html,/Fresh eligible:/);
  assert.match(html,/Unverified\/stale\/invalid:/);
 });
+
+test('local NBA history import is wired with file limits and no upload',()=>{
+ assert.match(html,/id="nbaHistoryFile"/);
+ assert.match(html,/fileInput\.addEventListener\('change'/);
+ assert.match(html,/file\.size>5\*1024\*1024/);
+ assert.match(html,/JSON\.parse\(await file\.text\(\)\)/);
+ assert.match(html,/applyHistory\(payload,'Local file: '/);
+ assert.match(html,/quotes\.length>100000/);
+});
