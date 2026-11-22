@@ -631,12 +631,14 @@ byId("loadHistoryTeams").addEventListener("click",loadHistoryTeams);
 byId("historyTeamSelect").addEventListener("change",()=>{
  const id=byId('historyTeamSelect').value;
  byId('historyTeamId').value=id;
+ byId('historyPlayer').value='';
  byId('historyPlayerSelect').replaceChildren(new Option('Load the selected team roster',''));
  byId('historyPlayerSelect').disabled=true;
  byId('loadHistoryPlayers').disabled=!/^[0-9]{1,6}$/.test(id);
  byId('historyPlayersStatus').textContent='Team changed. Load its current ESPN roster to select a player.';
 });
 byId("historyTeamId").addEventListener("input",()=>{
+ byId('historyPlayer').value='';
  byId('historyPlayerSelect').disabled=true;
  byId('loadHistoryPlayers').disabled=!/^[0-9]{1,6}$/.test(byId('historyTeamId').value.trim());
  byId('historyPlayersStatus').textContent='Team ID changed. Reload the roster before choosing a player.';
