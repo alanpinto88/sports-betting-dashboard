@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {crossBookGroups,verifiedCrossBookGroups,noVigPair} from '../lib/nba-quote-validation.mjs';
+import {crossBookGroups,verifiedCrossBookGroups,noVigPair,validateQuote} from '../lib/nba-quote-validation.mjs';
 const now=Date.parse('2026-11-21T20:00:00Z');
 const q={league:'NBA',eventId:'game1',playerId:'player1',stat:'points',period:'full_game',line:26.5,side:'over',provider:'trusted-ingest',sourceId:'quote1',sportsbook:'Book A',americanOdds:-110,capturedAt:'2026-11-21T19:59:00Z'};
 test('independent books with identical market and side group',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],now).length,1));
@@ -184,4 +184,16 @@ test('array quote capture timestamp is rejected',()=>{
 test('valid ISO capture timestamp remains eligible',()=>{
  const other={...q,sportsbook:'Book B',sourceId:'b',capturedAt:'2026-11-21T19:59:30Z'};
  assert.equal(crossBookGroups([q,other],now).length,1);
+});
+
+test('negative freshness window cannot validate quote',()=>{
+ assert.equal(validateQuote(q,now,-1).ok,false);
+});
+test('nonfinite freshness window cannot validate quote',()=>{
+ assert.equal(validateQuote(q,now,Infinity).ok,false);
+ assert.equal(validateQuote(q,now,NaN).ok,false);
+});
+test('zero freshness window accepts only exact capture time',()=>{
+ assert.equal(validateQuote({...q,capturedAt:'2026-11-21T20:00:00Z'},now,0).ok,true);
+ assert.equal(validateQuote(q,now,0).ok,false);
 });
