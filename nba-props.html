@@ -16,7 +16,9 @@ function renderVerification(){
  const count=Number.isInteger(latestSnapshot.rawQuoteCount)&&latestSnapshot.rawQuoteCount>=0?latestSnapshot.rawQuoteCount:0;
  const age=latestSnapshot.snapshotAgeMinutes;
  const freshness=typeof age==='number'&&Number.isFinite(age)&&age>=0&&age<=15?'Recent capture (unverified)':'Historical, stale, or invalid capture';
- status.textContent='Independent verification gate active · '+count+' raw player-market outcomes · '+freshness+' · 0 independently verified player-event associations · 0 eligible comparisons · EV disabled';
+ const eventCount=Number.isInteger(latestSnapshot.eventCount)?latestSnapshot.eventCount:0;
+ const coverage=eventCount===1?'Single-event snapshot; not full-slate coverage':eventCount===0?'No events in snapshot':eventCount+' events captured; full-slate coverage unverified';
+ status.textContent='Independent verification gate active · '+count+' raw player-market outcomes · '+freshness+' · '+coverage+' · 0 independently verified player-event associations · 0 eligible comparisons · EV disabled';
 }
 // Register listeners before asynchronous module loading to avoid losing a fast snapshot.
 window.addEventListener('evsports:nba-snapshot-unavailable',()=>{
@@ -429,7 +431,7 @@ renderFreshness(data);
 const rawQuoteCount=propEvents.reduce((total,game)=>total+(game.bookmakers||[]).reduce((sum,book)=>sum+(book.markets||[]).reduce((n,market)=>n+(String(market.key||'').startsWith('player_')?(market.outcomes||[]).length:0),0),0),0);
 const snapshotTime=Date.parse(data.captured_at||'');
 const snapshotAgeMinutes=Number.isFinite(snapshotTime)?(Date.now()-snapshotTime)/60000:NaN;
-window.dispatchEvent(new CustomEvent('evsports:nba-snapshot-loaded',{detail:{rawQuoteCount,snapshotAgeMinutes}}));
+window.dispatchEvent(new CustomEvent('evsports:nba-snapshot-loaded',{detail:{rawQuoteCount,snapshotAgeMinutes,eventCount:propEvents.length}}));
 auditSnapshot(propEvents,data.captured_at);
 renderIdentityReviewQueue(propEvents);
 byId("exportReview").disabled=false;
