@@ -25,3 +25,10 @@ test('missing schedule record remains unverified',()=>{
 test('duplicate schedule event identifiers fail closed',()=>{
  assert.throws(()=>buildNbaResearchReport({events:[schedule.events[0],schedule.events[0]]},rosters),/duplicate schedule/);
 });
+
+test('duplicate player-event records fail closed',()=>{
+ assert.throws(()=>buildNbaResearchReport(schedule,{players:[rosters.players[0],{...rosters.players[0],playerName:'example player'}]}),/Duplicate player\/event/);
+});
+test('missing player name fails closed',()=>{
+ assert.throws(()=>buildNbaResearchReport(schedule,{players:[{...rosters.players[0],playerName:''}]}),/Missing player\/event/);
+});
