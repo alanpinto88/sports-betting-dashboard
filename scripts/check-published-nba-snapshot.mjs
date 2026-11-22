@@ -10,6 +10,8 @@ if(snapshot.sport!=='basketball_nba')throw Error('Unexpected NBA snapshot sport'
 const report=auditSnapshot(snapshot);
 const coverageWarnings=[];
 if(report.events<2)coverageWarnings.push('single_event_snapshot_not_full_slate');
+// Even multi-event captures cannot establish full-slate completeness without
+// independently reconciling against an authoritative NBA schedule.
 if(report.identityUnverified>0)coverageWarnings.push('player_event_identity_unverified');
 if(report.staleOrUndatedMarkets>0)coverageWarnings.push('stale_or_undated_market_quotes');
 const output={
