@@ -7,15 +7,19 @@ export function auditSnapshot(snapshot) {
     invalidThresholds:0,unpairedSides:0,pairedMarkets:0,identityUnverified:0,staleOrUndatedMarkets:0,playersAcrossMultipleEvents:0};
   const playerEvents = new Map();
   for (const event of snapshot.events) {
-    for (const book of event.bookmakers || []) {
+    if (!event || !Array.isArray(event.bookmakers)) throw Error('Invalid event bookmakers');
+    for (const book of event.bookmakers) {
+      if (!book || !Array.isArray(book.markets)) throw Error('Invalid bookmaker markets');
       findings.books.add(book.key);
-      for (const market of book.markets || []) {
-        const t = Date.parse(market.last_update);
-        const captured = Date.parse(snapshot.captured_at);
+      for (const market of book.markets) {
+        if (!market || !Array.isArray(market.outcomes)) throw Error('Invalid market outcomes');
+        const t = typeof market.last_update === 'string' ? Date.parse(market.last_update) : NaN;
+        const captured = typeof snapshot.captured_at === 'string' ? Date.parse(snapshot.captured_at) : NaN;
         if (!Number.isFinite(t) || !Number.isFinite(captured) || t > captured || captured-t > 300000)
           findings.staleOrUndatedMarkets++;
         const groups = new Map();
-        for (const o of market.outcomes || []) {
+        for (const o of market.outcomes) {
+          if (!o || typeof o !== 'object') throw Error('Invalid outcome record');
           findings.outcomes++;
           if (impliedProbability(o.price) === null) findings.invalidPrices++;
           if (typeof o.point !== 'number' || !Number.isFinite(o.point) || o.point < 0) findings.invalidThresholds++;
