@@ -44,3 +44,28 @@ export function evaluateEV({comparison,modelProbability,americanOdds,modelVerifi
   const profit=odds>0?odds/100:100/(-odds);
   return {enabled:true,evPerUnit:p*profit-(1-p)};
 }
+
+/**
+ * Validate a published research snapshot before allowing quote comparisons.
+ * A provider's verified flag alone is not proof of upstream authenticity.
+ * trustedSourceIds must be populated by a separate, audited ingestion process.
+ */
+export function validatePublishedSnapshot(payload,{trustedSourceIds=[],now=Date.now(),maxAgeMinutes=15}={}){
+ const errors=[];
+ if(!payload || !Array.isArray(payload.quotes)) return {valid:false,errors:["invalid_payload"],quotes:[]};
+ if(!Array.isArray(trustedSourceIds)||trustedSourceIds.length===0) return {valid:false,errors:["no_trusted_sources"],quotes:[]};
+ const trusted=new Set(trustedSourceIds);
+ const quotes=[];
+ for(const q of payload.quotes){
+  if(!q||typeof q!=="object"||!trusted.has(q.source)){errors.push("untrusted_source");continue}
+  const required=["playerId","eventId","market","period","line","side","timestamp","source","americanOdds"];
+  if(required.some(k=>q[k]===null||q[k]===undefined||q[k]==="")){errors.push("missing_fields");continue}
+  if(typeof q.playerId!=="string"||!q.playerId.trim()||typeof q.eventId!=="string"||!q.eventId.trim()||typeof q.market!=="string"||!q.market.trim()||typeof q.period!=="string"||!q.period.trim()||!["over","under"].includes(normalizeName(q.side))){errors.push("invalid_identity");continue}
+  if(typeof q.line!=="number"||!Number.isFinite(q.line)||americanToProbability(q.americanOdds)===null){errors.push("invalid_price");continue}
+  const t=Date.parse(q.timestamp);
+  if(!Number.isFinite(t)||t>now||now-t>maxAgeMinutes*60000){errors.push("stale_timestamp");continue}
+  if(q.verified!==true){errors.push("unverified_quote");continue}
+  quotes.push(q);
+ }
+ return {valid:errors.length===0&&quotes.length>0,errors:[...new Set(errors)],quotes};
+}
