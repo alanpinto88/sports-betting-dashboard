@@ -10,7 +10,8 @@
 <p id="nbaPropsStatus" role="status" class="notice">NBA quote verification: checking for a published research snapshot…</p>
 <div class="scroll"><table><thead><tr><th>Player / Event</th><th>Market / Period</th><th>Line / Side</th><th>Sportsbook / Odds</th><th>Captured</th><th>Validation</th></tr></thead><tbody id="nbaPropsRows"><tr><td colspan="6" class="muted">No verified NBA quotes loaded.</td></tr></tbody></table></div>
 <p class="muted">Comparison rules: exact player ID, event ID, market, period, line and side; source timestamps must be valid and recent. Different lines (such as 24.5 vs 26.5) are never treated as equivalent.</p>
-<div class="panel" style="margin-top:16px"><h3>NBA Historical Odds Movement · Research</h3><p class="muted">Verified historical snapshots only. A movement alert is not proof of sharp money or positive EV.</p><p id="nbaMovementStatus" role="status" class="notice">Checking published historical NBA quote snapshots…</p><div class="scroll"><table><thead><tr><th>Player / Market</th><th>Sportsbook</th><th>Opening → Latest</th><th>Implied probability change</th><th>Source timestamps</th></tr></thead><tbody id="nbaMovementRows"><tr><td colspan="5">No verified movement history loaded.</td></tr></tbody></table></div></div>
+<div class="panel" style="margin-top:16px"><h3>NBA Historical Odds Movement · Research</h3><p class="muted">Verified historical snapshots only. A movement alert is not proof of sharp money or positive EV.</p><p id="nbaMovementStatus" role="status" class="notice">Checking published historical NBA quote snapshots…</p>
+ <label style="display:inline-flex;align-items:center;gap:8px;margin:10px 0"><input type="checkbox" id="nbaSignificantOnly"> Show significant movement only (≥3 implied probability points)</label><div class="scroll"><table><thead><tr><th>Player / Market</th><th>Sportsbook</th><th>Opening → Latest</th><th>Implied probability change</th><th>Source timestamps</th></tr></thead><tbody id="nbaMovementRows"><tr><td colspan="5">No verified movement history loaded.</td></tr></tbody></table></div></div>
 <div class="notice" id="nbaEVStatus">EV recommendations disabled: no independently validated model probability and matching verified quotes.</div></div></section>
 <section class="view" id="nhl" hidden><div class="panel section"><h2>NHL Historical Database</h2><div class="filter"><button class="active" data-period="1P">1st Period</button><button data-period="Full">Full Game</button><button data-period="Team">Team Trends</button></div><div class="scroll"><table><thead><tr><th>Game / actual puck drop ET</th><th>1P total and O/U prices</th><th>1P score</th><th>Full-game total and O/U prices</th><th>Final score</th><th>Source / captured at</th></tr></thead><tbody><tr><td colspan="6" class="muted">No source-verified historical rows imported.</td></tr></tbody></table></div><p class="notice">Missing data stays blank. Closing quotes must be timestamped strictly before actual puck drop.</p></div></section>
 <section class="view" id="odds" hidden><div class="panel section"><h2>Multi-sport sportsbook odds</h2><p class="muted">Verified timestamped snapshots for NHL, NBA, NFL, Premier League and MLB when supported events are available.</p><a class="btn" href="./sports-odds.html">Open multi-sport odds comparison →</a></div><div class="panel section"><h2>Latest NHL sportsbook odds snapshot</h2><p class="muted small" id="nhlOddsMeta">Checking for published odds…</p><div class="scroll"><table><thead><tr><th>Game</th><th>Start</th><th>Sportsbook</th><th>Market</th><th>Selection</th><th>Line</th><th>American odds</th></tr></thead><tbody id="nhlOddsRows"><tr><td colspan="7">No verified snapshot loaded</td></tr></tbody></table></div><p class="notice">Snapshots are captured manually, not continuously live. Check capture time and sportsbook prices before relying on them. No +EV claim is implied.</p></div><div class="panel section"><h2>Odds Movement — 24h to 1h Before Start</h2><div class="empty">No timestamped odds snapshots available. No synthetic chart points will be created.</div></div></section>
@@ -87,14 +88,14 @@
 
 (async function loadNbaMovement(){
  const status=document.getElementById('nbaMovementStatus'),rows=document.getElementById('nbaMovementRows');
- const search=document.getElementById('nbaPlayerSearch'),market=document.getElementById('nbaMarketFilter');
+ const search=document.getElementById('nbaPlayerSearch'),market=document.getElementById('nbaMarketFilter'),significantOnly=document.getElementById('nbaSignificantOnly');
  let summaries=[],names=new Map();
  const clean=x=>String(x??'').toLowerCase().trim();
  function render(){
   rows.replaceChildren();let shown=0;
   for(const q of summaries){
    const player=names.get(q.playerId)||q.playerId;
-   if(!clean(player).includes(clean(search.value))||(market.value&&q.stat!==market.value))continue;
+   if(!clean(player).includes(clean(search.value))||(market.value&&q.stat!==market.value)||(significantOnly.checked&&!q.significant))continue;
    if(shown++>=100)break;
    const tr=document.createElement('tr');
    const movement=q.probabilityPointChange;
@@ -106,7 +107,7 @@
   }
   if(!shown){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.textContent='No matching verified historical movements.';tr.append(td);rows.append(tr)}
  }
- search.addEventListener('input',render);market.addEventListener('change',render);
+ search.addEventListener('input',render);market.addEventListener('change',render);significantOnly.addEventListener('change',render);
  try{
   const {summarizeNbaMovement}=await import('./lib/nba-odds-movement.mjs');
   const response=await fetch('./data/nba-props-history.json',{cache:'no-store'});
