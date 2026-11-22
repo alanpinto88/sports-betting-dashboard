@@ -107,3 +107,25 @@ test('identical source IDs from different providers are not automatically confla
  assert.equal(result.enabled,true);
  assert.equal(result.groups[0].quotes.length,2);
 });
+
+test('arbitrary identity attestation string is rejected',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],{
+  now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:['game1-player1']
+ });
+ assert.equal(result.enabled,false);
+ assert.equal(result.reason,'invalid_verification_inputs');
+});
+test('wrong league in identity attestation is rejected',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],{
+  now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NHL','game1','player1'])]
+ });
+ assert.equal(result.enabled,false);
+ assert.equal(result.groups.length,0);
+});
+test('noncanonical identity tuple is rejected',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],{
+  now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:['["NBA", "game1", "player1"]']
+ });
+ assert.equal(result.enabled,false);
+ assert.equal(result.reason,'invalid_verification_inputs');
+});
