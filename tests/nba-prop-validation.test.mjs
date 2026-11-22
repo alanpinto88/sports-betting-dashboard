@@ -27,6 +27,7 @@ test('no-vig calculation requires verified opposing quotes',()=>{
  const p=noVigPair(over,under);
  assert.ok(p);assert.ok(Math.abs(p.over-0.5)<1e-12);
  assert.equal(noVigPair(over,normalizeProp(raw('under',-110,{line:25.5}))),null);
+ assert.equal(noVigPair(over,normalizeProp(raw('under',-110,{provider:'other-book'}))),null);
  assert.equal(noVigPair(over,normalizeProp(raw('under',-110,{verified:false}))),null);
  assert.equal(noVigPair(over,normalizeProp(raw('under',-110,{sourceId:null}))),null);
 });
