@@ -189,6 +189,12 @@ async function checkHistoricalBoxscores(){
      Number.isFinite(Date.parse(g.date))&&Math.abs(Date.parse(g.date)-start.getTime())<=90*60000;
    });
    if(matches.length!==1){results.push(String(event.away_team)+' @ '+String(event.home_team)+': '+(matches.length?'ambiguous schedule':'schedule not matched'));continue}
+   const competition=matches[0].competitions?.[0];
+   const completed=matches[0].status?.type?.completed===true||competition?.status?.type?.completed===true;
+   if(!completed){
+    results.push(String(event.away_team)+' @ '+String(event.home_team)+': game not confirmed final; historical player statistics unavailable');
+    continue;
+   }
    const summary=await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event='+encodeURIComponent(matches[0].id),{signal:controller.signal,cache:'no-store'});
    if(!summary.ok)throw Error('ESPN box score HTTP '+summary.status);
    const payload=await summary.json();
