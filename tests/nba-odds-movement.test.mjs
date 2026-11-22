@@ -49,3 +49,9 @@ test('rejects missing, malformed, and post-start event timestamps',()=>{
   assert.equal(summarizeNbaMovement([a,b],{now}).length,0);
  }
 });
+
+test('rejects contradictory game start times within the same market',()=>{
+ const a=q('2026-11-21T20:00:00Z',-110,{event_starts_at:'2026-11-22T00:00:00Z'});
+ const b=q('2026-11-21T21:00:00Z',-140,{event_starts_at:'2026-11-22T01:00:00Z'});
+ assert.equal(summarizeNbaMovement([a,b],{now}).length,0);
+});
