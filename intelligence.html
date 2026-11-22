@@ -45,11 +45,13 @@
 (async function loadNbaProps(){
  const status=document.getElementById('nbaPropsStatus'),rows=document.getElementById('nbaPropsRows'),search=document.getElementById('nbaPlayerSearch'),market=document.getElementById('nbaMarketFilter');
  let quotes=[];
+ let validationReady=false;
+ let validatePublishedQuote=()=>({ok:false});
  const clean=x=>String(x??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
  const aliases={pts:'points',point:'points',reb:'rebounds',rebound:'rebounds',ast:'assists',assist:'assists',threes:'3 pointers made'};
  const normalizedMarket=x=>aliases[clean(x)]||clean(x);
  const isFresh=q=>{const t=Date.parse(q.captured_at);return Number.isFinite(t)&&t<=Date.now()&&Date.now()-t<=15*60000};
- const valid=q=>q.verified===true&&typeof q.player_id==='string'&&q.player_id.trim()&&typeof q.event_id==='string'&&q.event_id.trim()&&typeof q.source==='string'&&q.source.trim()&&typeof q.market==='string'&&q.market.trim()&&typeof q.period==='string'&&q.period.trim()&&['over','under'].includes(clean(q.side))&&typeof q.line==='number'&&Number.isFinite(q.line)&&typeof q.american_odds==='number'&&Number.isFinite(q.american_odds)&&Math.abs(q.american_odds)>=100&&isFresh(q);
+ const valid=q=>validationReady && validatePublishedQuote(q).ok;
  const key=q=>[q.player_id,q.event_id,normalizedMarket(q.market),clean(q.period),q.line,clean(q.side)].join('|');
  function render(){
   rows.replaceChildren();let shown=0;
@@ -70,6 +72,8 @@
  }
  search.addEventListener('input',render);market.addEventListener('change',render);
  try{
+  ({validatePublishedQuote}=await import('./lib/nba-published-adapter.mjs'));
+  validationReady=true;
   const response=await fetch('./data/nba-props-latest.json',{cache:'no-store'});
   if(!response.ok)throw Error('No published NBA props snapshot');
   const payload=await response.json();
