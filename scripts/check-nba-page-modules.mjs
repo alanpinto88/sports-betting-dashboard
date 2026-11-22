@@ -30,6 +30,12 @@ for(const required of [
  'id="checkBoxscores"',
  "import('./lib/nba-boxscore-reconciliation.mjs')",
  'checkHistoricalBoxscores()',
+ 'id="checkLastFive"',
+ 'id="historyPlayer"',
+ 'id="historyTeamId"',
+ 'id="lastFiveStatus"',
+ "import('./lib/nba-history-collector.mjs')",
+ 'checkLastFive()',
  'evEligible'
 ]){
  // evEligible is represented by the report module, not necessarily the page.
