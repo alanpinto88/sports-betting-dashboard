@@ -41,3 +41,20 @@ test('rejects a game summary that does not include the requested team',async()=>
  const r=await collectNbaPlayerHistory({playerName:'Example Player',teamId:'1',before:'2026-11-06',fetchJson});
  assert.equal(r.games,0);assert.match(r.warnings.join(' '),/requested team missing/);
 });
+
+test('one ESPN summary failure does not erase other completed games',async()=>{
+ const fetchJson=async url=>{
+  if(url.includes('/schedule?'))return {events:[events[0],events[1]]};
+  if(url.endsWith('101'))throw Error('temporary provider failure');
+  return {header:{competitions:[{status:{type:{completed:true}},competitors:[{team:{id:'1'}},{team:{id:'2'}}]}]},boxscore};
+ };
+ const r=await collectNbaPlayerHistory({playerName:'Example Player',teamId:'1',before:'2026-11-06',fetchJson});
+ assert.equal(r.games,1);assert.match(r.warnings.join(' '),/summary request failed/);
+});
+test('aborted ESPN requests stop the collector immediately',async()=>{
+ const fetchJson=async url=>{
+  if(url.includes('/schedule?'))return {events:[events[0]]};
+  const e=new Error('cancelled');e.name='AbortError';throw e;
+ };
+ await assert.rejects(collectNbaPlayerHistory({playerName:'Example Player',teamId:'1',before:'2026-11-06',fetchJson}),{name:'AbortError'});
+});
