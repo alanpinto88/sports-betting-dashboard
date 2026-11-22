@@ -14,3 +14,8 @@ test('matches exact lines across distinct books only',()=>{
  assert.equal(groups.length,2);
  assert.equal(groups.filter(x=>x.matched).length,1);
 });
+
+test('accepts timezone-aware UTC and offset capture times',()=>{
+ for(const captured_at of ['2026-11-22T00:55:00Z','2026-11-21T19:55:00-05:00','2026-11-22T00:55:00.000+00:00'])
+  assert.equal(validatePublishedQuote(quote({captured_at}),now).ok,true,captured_at);
+});
