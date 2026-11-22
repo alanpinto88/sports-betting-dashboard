@@ -24,3 +24,9 @@ test('NBA feed errors remain visible after filter-driven rerenders',()=>{
  assert.match(html,/status\.textContent=feedError\?/);
  assert.match(html,/catch\(e\)\{feedError=e\.message;render\(\);return\}/);
 });
+
+test('significant NBA movement filter is wired to the research table',()=>{
+ assert.match(html,/id="nbaSignificantOnly"/);
+ assert.match(html,/significantOnly\.checked&&!q\.significant/);
+ assert.match(html,/significantOnly\.addEventListener\('change',render\)/);
+});
