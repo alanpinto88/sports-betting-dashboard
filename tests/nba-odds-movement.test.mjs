@@ -35,3 +35,9 @@ test('rejects conflicting odds at identical capture timestamps',()=>{
  const c=q('2026-11-21T21:00:00Z',-140);
  assert.equal(summarizeNbaMovement([a,b,c],{now}).length,0);
 });
+
+test('excludes quotes at or after provided event start',()=>{
+ const a=q('2026-11-21T20:00:00Z',-110,{event_starts_at:'2026-11-21T20:30:00Z'});
+ const b=q('2026-11-21T21:00:00Z',-140,{event_starts_at:'2026-11-21T20:30:00Z'});
+ assert.equal(summarizeNbaMovement([a,b],{now}).length,0);
+});
