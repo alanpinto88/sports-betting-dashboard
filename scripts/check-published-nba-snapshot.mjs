@@ -8,8 +8,12 @@ if(typeof snapshot.captured_at!=='string'||!Number.isFinite(Date.parse(snapshot.
  throw Error('Published NBA snapshot has no valid capture timestamp');
 if(snapshot.sport!=='basketball_nba')throw Error('Unexpected NBA snapshot sport');
 const report=auditSnapshot(snapshot);
+const coverageWarnings=[];
+if(report.events<2)coverageWarnings.push('single_event_snapshot_not_full_slate');
+if(report.identityUnverified>0)coverageWarnings.push('player_event_identity_unverified');
+if(report.staleOrUndatedMarkets>0)coverageWarnings.push('stale_or_undated_market_quotes');
 const output={
- status:'research_only',captured_at:snapshot.captured_at,events:report.events,
+ status:'research_only',coverageWarnings,captured_at:snapshot.captured_at,events:report.events,
  books:report.books,outcomes:report.outcomes,identityUnverified:report.identityUnverified,
  playersAcrossMultipleEvents:report.playersAcrossMultipleEvents,
  invalidPrices:report.invalidPrices,invalidThresholds:report.invalidThresholds,
