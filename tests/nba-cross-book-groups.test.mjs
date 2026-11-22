@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {crossBookGroups} from '../lib/nba-quote-validation.mjs';
+import {crossBookGroups,verifiedCrossBookGroups} from '../lib/nba-quote-validation.mjs';
 const now=Date.parse('2026-11-21T20:00:00Z');
 const q={league:'NBA',eventId:'game1',playerId:'player1',stat:'points',period:'full_game',line:26.5,side:'over',provider:'trusted-ingest',sourceId:'quote1',sportsbook:'Book A',americanOdds:-110,capturedAt:'2026-11-21T19:59:00Z'};
 test('independent books with identical market and side group',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],now).length,1));
@@ -14,3 +14,21 @@ test('missing provenance is excluded',()=>assert.equal(crossBookGroups([q,{...q,
 test('non-string sportsbook provenance is rejected',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:{name:'Book B'}}],now).length,0));
 test('non-string provider provenance is rejected',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',provider:{name:'feed'}}],now).length,0));
 test('non-string source ID provenance is rejected',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',sourceId:123}],now).length,0));
+
+test('independent verification required for production grouping',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B'}],{now});
+ assert.equal(result.enabled,false);
+ assert.equal(result.reason,'missing_independent_verification');
+});
+test('unknown provider excluded from production grouping',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B'}],{now,trustedProviders:['different'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]});
+ assert.equal(result.enabled,false);
+});
+test('unattested player-event identity excluded from production grouping',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B'}],{now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NBA','other-game','player1'])]});
+ assert.equal(result.enabled,false);
+});
+test('attested provider and identity allow eligible comparison groups',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B'}],{now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]});
+ assert.equal(result.enabled,true);assert.equal(result.groups.length,1);
+});
