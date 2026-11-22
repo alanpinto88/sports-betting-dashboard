@@ -23,3 +23,11 @@ test('complete roster coverage can report player not listed',()=>{
 test('duplicate team roster records are rejected',()=>{
  assert.throws(()=>reconcileNbaRosters(snapshot,[...roster(),roster()[0]]),/Duplicate team roster/);
 });
+
+test('provider player fallback is included in roster research',()=>{
+ const input=structuredClone(snapshot);
+ input.events[0].bookmakers[0].markets[0].outcomes=[{player:'Example Player',name:'Over'}];
+ const result=reconcileNbaRosters(input,roster());
+ assert.equal(result.players.length,1);
+ assert.equal(result.players[0].status,'current_roster_match_unverified_participation');
+});
