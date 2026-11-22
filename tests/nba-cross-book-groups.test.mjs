@@ -139,3 +139,23 @@ test('later sportsbook update supersedes earlier quote',()=>{
  assert.equal(result.length,1);
  assert.equal(result[0].quotes.find(x=>x.sportsbook==='Book A').americanOdds,-120);
 });
+
+test('same-timestamp conflicts are quarantined regardless of input ordering',()=>{
+ const conflict={...q,americanOdds:-120,sourceId:'conflict'};
+ const other={...q,sportsbook:'Book B',sourceId:'book-b'};
+ for(const records of [[q,conflict,other],[conflict,q,other],[other,q,conflict]]){
+  assert.equal(crossBookGroups(records,now).length,0);
+ }
+});
+test('newer independent quote resolves earlier timestamp conflict',()=>{
+ const conflict={...q,americanOdds:-120,sourceId:'conflict'};
+ const newer={...q,americanOdds:-115,sourceId:'newest',capturedAt:'2026-11-21T19:59:40Z'};
+ const other={...q,sportsbook:'Book B',sourceId:'book-b'};
+ const result=crossBookGroups([q,conflict,newer,other],now);
+ assert.equal(result.length,1);
+ assert.equal(result[0].quotes.find(x=>x.sportsbook==='Book A').americanOdds,-115);
+});
+test('same timestamp duplicate identical quote is idempotent',()=>{
+ const other={...q,sportsbook:'Book B',sourceId:'book-b'};
+ assert.equal(crossBookGroups([q,{...q},other],now).length,1);
+});
