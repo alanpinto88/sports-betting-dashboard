@@ -185,6 +185,7 @@ async function checkLastFive(){
    ': '+r.games+'/5 completed player games; averages '+fmt(r.points)+' PTS, '+fmt(r.rebounds)+
    ' REB, '+fmt(r.assists)+' AST, '+fmt(r.minutes)+' MIN. '+
    (r.complete?'Five-game sample found.':'Incomplete sample; do not interpret as a five-game average. ')+
+   (r.gameDates?.length?'Included game dates: '+r.gameDates.map(x=>String(x).slice(0,10)).join(', ')+'. ':'')+
    (r.warnings.length?'Warnings: '+r.warnings.slice(0,5).join('; ')+'. ':'')+
    'Player-team identity is user supplied and unverified; historical stats are research only. No picks or EV enabled.';
  }catch(error){if(revision===snapshotRevision)status.textContent='ESPN history unavailable: '+error.message+'. No verification changed.'}
