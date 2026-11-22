@@ -28,3 +28,10 @@ test('rejects unverified, future, invalid and single-point movement',()=>{
  }
  assert.equal(summarizeNbaMovement([base],{now}).length,0);
 });
+
+test('rejects conflicting odds at identical capture timestamps',()=>{
+ const a=q('2026-11-21T20:00:00Z',-110);
+ const b=q('2026-11-21T20:00:00Z',-130,{source_id:'different'});
+ const c=q('2026-11-21T21:00:00Z',-140);
+ assert.equal(summarizeNbaMovement([a,b,c],{now}).length,0);
+});
