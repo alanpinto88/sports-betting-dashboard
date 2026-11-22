@@ -450,6 +450,11 @@ return await response.json();
 }
 async function load(){
 const revision=++snapshotRevision;
+propEvents=[];loadedSnapshot=null;
+byId('checkRosters').disabled=true;byId('checkSchedule').disabled=true;
+byId('exportReview').disabled=true;byId('exportQuoteArchive').disabled=true;
+byId('saveLocalSnapshot').disabled=true;
+byId('games').textContent='0';byId('reviewPending').textContent='0';byId('reviewVerified').textContent='0';
 scheduleResearch=null;rosterResearch=null;combinedResearch=null;
 await renderCombinedResearch();
 window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));
@@ -458,7 +463,7 @@ byId("auditNote").textContent="Loading published NBA snapshot…";
 byId("reviewQueue").textContent="Loading published NBA snapshot…";
 let data=null;
 try{data=await readJson("./data/nba-player-props-latest.json")}
-catch(error){try{data=await readJson("https://raw.githubusercontent.com/alanpinto88/sports-betting-dashboard/main/data/nba-player-props-latest.json")}catch(fallbackError){show("NBA player props unavailable. Both published and GitHub fallback sources failed. First source: "+error.message+"; fallback: "+fallbackError.message+". Please retry later.",false);byId("auditNote").textContent="Snapshot unavailable; no player audit can run.";byId("reviewQueue").textContent="Snapshot unavailable; verification queue cannot load.";byId("identityAnomaly").textContent="Snapshot unavailable; grouping cannot be checked.";byId("rosterCheckStatus").textContent="Roster research requires a loaded snapshot.";byId("results").replaceChildren();row(["Snapshot unavailable; try Refresh published data.","","","","","","",""]);return}}
+catch(error){try{data=await readJson("https://raw.githubusercontent.com/alanpinto88/sports-betting-dashboard/main/data/nba-player-props-latest.json")}catch(fallbackError){if(revision!==snapshotRevision)return;show("NBA player props unavailable. Both published and GitHub fallback sources failed. First source: "+error.message+"; fallback: "+fallbackError.message+". Please retry later.",false);byId("auditNote").textContent="Snapshot unavailable; no player audit can run.";byId("reviewQueue").textContent="Snapshot unavailable; verification queue cannot load.";byId("identityAnomaly").textContent="Snapshot unavailable; grouping cannot be checked.";byId("rosterCheckStatus").textContent="Roster research requires a loaded snapshot.";byId("results").replaceChildren();row(["Snapshot unavailable; try Refresh published data.","","","","","","",""]);return}}
 if(revision!==snapshotRevision)return;
 if(data?.source!=="The Odds API"||!Array.isArray(data.events)){show("Published NBA player-prop snapshot has an unexpected format.",false);byId("auditNote").textContent="Snapshot format invalid.";byId("reviewQueue").textContent="Snapshot format invalid.";return}
 propEvents=data.events;
@@ -477,6 +482,7 @@ auditSnapshot(propEvents,data.captured_at);
 renderIdentityReviewQueue(propEvents);
 byId("exportReview").disabled=false;
 byId("checkRosters").disabled=false;
+byId("checkSchedule").disabled=false;
 byId("games").textContent=String(propEvents.length);
 byId("captured").textContent=fmtDate(data.captured_at);
 byId("quota").textContent=data.quota_remaining_at_end??"Unknown";
@@ -496,7 +502,7 @@ byId("compareLocalHistory").addEventListener("click",compareLocalHistory);
 byId("compareArchives").addEventListener("click",compareArchives);
 byId("rawQuotes").addEventListener("change",render);
 for(const id of ["player","team","opponent","market","book"])byId(id).addEventListener("input",render);
-byId("refresh").addEventListener("click",load);
+byId("refresh").addEventListener("click",()=>load().catch(error=>{window.dispatchEvent(new Event("evsports:nba-snapshot-unavailable"));show("Data loading error: "+error.message,false);byId("auditNote").textContent="Loading failed; see status at top.";byId("reviewQueue").textContent="Loading failed; see status at top.";}));
 load().catch(error=>{window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));show("Data loading error: "+error.message,false);byId("auditNote").textContent="Loading failed; see status at top.";byId("reviewQueue").textContent="Loading failed; see status at top.";});
 })();
 </script></body></html>
