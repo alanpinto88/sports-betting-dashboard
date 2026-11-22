@@ -18,7 +18,7 @@ function renderVerification(){
  const freshness=typeof age==='number'&&Number.isFinite(age)&&age>=0&&age<=15?'Recent capture (unverified)':'Historical, stale, or invalid capture';
  const eventCount=Number.isInteger(latestSnapshot.eventCount)?latestSnapshot.eventCount:0;
  const coverage=eventCount===1?'Single-event snapshot; not full-slate coverage':eventCount===0?'No events in snapshot':eventCount+' events captured; full-slate coverage unverified';
- status.textContent='Independent verification gate active · '+count+' raw player-market outcomes · '+freshness+' · '+coverage+' · 0 independently verified player-event associations · 0 eligible comparisons · EV disabled';
+ status.textContent='Validator loaded; independent identity verification not configured · '+count+' raw player-market outcomes · '+freshness+' · '+coverage+' · 0 independently verified player-event associations · 0 eligible comparisons · EV disabled';
 }
 // Register listeners before asynchronous module loading to avoid losing a fast snapshot.
 window.addEventListener('evsports:nba-snapshot-unavailable',()=>{
