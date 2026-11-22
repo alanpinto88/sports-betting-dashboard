@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {summarizeNbaMovement} from '../lib/nba-odds-movement.mjs';
+import {summarizeNbaMovement,auditNbaHistory} from '../lib/nba-odds-movement.mjs';
 const now=Date.parse('2026-11-22T02:00:00Z');
 const q=(captured_at,american_odds,extra={})=>({
  verified:true,player_id:'p1',event_id:'e1',market:'Points',period:'Full game',
@@ -60,4 +60,19 @@ test('rejects reused source IDs across different historical captures',()=>{
  const a=q('2026-11-21T20:00:00Z',-110,{source_id:'same-source'});
  const b=q('2026-11-21T21:00:00Z',-140,{source_id:'same-source'});
  assert.equal(summarizeNbaMovement([a,b],{now}).length,0);
+});
+
+test('audits eligible and rejected NBA historical quote records',()=>{
+ const records=[
+  q('2026-11-21T20:00:00Z',-110),
+  q('2026-11-21T20:00:00Z',-110,{verified:false}),
+  q('2026-11-21T20:00:00Z',-110,{event_starts_at:undefined}),
+  q('2026-11-21T20:00:00Z',-110,{event_starts_at:'2026-11-21T19:00:00Z'}),
+  q('2026-11-21T20:00:00Z',-90),
+  q('2026-11-23T20:00:00Z',-110)
+ ];
+ assert.deepEqual(auditNbaHistory(records,{now}),{
+  total:6,eligible:1,unverified:1,invalidCapture:1,
+  missingEventStart:1,notPregame:1,invalidQuote:1
+ });
 });
