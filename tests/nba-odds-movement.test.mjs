@@ -55,3 +55,9 @@ test('rejects contradictory game start times within the same market',()=>{
  const b=q('2026-11-21T21:00:00Z',-140,{event_starts_at:'2026-11-22T01:00:00Z'});
  assert.equal(summarizeNbaMovement([a,b],{now}).length,0);
 });
+
+test('rejects reused source IDs across different historical captures',()=>{
+ const a=q('2026-11-21T20:00:00Z',-110,{source_id:'same-source'});
+ const b=q('2026-11-21T21:00:00Z',-140,{source_id:'same-source'});
+ assert.equal(summarizeNbaMovement([a,b],{now}).length,0);
+});
