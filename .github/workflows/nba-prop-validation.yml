@@ -10,6 +10,8 @@ on:
   pull_request:
     paths:
       - 'lib/nba-prop-validation.mjs'
+      - 'lib/nba-published-adapter.mjs'
+      - 'tests/nba-published-adapter.test.mjs'
       - 'tests/nba-prop-validation.test.mjs'
       - '.github/workflows/nba-prop-validation.yml'
   workflow_dispatch:
