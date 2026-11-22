@@ -4,10 +4,12 @@
 const status=document.getElementById('canonicalValidationStatus');
 let loaded=false;
 try {
- const {crossBookGroups}=await import('./lib/nba-quote-validation.mjs');
+ const {crossBookGroups,verifiedCrossBookGroups}=await import('./lib/nba-quote-validation.mjs');
  if(crossBookGroups([]).length!==0)throw Error('Unexpected validator result');
+ const gate=verifiedCrossBookGroups([],{trustedProviders:[],verifiedIdentityKeys:[]});
+ if(gate.enabled!==false||gate.groups.length!==0||gate.reason!=='missing_independent_verification')throw Error('Independent verification gate failed');
  loaded=true;
- status.textContent='Validator loaded · awaiting published snapshot · 0 eligible comparisons · EV disabled';
+ status.textContent='Independent identity and provider gate active · awaiting snapshot · EV disabled';
 } catch(error) {
  status.textContent='Validator unavailable · comparisons disabled · EV disabled';
 }
@@ -16,7 +18,7 @@ window.addEventListener('evsports:nba-snapshot-loaded',event=>{
  const count=Number.isInteger(event.detail?.rawQuoteCount)&&event.detail.rawQuoteCount>=0?event.detail.rawQuoteCount:0;
  const age=event.detail?.snapshotAgeMinutes;
  const freshness=typeof age==='number'&&Number.isFinite(age)&&age>=0&&age<=15?'Recent capture (unverified)':'Historical, stale, or invalid capture';
- status.textContent='Validator loaded · '+count+' raw player-market outcomes · '+freshness+' · 0 independently verified player-event associations · 0 eligible comparisons · EV disabled';
+ status.textContent='Independent verification gate active · '+count+' raw player-market outcomes · '+freshness+' · 0 independently verified player-event associations · 0 eligible comparisons · EV disabled';
 });
 </script>
 <script>
