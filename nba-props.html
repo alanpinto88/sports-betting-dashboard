@@ -157,19 +157,18 @@ const independentGames=schedule.map(e=>{
   awayTeam:competitors.find(c=>c.homeAway==='away')?.team?.displayName,startTime:e.date};
 });
 const reconciliation=reconcileNbaSchedule({events:propEvents},independentGames,{toleranceMinutes:90});
-for(const game of propEvents){
-const home=String(game.home_team||"").toLowerCase().trim(),away=String(game.away_team||"").toLowerCase().trim();
-const matches=schedule.filter(e=>{
-const cs=e.competitions?.[0]?.competitors||[];
-const h=cs.find(c=>c.homeAway==="home")?.team?.displayName?.toLowerCase();
-const a=cs.find(c=>c.homeAway==="away")?.team?.displayName?.toLowerCase();
-return h===home&&a===away&&formatDay(new Date(e.date))===formatDay(new Date(game.commence_time));
-});
-if(matches.length!==1){lines.push(game.away_team+" @ "+game.home_team+": "+matches.length+" independent schedule matches; UNVERIFIED");continue}
-const match=matches[0],delta=Math.round((new Date(game.commence_time)-new Date(match.date))/60000);
-lines.push(game.away_team+" @ "+game.home_team+": ESPN event "+String(match.id||"unknown")+"; ESPN scheduled "+new Date(match.date).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"medium",timeStyle:"short"})+" ET; snapshot start "+new Date(game.commence_time).toLocaleString("en-US",{timeZone:"America/New_York",timeStyle:"short"})+" ET; difference "+delta+" minutes. "+(delta===0?"Schedule time agrees.":"START-TIME DISCREPANCY — investigate before linking event IDs.") );
+for(const [index,game] of propEvents.entries()){
+ const result=reconciliation.events[index];
+ const label=String(game.away_team||'Unknown')+' @ '+String(game.home_team||'Unknown');
+ const description={
+  schedule_match_unverified_identity:'One independent schedule match within 90 minutes; player and provider event IDs UNVERIFIED',
+  ambiguous_schedule_match:'Multiple independent schedule matches; UNVERIFIED',
+  schedule_not_matched:'No independent schedule match within 90 minutes; UNVERIFIED',
+  invalid_snapshot_event:'Invalid snapshot teams or start time; UNVERIFIED'
+ }[result.status]||'Schedule verification unavailable';
+ lines.push(label+': '+description);
 }
-status.textContent="Schedule reconciliation: "+reconciliation.matched+" matched, "+reconciliation.ambiguous+" ambiguous, "+reconciliation.unmatched+" unmatched. "+lines.join(" | ")+" Team/date matching is research evidence only. A 10-minute time difference may reflect schedule adjustments or feed conventions and does not alone prove a bad event ID. No sportsbook event IDs, individual player markets, participation or EV are verified.";
+status.textContent="Schedule reconciliation: "+reconciliation.matched+" matched, "+reconciliation.ambiguous+" ambiguous, "+reconciliation.unmatched+" unmatched. "+lines.join(" | ")+" Team/date matching is research evidence only. Schedule differences may reflect updates or feed conventions; investigate before linking event IDs. No sportsbook event IDs, individual player markets, participation or EV are verified.";
 }catch(error){status.textContent="Schedule lookup unavailable ("+error.message+"). No verification status changed; no paid sportsbook API was called."}
 finally{clearTimeout(timer);button.disabled=false}
 }
