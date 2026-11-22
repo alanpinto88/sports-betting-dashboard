@@ -18,3 +18,9 @@ test('NBA research loads only published local snapshots',()=>{
  assert.match(html,/\.\/lib\/nba-published-adapter\.mjs/);
  assert.match(html,/\.\/lib\/nba-odds-movement\.mjs/);
 });
+
+test('NBA feed errors remain visible after filter-driven rerenders',()=>{
+ assert.match(html,/let feedError=null/);
+ assert.match(html,/status\.textContent=feedError\?/);
+ assert.match(html,/catch\(e\)\{feedError=e\.message;render\(\);return\}/);
+});
