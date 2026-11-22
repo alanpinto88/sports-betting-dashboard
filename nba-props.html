@@ -378,7 +378,7 @@ for(const outcome of market.outcomes||[]){
 outcomes++;
 const name=String(outcome.description||outcome.player||"").trim();
 if(name)names.add(name.toLowerCase());else missingNames++;
-if(!Number.isFinite(outcome.price)||outcome.price===0)invalidPrices++;
+if(!Number.isInteger(outcome.price)||Math.abs(outcome.price)<100)invalidPrices++;
 const side=String(outcome.name||"").toLowerCase();
 const point=Number(outcome.point);
 if(!name||!Number.isFinite(point)||(side!=="over"&&side!=="under"))continue;
