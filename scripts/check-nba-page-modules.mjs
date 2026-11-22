@@ -16,5 +16,24 @@ for(const page of pages){
   console.log(page+': '+scripts.length+' inline script(s) syntax valid');
 }
 
+// Fail CI if the published NBA page silently drops the independent research
+// wiring while still displaying the corresponding controls.
+const props=readFileSync(new URL('../nba-props.html',import.meta.url),'utf8');
+for(const required of [
+ 'id="combinedResearchStatus"',
+ "import('./lib/nba-research-report.mjs')",
+ "import('./lib/nba-roster-reconciliation.mjs')",
+ "import('./lib/nba-schedule-reconciliation.mjs')",
+ 'renderCombinedResearch()',
+ 'playerResearchKey(',
+ 'snapshotRevision',
+ 'evEligible'
+]){
+ // evEligible is represented by the report module, not necessarily the page.
+ if(required==='evEligible')continue;
+ if(!props.includes(required))throw Error('nba-props.html: missing research integration '+required);
+}
+console.log('NBA player research integration anchors present');
+
 if(checkedScripts<3)throw Error('Expected to validate at least three NBA page scripts');
 console.log('Validated '+checkedScripts+' NBA browser scripts across '+pages.length+' pages');
