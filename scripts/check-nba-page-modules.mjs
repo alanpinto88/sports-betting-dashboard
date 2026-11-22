@@ -27,6 +27,9 @@ for(const required of [
  'renderCombinedResearch()',
  'playerResearchKey(',
  'snapshotRevision',
+ 'id="checkBoxscores"',
+ "import('./lib/nba-boxscore-reconciliation.mjs')",
+ 'checkHistoricalBoxscores()',
  'evEligible'
 ]){
  // evEligible is represented by the report module, not necessarily the page.
