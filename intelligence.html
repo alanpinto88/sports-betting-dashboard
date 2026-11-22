@@ -45,7 +45,7 @@
 (async function loadNbaProps(){
  const status=document.getElementById('nbaPropsStatus'),rows=document.getElementById('nbaPropsRows'),search=document.getElementById('nbaPlayerSearch'),market=document.getElementById('nbaMarketFilter');
  let quotes=[];
- const clean=x=>String(x??'').normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+ const clean=x=>String(x??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
  const aliases={pts:'points',point:'points',reb:'rebounds',rebound:'rebounds',ast:'assists',assist:'assists',threes:'3 pointers made'};
  const normalizedMarket=x=>aliases[clean(x)]||clean(x);
  const isFresh=q=>{const t=Date.parse(q.captured_at);return Number.isFinite(t)&&t<=Date.now()&&Date.now()-t<=15*60000};
