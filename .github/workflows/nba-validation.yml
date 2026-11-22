@@ -16,6 +16,8 @@ on:
       - 'nba-props.html'
       - 'nba-audit.html'
       - 'tests/*.test.mjs'
+      - 'research/nba-quote-validation.mjs'
+      - 'research/nba-quote-validation.test.mjs'
       - '.github/workflows/nba-validation.yml'
   pull_request:
     paths:
@@ -33,6 +35,8 @@ on:
       - 'nba-props.html'
       - 'nba-audit.html'
       - 'tests/*.test.mjs'
+      - 'research/nba-quote-validation.mjs'
+      - 'research/nba-quote-validation.test.mjs'
       - '.github/workflows/nba-validation.yml'
   workflow_dispatch:
 permissions:
@@ -50,3 +54,6 @@ jobs:
         run: node --test tests/*.test.mjs
       - name: Check inline NBA page JavaScript syntax
         run: node scripts/check-nba-page-modules.mjs
+
+      - name: Validate research NBA quote guards
+        run: node --test research/nba-quote-validation.test.mjs
