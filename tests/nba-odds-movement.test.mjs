@@ -5,7 +5,7 @@ const now=Date.parse('2026-11-22T02:00:00Z');
 const q=(captured_at,american_odds,extra={})=>({
  verified:true,player_id:'p1',event_id:'e1',market:'Points',period:'Full game',
  side:'over',line:24.5,american_odds,sportsbook:'bookA',
- source_id:'source-'+captured_at,captured_at,...extra
+ source_id:'source-'+captured_at,captured_at,event_starts_at:'2026-11-22T00:00:00Z',...extra
 });
 test('reports same-book historical movement in probability points',()=>{
  const results=summarizeNbaMovement([q('2026-11-21T20:00:00Z',-110),q('2026-11-21T21:00:00Z',-140)],{now});
@@ -40,4 +40,12 @@ test('excludes quotes at or after provided event start',()=>{
  const a=q('2026-11-21T20:00:00Z',-110,{event_starts_at:'2026-11-21T20:30:00Z'});
  const b=q('2026-11-21T21:00:00Z',-140,{event_starts_at:'2026-11-21T20:30:00Z'});
  assert.equal(summarizeNbaMovement([a,b],{now}).length,0);
+});
+
+test('rejects missing, malformed, and post-start event timestamps',()=>{
+ const a=q('2026-11-21T20:00:00Z',-110);
+ for(const event_starts_at of [undefined,'not-a-date','2026-11-21T20:00:00Z']){
+  const b=q('2026-11-21T21:00:00Z',-140,{event_starts_at});
+  assert.equal(summarizeNbaMovement([a,b],{now}).length,0);
+ }
 });
