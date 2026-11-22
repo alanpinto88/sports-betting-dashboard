@@ -164,7 +164,7 @@ finally{if(revision===snapshotRevision)button.disabled=false}
 async function checkLastFive(){
  const revision=snapshotRevision,button=byId('checkLastFive'),status=byId('lastFiveStatus');
  const playerName=byId('historyPlayer').value.trim(),teamId=byId('historyTeamId').value.trim();
- if(!playerName||!/^\\d{1,6}$/.test(teamId)){status.textContent='Enter an exact player name and numeric ESPN team ID (1–6 digits).';return}
+ if(!playerName||!/^[0-9]{1,6}$/.test(teamId)){status.textContent='Enter an exact player name and numeric ESPN team ID (1–6 digits).';return}
  if(!propEvents.length){status.textContent='Load an NBA snapshot before historical research.';return}
  const starts=propEvents.map(e=>Date.parse(e.commence_time)).filter(Number.isFinite);
  if(!starts.length){status.textContent='No valid snapshot event dates; research unavailable.';return}
