@@ -29,7 +29,7 @@ test('unattested player-event identity excluded from production grouping',()=>{
  assert.equal(result.enabled,false);
 });
 test('attested provider and identity allow eligible comparison groups',()=>{
- const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B'}],{now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]});
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],{now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]});
  assert.equal(result.enabled,true);assert.equal(result.groups.length,1);
 });
 
