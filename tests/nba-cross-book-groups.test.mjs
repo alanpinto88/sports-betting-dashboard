@@ -172,3 +172,16 @@ test('explicit false suspension state permits otherwise valid quotes',()=>{
  const other={...q,sportsbook:'Book B',sourceId:'b',suspended:false};
  assert.equal(crossBookGroups([q,other],now).length,1);
 });
+
+test('numeric quote capture timestamp is rejected',()=>{
+ const other={...q,sportsbook:'Book B',sourceId:'b',capturedAt:Date.parse(q.capturedAt)};
+ assert.equal(crossBookGroups([q,other],now).length,0);
+});
+test('array quote capture timestamp is rejected',()=>{
+ const other={...q,sportsbook:'Book B',sourceId:'b',capturedAt:[q.capturedAt]};
+ assert.equal(crossBookGroups([q,other],now).length,0);
+});
+test('valid ISO capture timestamp remains eligible',()=>{
+ const other={...q,sportsbook:'Book B',sourceId:'b',capturedAt:'2026-11-21T19:59:30Z'};
+ assert.equal(crossBookGroups([q,other],now).length,1);
+});
