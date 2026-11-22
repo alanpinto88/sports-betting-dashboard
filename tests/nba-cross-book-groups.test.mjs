@@ -159,3 +159,16 @@ test('same timestamp duplicate identical quote is idempotent',()=>{
  const other={...q,sportsbook:'Book B',sourceId:'book-b'};
  assert.equal(crossBookGroups([q,{...q},other],now).length,1);
 });
+
+test('string suspension flag is not treated as an active sportsbook quote',()=>{
+ const other={...q,sportsbook:'Book B',sourceId:'b',suspended:'false'};
+ assert.equal(crossBookGroups([q,other],now).length,0);
+});
+test('explicitly suspended quote cannot enter comparison',()=>{
+ const other={...q,sportsbook:'Book B',sourceId:'b',suspended:true};
+ assert.equal(crossBookGroups([q,other],now).length,0);
+});
+test('explicit false suspension state permits otherwise valid quotes',()=>{
+ const other={...q,sportsbook:'Book B',sourceId:'b',suspended:false};
+ assert.equal(crossBookGroups([q,other],now).length,1);
+});
