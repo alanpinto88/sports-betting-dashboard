@@ -69,3 +69,22 @@ export function validatePublishedSnapshot(payload,{trustedSourceIds=[],now=Date.
  }
  return {valid:errors.length===0&&quotes.length>0,errors:[...new Set(errors)],quotes};
 }
+
+/**
+ * Build cross-book comparisons from independently validated quotes.
+ * Quotes from the same sportsbook never count as two independent books.
+ */
+export function groupComparableQuotes(quotes,{now=Date.now(),maxAgeMinutes=15}={}){
+ const groups=new Map();
+ for(const q of quotes||[]){
+  if(!q||q.verified!==true||typeof q.playerId!=="string"||!q.playerId.trim()||typeof q.eventId!=="string"||!q.eventId.trim()||typeof q.market!=="string"||!q.market.trim()||typeof q.period!=="string"||!q.period.trim()||!["over","under"].includes(normalizeName(q.side))||typeof q.line!=="number"||!Number.isFinite(q.line)||typeof q.sportsbook!=="string"||!q.sportsbook.trim()||typeof q.source!=="string"||!q.source.trim()||americanToProbability(q.americanOdds)===null)continue;
+  const time=Date.parse(q.timestamp);
+  if(!Number.isFinite(time)||time>now||now-time>maxAgeMinutes*60000)continue;
+  const key=JSON.stringify([q.playerId,q.eventId,normalizeMarket(q.market),normalizeName(q.period),q.line,normalizeName(q.side)]);
+  if(!groups.has(key))groups.set(key,new Map());
+  const books=groups.get(key),book=normalizeName(q.sportsbook);
+  const prior=books.get(book);
+  if(!prior||Date.parse(q.timestamp)>Date.parse(prior.timestamp))books.set(book,q);
+ }
+ return [...groups.entries()].filter(([,books])=>books.size>=2).map(([key,books])=>({key,quotes:[...books.values()]}));
+}
