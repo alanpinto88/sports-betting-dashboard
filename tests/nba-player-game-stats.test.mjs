@@ -37,6 +37,7 @@ test('last-five history sorts by date and excludes games at or after cutoff',()=
   {...item,gameId:'future',final:true,startTime:'2026-11-05T00:00:00Z'}];
  const r=summarizeNbaLastFive(history,{before:'2026-11-04T00:00:00Z'});
  assert.deepEqual(r.gameIds,['new','old']);
+ assert.deepEqual(r.gameDates,['2026-11-03T00:00:00Z','2026-11-01T00:00:00Z']);
 });
 test('duplicate historical game identifiers fail closed',()=>{
  const item=extractNbaPlayerGameStats(box,'Example Player');
