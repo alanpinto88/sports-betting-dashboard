@@ -45,3 +45,20 @@ test('rejects unrelated provider schema',()=>{
  sample.source='unknown';
  assert.throws(()=>auditSnapshot(sample),/Unexpected snapshot schema/);
 });
+
+test('rejects null event instead of silently skipping malformed data',()=>{
+ const sample=fixture();sample.events.push(null);
+ assert.throws(()=>auditSnapshot(sample),/Invalid event bookmakers/);
+});
+test('rejects malformed bookmaker markets',()=>{
+ const sample=fixture();sample.events[0].bookmakers[0].markets=null;
+ assert.throws(()=>auditSnapshot(sample),/Invalid bookmaker markets/);
+});
+test('rejects malformed outcome list',()=>{
+ const sample=fixture();sample.events[0].bookmakers[0].markets[0].outcomes=null;
+ assert.throws(()=>auditSnapshot(sample),/Invalid market outcomes/);
+});
+test('rejects null outcome record',()=>{
+ const sample=fixture();sample.events[0].bookmakers[0].markets[0].outcomes.push(null);
+ assert.throws(()=>auditSnapshot(sample),/Invalid outcome record/);
+});
