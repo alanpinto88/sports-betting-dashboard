@@ -135,7 +135,7 @@ const labels=[...new Set(propEvents.flatMap(g=>[g.home_team,g.away_team]).filter
 if(!labels.length)throw Error("No NBA teams in loaded snapshot");
 const unknown=labels.filter(label=>!codes[label]);if(unknown.length)throw Error("Unknown team labels: "+unknown.join(", "));
 if(labels.length>10)throw Error("Manual research is limited to 10 teams per request");
-const results=await Promise.all(labels.map(async label=>{
+const settled=await Promise.allSettled(labels.map(async label=>{
 const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
 try{
 const response=await fetch("https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/"+codes[label]+"/roster",{signal:controller.signal,cache:"no-store"});
@@ -147,6 +147,9 @@ return {label,names:new Set(athletes.map(a=>String(a.displayName||a.fullName||""
 }finally{clearTimeout(timer)}
 }));
 if(revision!==snapshotRevision)return;
+const results=settled.filter(r=>r.status==='fulfilled').map(r=>r.value);
+const failures=settled.flatMap((r,i)=>r.status==='rejected'?[labels[i]+': '+String(r.reason?.message||r.reason)]:[]);
+if(!results.length)throw Error('All roster requests failed: '+failures.join('; '));
 const {reconcileNbaRosters}=await import('./lib/nba-roster-reconciliation.mjs');
 if(revision!==snapshotRevision)return;
 const review=reconcileNbaRosters({events:propEvents},results.map(r=>({team:r.label,players:[...r.names]})));
@@ -154,7 +157,7 @@ rosterResearch=review;await renderCombinedResearch();
 const counts={};
 for(const p of review.players)counts[p.status]=(counts[p.status]||0)+1;
 const details=review.players.map(p=>p.playerName+" ["+p.status.replaceAll("_"," ")+(p.teams.length?": "+p.teams.join(" / "):"")+"]");
-status.textContent="ESPN current-roster research for "+results.length+" loaded team(s), "+review.players.length+" distinct player/event pair(s): "+Object.entries(counts).map(([key,value])=>value+" "+key.replaceAll("_"," ")).join("; ")+". "+details.join("; ")+". Current rosters are NOT historical game-day rosters or proof of participation, sportsbook event identity, or quote accuracy. Verified count remains 0; EV disabled.";
+status.textContent="ESPN current-roster research for "+results.length+" of "+labels.length+" team(s). "+(failures.length?"Unavailable rosters: "+failures.join("; ")+". Missing teams remain unverified. ":"")+ "+review.players.length+" distinct player/event pair(s): "+Object.entries(counts).map(([key,value])=>value+" "+key.replaceAll("_"," ")).join("; ")+". "+details.join("; ")+". Current rosters are NOT historical game-day rosters or proof of participation, sportsbook event identity, or quote accuracy. Verified count remains 0; EV disabled.";
 }catch(error){if(revision===snapshotRevision)status.textContent="Roster research unavailable: "+error.message+". Verification unchanged; no paid sportsbook API calls."}
 finally{if(revision===snapshotRevision)button.disabled=false}
 }
