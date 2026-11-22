@@ -10,3 +10,7 @@ test('opposite sides do not group',()=>assert.equal(crossBookGroups([q,{...q,spo
 test('stale quotes do not group',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',capturedAt:'2026-11-21T19:30:00Z'}],now).length,0));
 test('latest quote from each sportsbook wins',()=>{const groups=crossBookGroups([q,{...q,americanOdds:-120,capturedAt:'2026-11-21T19:59:30Z'},{...q,sportsbook:'Book B'}],now);assert.equal(groups[0].quotes.find(x=>x.sportsbook==='Book A').americanOdds,-120)});
 test('missing provenance is excluded',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',sourceId:''}],now).length,0));
+
+test('non-string sportsbook provenance is rejected',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:{name:'Book B'}}],now).length,0));
+test('non-string provider provenance is rejected',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',provider:{name:'feed'}}],now).length,0));
+test('non-string source ID provenance is rejected',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',sourceId:123}],now).length,0));
