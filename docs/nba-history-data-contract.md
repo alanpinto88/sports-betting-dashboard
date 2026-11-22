@@ -20,6 +20,7 @@ Each actual quote must include:
 - `sportsbook`: source sportsbook
 - `source_id`: unique source record identifier
 - `captured_at`: original ISO 8601 timestamp
+- `event_starts_at`: valid ISO 8601 game-start timestamp, strictly later than quote capture; required for pregame movement
 
 At least two independently timestamped records from the **same sportsbook**
 and exact market are needed to calculate a movement. Data cannot be backfilled
