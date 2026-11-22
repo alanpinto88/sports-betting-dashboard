@@ -11,7 +11,8 @@
 <div class="scroll"><table><thead><tr><th>Player / Event</th><th>Market / Period</th><th>Line / Side</th><th>Sportsbook / Odds</th><th>Captured</th><th>Validation</th></tr></thead><tbody id="nbaPropsRows"><tr><td colspan="6" class="muted">No verified NBA quotes loaded.</td></tr></tbody></table></div>
 <p class="muted">Comparison rules: exact player ID, event ID, market, period, line and side; source timestamps must be valid and recent. Different lines (such as 24.5 vs 26.5) are never treated as equivalent.</p>
 <div class="panel" style="margin-top:16px"><h3>NBA Historical Odds Movement · Research</h3><p class="muted">Verified historical snapshots only. A movement alert is not proof of sharp money or positive EV.</p><p id="nbaMovementStatus" role="status" class="notice">Checking published historical NBA quote snapshots…</p>
- <label style="display:inline-flex;align-items:center;gap:8px;margin:10px 0"><input type="checkbox" id="nbaSignificantOnly"> Show significant movement only (≥3 implied probability points)</label><div class="scroll"><table><thead><tr><th>Player / Market</th><th>Sportsbook</th><th>First observed → Latest</th><th>Implied probability change</th><th>Snapshots</th><th>Source timestamps</th></tr></thead><tbody id="nbaMovementRows"><tr><td colspan="5">No verified movement history loaded.</td></tr></tbody></table></div></div>
+ <label style="display:block;margin:10px 0">Inspect historical JSON from your iPhone (local only, max 5 MB): <input type="file" id="nbaHistoryFile" accept=".json,application/json"></label><p class="muted">Imported files stay in this browser session; nothing is uploaded or published. Only use source data you are permitted to access.</p>
+ <label style="display:inline-flex;align-items:center;gap:8px;margin:10px 0"><input type="checkbox" id="nbaSignificantOnly"> Show significant movement only (≥3 implied probability points)</label><div class="scroll"><table><thead><tr><th>Player / Market</th><th>Sportsbook</th><th>First observed → Latest</th><th>Implied probability change</th><th>Snapshots</th><th>Source timestamps</th></tr></thead><tbody id="nbaMovementRows"><tr><td colspan="6">No verified movement history loaded.</td></tr></tbody></table></div></div>
 <div class="notice" id="nbaEVStatus">EV recommendations disabled: no independently validated model probability and matching verified quotes.</div></div></section>
 <section class="view" id="nhl" hidden><div class="panel section"><h2>NHL Historical Database</h2><div class="filter"><button class="active" data-period="1P">1st Period</button><button data-period="Full">Full Game</button><button data-period="Team">Team Trends</button></div><div class="scroll"><table><thead><tr><th>Game / actual puck drop ET</th><th>1P total and O/U prices</th><th>1P score</th><th>Full-game total and O/U prices</th><th>Final score</th><th>Source / captured at</th></tr></thead><tbody><tr><td colspan="6" class="muted">No source-verified historical rows imported.</td></tr></tbody></table></div><p class="notice">Missing data stays blank. Closing quotes must be timestamped strictly before actual puck drop.</p></div></section>
 <section class="view" id="odds" hidden><div class="panel section"><h2>Multi-sport sportsbook odds</h2><p class="muted">Verified timestamped snapshots for NHL, NBA, NFL, Premier League and MLB when supported events are available.</p><a class="btn" href="./sports-odds.html">Open multi-sport odds comparison →</a></div><div class="panel section"><h2>Latest NHL sportsbook odds snapshot</h2><p class="muted small" id="nhlOddsMeta">Checking for published odds…</p><div class="scroll"><table><thead><tr><th>Game</th><th>Start</th><th>Sportsbook</th><th>Market</th><th>Selection</th><th>Line</th><th>American odds</th></tr></thead><tbody id="nhlOddsRows"><tr><td colspan="7">No verified snapshot loaded</td></tr></tbody></table></div><p class="notice">Snapshots are captured manually, not continuously live. Check capture time and sportsbook prices before relying on them. No +EV claim is implied.</p></div><div class="panel section"><h2>Odds Movement — 24h to 1h Before Start</h2><div class="empty">No timestamped odds snapshots available. No synthetic chart points will be created.</div></div></section>
@@ -89,8 +90,9 @@
 
 (async function loadNbaMovement(){
  const status=document.getElementById('nbaMovementStatus'),rows=document.getElementById('nbaMovementRows');
- const search=document.getElementById('nbaPlayerSearch'),market=document.getElementById('nbaMarketFilter'),significantOnly=document.getElementById('nbaSignificantOnly');
+ const search=document.getElementById('nbaPlayerSearch'),market=document.getElementById('nbaMarketFilter'),significantOnly=document.getElementById('nbaSignificantOnly'),fileInput=document.getElementById('nbaHistoryFile');
  let summaries=[],names=new Map();
+ let summarizeNbaMovement,auditNbaHistory;
  const clean=x=>String(x??'').toLowerCase().trim();
  function render(){
   rows.replaceChildren();let shown=0;
@@ -110,17 +112,29 @@
   if(!shown){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.textContent='No matching verified historical movements.';tr.append(td);rows.append(tr)}
  }
  search.addEventListener('input',render);market.addEventListener('change',render);significantOnly.addEventListener('change',render);
- try{
-  const {summarizeNbaMovement,auditNbaHistory}=await import('./lib/nba-odds-movement.mjs');
-  const response=await fetch('./data/nba-props-history.json',{cache:'no-store'});
-  if(!response.ok)throw Error('Historical snapshot not published');
-  const payload=await response.json();
-  if(!Array.isArray(payload.quotes))throw Error('Invalid historical snapshot format');
-  for(const q of payload.quotes)if(typeof q.player_id==='string'&&typeof q.player_name==='string')names.set(q.player_id,q.player_name);
+ function applyHistory(payload,source){
+  if(!payload||!Array.isArray(payload.quotes)||payload.quotes.length>100000)throw Error('Expected JSON object with quotes array (max 100,000)');
+  names=new Map();
+  for(const q of payload.quotes)if(q&&typeof q.player_id==='string'&&typeof q.player_name==='string')names.set(q.player_id,q.player_name);
   const audit=auditNbaHistory(payload.quotes);
   summaries=summarizeNbaMovement(payload.quotes);
-  status.textContent='Historical quotes: '+audit.total+' · Eligible pregame quotes: '+audit.eligible+' · Rejected: '+(audit.total-audit.eligible)+' · Movement groups: '+summaries.length+' · Significant: '+summaries.filter(x=>x.significant).length+' · Research only; no betting recommendations';
- }catch(err){status.textContent='NBA movement history unavailable: '+err.message+' · No live API calls or recommendations.'}
+  status.textContent=source+' · Quotes: '+audit.total+' · Eligible pregame: '+audit.eligible+' · Rejected: '+(audit.total-audit.eligible)+' · Movement groups: '+summaries.length+' · Significant: '+summaries.filter(x=>x.significant).length+' · Research only; no betting recommendations';
+  render();
+ }
+ try{
+  ({summarizeNbaMovement,auditNbaHistory}=await import('./lib/nba-odds-movement.mjs'));
+  fileInput.addEventListener('change',async()=>{
+   const file=fileInput.files?.[0];if(!file)return;
+   try{
+    if(file.size>5*1024*1024)throw Error('File exceeds 5 MB limit');
+    const payload=JSON.parse(await file.text());
+    applyHistory(payload,'Local file: '+file.name);
+   }catch(err){summaries=[];names=new Map();status.textContent='Local history import rejected: '+err.message;render()}
+  });
+  const response=await fetch('./data/nba-props-history.json',{cache:'no-store'});
+  if(!response.ok)throw Error('Historical snapshot not published');
+  applyHistory(await response.json(),'Published historical snapshot');
+ }catch(err){status.textContent='NBA movement history unavailable: '+err.message+' · You can inspect a local JSON file; no live API calls.'}
  render();
 })();
 const labels={overview:'Overview',ev:'EV Opportunities',props:'Player Props',nhl:'NHL Database',odds:'Odds Movement',tracker:'Bet Tracker',api:'Data & APIs',settings:'Settings'};document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(x=>x.hidden=x.id!==id);document.getElementById('title').textContent=labels[id]}));document.querySelectorAll('[data-sport]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-sport]').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('sportNote').textContent=b.dataset.sport+' · verified data only'}));document.querySelectorAll('[data-period]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-period]').forEach(x=>x.classList.toggle('active',x.dataset.period===b.dataset.period))}));const apiText={Overview:'Authenticated provider calls are intentionally disabled. Free-plan allowance has not been verified.',Endpoints:'Endpoint access has not been verified for this plan. No endpoint requests are sent.',Usage:'Quota and billing allowance unverified. No usage is estimated or claimed.'};document.querySelectorAll('[data-api-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-api-tab]').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('apiTabContent').textContent=apiText[b.dataset.apiTab]}));const cal=document.getElementById('calendar');['S','M','T','W','T','F','S',...Array.from({length:14},(_,i)=>String(i+1))].forEach(x=>{const d=document.createElement('div');d.className='day';d.textContent=x;cal.appendChild(d)});
