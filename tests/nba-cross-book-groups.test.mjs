@@ -57,3 +57,25 @@ test('production gate permits independently sourced sportsbook records',()=>{
  assert.equal(result.enabled,true);
  assert.equal(result.groups.length,1);
 });
+
+test('malformed provider attestation fails closed',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],{
+  now,trustedProviders:['trusted-ingest',{}],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]
+ });
+ assert.equal(result.enabled,false);
+ assert.equal(result.reason,'invalid_verification_inputs');
+});
+test('malformed player identity attestation fails closed',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],{
+  now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1']),null]
+ });
+ assert.equal(result.enabled,false);
+ assert.equal(result.groups.length,0);
+});
+test('invalid verification clock fails closed',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],{
+  now:NaN,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]
+ });
+ assert.equal(result.enabled,false);
+ assert.equal(result.reason,'invalid_verification_inputs');
+});
