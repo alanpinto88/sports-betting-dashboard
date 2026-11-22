@@ -30,3 +30,9 @@ test('significant NBA movement filter is wired to the research table',()=>{
  assert.match(html,/significantOnly\.checked&&!q\.significant/);
  assert.match(html,/significantOnly\.addEventListener\('change',render\)/);
 });
+
+test('historical odds table labels earliest observed price accurately',()=>{
+ assert.match(html,/First observed → Latest/);
+ assert.match(html,/<th>Snapshots<\/th>/);
+ assert.match(html,/String\(q\.snapshotCount\)/);
+});
