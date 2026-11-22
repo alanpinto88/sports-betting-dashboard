@@ -71,7 +71,8 @@
   }
   if(!shown){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.textContent='No matching published quotes. No recommendations available.';tr.appendChild(td);rows.appendChild(tr)}
   const pairs=[...groups.values()].filter(v=>v.size>=2).length;
-  status.textContent=feedError?'NBA research feed unavailable: '+feedError+' · No live provider calls made.':'Published NBA research quotes: '+quotes.length+' · '+pairs+' matching cross-book groups · EV disabled (model not verified)';
+  const eligible=quotes.filter(valid).length;
+  status.textContent=feedError?'NBA research feed unavailable: '+feedError+' · No live provider calls made.':'Published NBA research quotes: '+quotes.length+' · Fresh eligible: '+eligible+' · Unverified/stale/invalid: '+(quotes.length-eligible)+' · '+pairs+' matching cross-book groups · EV disabled (model not verified)';
  }
  search.addEventListener('input',render);market.addEventListener('change',render);
  try{
