@@ -155,8 +155,8 @@ const counts={};
 for(const p of review.players)counts[p.status]=(counts[p.status]||0)+1;
 const details=review.players.map(p=>p.playerName+" ["+p.status.replaceAll("_"," ")+(p.teams.length?": "+p.teams.join(" / "):"")+"]");
 status.textContent="ESPN current-roster research for "+results.length+" loaded team(s), "+review.players.length+" distinct player/event pair(s): "+Object.entries(counts).map(([key,value])=>value+" "+key.replaceAll("_"," ")).join("; ")+". "+details.join("; ")+". Current rosters are NOT historical game-day rosters or proof of participation, sportsbook event identity, or quote accuracy. Verified count remains 0; EV disabled.";
-}catch(error){status.textContent="Roster research unavailable: "+error.message+". Verification unchanged; no paid sportsbook API calls."}
-finally{button.disabled=false}
+}catch(error){if(revision===snapshotRevision)status.textContent="Roster research unavailable: "+error.message+". Verification unchanged; no paid sportsbook API calls."}
+finally{if(revision===snapshotRevision)button.disabled=false}
 }
 async function checkNbaSchedule(){
 const revision=snapshotRevision;
@@ -197,8 +197,8 @@ for(const [index,game] of propEvents.entries()){
  lines.push(label+': '+description);
 }
 status.textContent="Schedule reconciliation: "+reconciliation.matched+" matched, "+reconciliation.ambiguous+" ambiguous, "+reconciliation.unmatched+" unmatched. "+lines.join(" | ")+" Team/date matching is research evidence only. Schedule differences may reflect updates or feed conventions; investigate before linking event IDs. No sportsbook event IDs, individual player markets, participation or EV are verified.";
-}catch(error){status.textContent="Schedule lookup unavailable ("+error.message+"). No verification status changed; no paid sportsbook API was called."}
-finally{clearTimeout(timer);button.disabled=false}
+}catch(error){if(revision===snapshotRevision)status.textContent="Schedule lookup unavailable ("+error.message+"). No verification status changed; no paid sportsbook API was called."}
+finally{clearTimeout(timer);if(revision===snapshotRevision)button.disabled=false}
 }
 function renderIdentityReviewQueue(events){
 const players=new Map();
