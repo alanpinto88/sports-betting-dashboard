@@ -46,14 +46,17 @@ try {
 "use strict";
 const byId=id=>document.getElementById(id);
 let propEvents=[];
-let scheduleResearch=null,rosterResearch=null;
+let scheduleResearch=null,rosterResearch=null,combinedResearch=null;
+const playerResearchKey=(eventId,name)=>JSON.stringify([String(eventId),String(name).trim().toLocaleLowerCase('en-US')]);
 async function renderCombinedResearch(){
  const target=byId('combinedResearchStatus');
  if(!target)return;
- if(!scheduleResearch||!rosterResearch){target.textContent='Research incomplete: run both ESPN schedule and roster checks. No identities or EV verified.';return}
+ if(!scheduleResearch||!rosterResearch){combinedResearch=null;renderIdentityReviewQueue(propEvents);target.textContent='Research incomplete: run both ESPN schedule and roster checks. No identities or EV verified.';return}
  try{
   const {buildNbaResearchReport}=await import('./lib/nba-research-report.mjs');
   const report=buildNbaResearchReport(scheduleResearch,rosterResearch);
+  combinedResearch=new Map(report.findings.map(item=>[playerResearchKey(item.eventId,item.playerName),item]));
+  renderIdentityReviewQueue(propEvents);
   const counts={};for(const item of report.findings)for(const flag of item.flags)counts[flag]=(counts[flag]||0)+1;
   target.textContent='Combined research: '+report.findings.length+' player/event records; '+Object.entries(counts).map(([k,v])=>v+' '+k.replaceAll('_',' ')).join('; ')+'. Verified identities: 0. EV recommendations: disabled.';
  }catch(error){target.textContent='Combined research unavailable: '+error.message+'. EV disabled.'}
@@ -215,7 +218,10 @@ const card=document.createElement("div");card.className="prop-card";
 const title=document.createElement("strong");title.textContent=p.name;card.append(title);
 const detail=document.createElement("p");detail.className="muted";detail.textContent="Source event ID(s): "+[...p.eventIds].join(", ")+" · Snapshot event label(s) (UNVERIFIED): "+[...p.eventLabels].join("; ");card.append(detail);
 const source=document.createElement("p");source.className="muted";source.textContent="Sportsbook labels: "+[...p.books].join(", ");card.append(source);
-const status=document.createElement("p");status.className="prop-note";status.textContent="PENDING — independently verify player identity, roster team, event and date before trusting any game assignment.";card.append(status);
+const status=document.createElement("p");status.className="prop-note";
+const findings=[...p.eventIds].map(eventId=>combinedResearch?.get(playerResearchKey(eventId,p.name))).filter(Boolean);
+status.textContent=findings.length?findings.map(f=>"Event "+f.eventId+": schedule "+f.scheduleStatus.replaceAll("_"," ")+"; roster "+f.rosterStatus.replaceAll("_"," ")+"; "+f.flags.map(flag=>flag.replaceAll("_"," ")).join(", ")).join(" | ")+" — UNVERIFIED; EV disabled.":"PENDING — independently verify player identity, roster team, event and date before trusting any game assignment.";
+card.append(status);
 root.append(card);
 }
 }
@@ -461,7 +467,7 @@ byId("checkRosters").disabled=false;
 byId("games").textContent=String(propEvents.length);
 byId("captured").textContent=fmtDate(data.captured_at);
 byId("quota").textContent=data.quota_remaining_at_end??"Unknown";
-scheduleResearch=null;rosterResearch=null;await renderCombinedResearch();
+scheduleResearch=null;rosterResearch=null;combinedResearch=null;await renderCombinedResearch();
 byId("scheduleStatus").textContent="Snapshot loaded: "+propEvents.length+" event(s). Click the schedule check to compare teams, dates and start times against ESPN. This does not use sportsbook API credits.";
 const books=new Set(propEvents.flatMap(game=>(game.bookmakers||[]).map(b=>b.key)));
 show("NBA raw player-points quotes loaded · "+books.size+" sportsbooks · 0 verified player-event associations. Team/opponent filters locked; raw quotes research only. No picks, comparisons or EV calculations.",false);
