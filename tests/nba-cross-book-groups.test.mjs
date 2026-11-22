@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {crossBookGroups} from '../lib/nba-quote-validation.mjs';
+const now=Date.parse('2026-11-21T20:00:00Z');
+const q={league:'NBA',eventId:'game1',playerId:'player1',stat:'points',period:'full_game',line:26.5,side:'over',provider:'trusted-ingest',sourceId:'quote1',sportsbook:'Book A',americanOdds:-110,capturedAt:'2026-11-21T19:59:00Z'};
+test('independent books with identical market and side group',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],now).length,1));
+test('same sportsbook is not an independent comparison',()=>assert.equal(crossBookGroups([q,{...q,sourceId:'quote2'}],now).length,0));
+test('different lines do not group',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',line:24.5}],now).length,0));
+test('opposite sides do not group',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',side:'under'}],now).length,0));
+test('stale quotes do not group',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',capturedAt:'2026-11-21T19:30:00Z'}],now).length,0));
+test('latest quote from each sportsbook wins',()=>{const groups=crossBookGroups([q,{...q,americanOdds:-120,capturedAt:'2026-11-21T19:59:30Z'},{...q,sportsbook:'Book B'}],now);assert.equal(groups[0].quotes.find(x=>x.sportsbook==='Book A').americanOdds,-120)});
+test('missing provenance is excluded',()=>assert.equal(crossBookGroups([q,{...q,sportsbook:'Book B',sourceId:''}],now).length,0));
