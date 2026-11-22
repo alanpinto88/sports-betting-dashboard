@@ -47,6 +47,7 @@ try {
 const byId=id=>document.getElementById(id);
 let propEvents=[];
 let scheduleResearch=null,rosterResearch=null,combinedResearch=null;
+let snapshotRevision=0;
 const playerResearchKey=(eventId,name)=>JSON.stringify([String(eventId),String(name).trim().toLocaleLowerCase('en-US')]);
 async function renderCombinedResearch(){
  const target=byId('combinedResearchStatus');
@@ -124,6 +125,7 @@ const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectU
 const a=document.createElement("a");a.href=url;a.download="nba-player-identity-review.csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 async function checkSourceRosters(){
+const revision=snapshotRevision;
 rosterResearch=null;await renderCombinedResearch();
 const status=byId("rosterCheckStatus"),button=byId("checkRosters");button.disabled=true;
 status.textContent="Checking ESPN rosters for loaded NBA teams…";
@@ -144,7 +146,9 @@ if(!athletes.length)throw Error(label+" returned no usable athlete records");
 return {label,names:new Set(athletes.map(a=>String(a.displayName||a.fullName||"").trim().toLowerCase()).filter(Boolean))};
 }finally{clearTimeout(timer)}
 }));
+if(revision!==snapshotRevision)return;
 const {reconcileNbaRosters}=await import('./lib/nba-roster-reconciliation.mjs');
+if(revision!==snapshotRevision)return;
 const review=reconcileNbaRosters({events:propEvents},results.map(r=>({team:r.label,players:[...r.names]})));
 rosterResearch=review;await renderCombinedResearch();
 const counts={};
@@ -155,6 +159,7 @@ status.textContent="ESPN current-roster research for "+results.length+" loaded t
 finally{button.disabled=false}
 }
 async function checkNbaSchedule(){
+const revision=snapshotRevision;
 scheduleResearch=null;await renderCombinedResearch();
 const button=byId("checkSchedule"),status=byId("scheduleStatus");button.disabled=true;
 status.textContent="Checking independent schedules for all loaded snapshot events…";
@@ -169,6 +174,7 @@ const response=await fetch("https://site.api.espn.com/apis/site/v2/sports/basket
 if(!response.ok)throw Error("ESPN "+day+" HTTP "+response.status);
 const data=await response.json();return data.events||[];
 }));
+if(revision!==snapshotRevision)return;
 const schedule=schedules.flat(),lines=[];
 const {reconcileNbaSchedule}=await import('./lib/nba-schedule-reconciliation.mjs');
 const independentGames=schedule.map(e=>{
@@ -176,6 +182,7 @@ const independentGames=schedule.map(e=>{
  return {homeTeam:competitors.find(c=>c.homeAway==='home')?.team?.displayName,
   awayTeam:competitors.find(c=>c.homeAway==='away')?.team?.displayName,startTime:e.date};
 });
+if(revision!==snapshotRevision)return;
 const reconciliation=reconcileNbaSchedule({events:propEvents},independentGames,{toleranceMinutes:90});
 scheduleResearch=reconciliation;await renderCombinedResearch();
 for(const [index,game] of propEvents.entries()){
@@ -442,6 +449,9 @@ return await response.json();
 }finally{clearTimeout(timer)}
 }
 async function load(){
+const revision=++snapshotRevision;
+scheduleResearch=null;rosterResearch=null;combinedResearch=null;
+await renderCombinedResearch();
 window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));
 show("Loading NBA player props… (up to 8 seconds per source)",false);
 byId("auditNote").textContent="Loading published NBA snapshot…";
@@ -449,6 +459,7 @@ byId("reviewQueue").textContent="Loading published NBA snapshot…";
 let data=null;
 try{data=await readJson("./data/nba-player-props-latest.json")}
 catch(error){try{data=await readJson("https://raw.githubusercontent.com/alanpinto88/sports-betting-dashboard/main/data/nba-player-props-latest.json")}catch(fallbackError){show("NBA player props unavailable. Both published and GitHub fallback sources failed. First source: "+error.message+"; fallback: "+fallbackError.message+". Please retry later.",false);byId("auditNote").textContent="Snapshot unavailable; no player audit can run.";byId("reviewQueue").textContent="Snapshot unavailable; verification queue cannot load.";byId("identityAnomaly").textContent="Snapshot unavailable; grouping cannot be checked.";byId("rosterCheckStatus").textContent="Roster research requires a loaded snapshot.";byId("results").replaceChildren();row(["Snapshot unavailable; try Refresh published data.","","","","","","",""]);return}}
+if(revision!==snapshotRevision)return;
 if(data?.source!=="The Odds API"||!Array.isArray(data.events)){show("Published NBA player-prop snapshot has an unexpected format.",false);byId("auditNote").textContent="Snapshot format invalid.";byId("reviewQueue").textContent="Snapshot format invalid.";return}
 propEvents=data.events;
 loadedSnapshot=data;
