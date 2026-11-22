@@ -90,3 +90,20 @@ test('no-vig pair accepts independently identified over and under records',()=>{
  assert.equal(result.ok,true);
  assert.equal(result.label,'No-vig market-implied probabilities; not predictive probabilities');
 });
+
+test('duplicate upstream quote is quarantined while independent third book remains eligible',()=>{
+ const result=verifiedCrossBookGroups([
+  q,{...q,sportsbook:'Book B'},
+  {...q,sportsbook:'Book C',sourceId:'quote3'}
+ ],{now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]});
+ assert.equal(result.enabled,true);
+ assert.equal(result.groups.length,1);
+ assert.deepEqual(result.groups[0].quotes.map(x=>x.sportsbook),['Book A','Book C']);
+});
+test('identical source IDs from different providers are not automatically conflated',()=>{
+ const result=verifiedCrossBookGroups([
+  q,{...q,sportsbook:'Book B',provider:'second-provider'}
+ ],{now,trustedProviders:['trusted-ingest','second-provider'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]});
+ assert.equal(result.enabled,true);
+ assert.equal(result.groups[0].quotes.length,2);
+});
