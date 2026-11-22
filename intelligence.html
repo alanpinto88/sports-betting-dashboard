@@ -45,17 +45,28 @@
 (async function loadNbaProps(){
  const status=document.getElementById('nbaPropsStatus'),rows=document.getElementById('nbaPropsRows'),search=document.getElementById('nbaPlayerSearch'),market=document.getElementById('nbaMarketFilter');
  let quotes=[];
- const clean=x=>String(x??'').toLowerCase().trim();
+ const clean=x=>String(x??'').normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+ const aliases={pts:'points',point:'points',reb:'rebounds',rebound:'rebounds',ast:'assists',assist:'assists',threes:'3 pointers made'};
+ const normalizedMarket=x=>aliases[clean(x)]||clean(x);
+ const isFresh=q=>{const t=Date.parse(q.captured_at);return Number.isFinite(t)&&t<=Date.now()&&Date.now()-t<=15*60000};
+ const valid=q=>q.verified===true&&typeof q.player_id==='string'&&q.player_id.trim()&&typeof q.event_id==='string'&&q.event_id.trim()&&typeof q.source==='string'&&q.source.trim()&&typeof q.market==='string'&&q.market.trim()&&typeof q.period==='string'&&q.period.trim()&&['over','under'].includes(clean(q.side))&&typeof q.line==='number'&&Number.isFinite(q.line)&&typeof q.american_odds==='number'&&Number.isFinite(q.american_odds)&&Math.abs(q.american_odds)>=100&&isFresh(q);
+ const key=q=>[q.player_id,q.event_id,normalizedMarket(q.market),clean(q.period),q.line,clean(q.side)].join('|');
  function render(){
   rows.replaceChildren();let shown=0;
+  const groups=new Map();
+  for(const q of quotes){if(!valid(q))continue;const k=key(q);if(!groups.has(k))groups.set(k,new Set());groups.get(k).add(clean(q.sportsbook||q.source))}
   for(const q of quotes){
-   if(!clean(q.player_name).includes(clean(search.value)) || (market.value && clean(q.market)!==market.value))continue;
+   if(!clean(q.player_name).includes(clean(search.value)) || (market.value&&normalizedMarket(q.market)!==market.value))continue;
    if(shown++>=150)break;
-   const tr=document.createElement('tr'),valid=q.verified===true && q.player_id && q.event_id && q.source && q.captured_at && Number.isFinite(Date.parse(q.captured_at)) && Date.parse(q.captured_at)<=Date.now() && Date.now()-Date.parse(q.captured_at)<=15*60000;
-   const fields=[(q.player_name||'Unknown')+' · '+(q.event_name||'Event unverified'),(q.market||'—')+' · '+(q.period||'—'),String(q.line??'—')+' · '+(q.side||'—'),(q.sportsbook||'—')+' · '+(q.american_odds??'—'),q.captured_at?new Date(q.captured_at).toLocaleString():'—',valid?'Quote metadata verified · pair match pending':'Unverified / stale'];
+   const tr=document.createElement('tr');
+   const matched=valid(q)&&(groups.get(key(q))?.size||0)>=2;
+   const label=!valid(q)?'Unverified / stale':matched?'Matching quotes · model pending':'Quote valid · no cross-book match';
+   const fields=[(q.player_name||'Unknown')+' · '+(q.event_name||'Event unverified'),(q.market||'—')+' · '+(q.period||'—'),String(q.line??'—')+' · '+(q.side||'—'),(q.sportsbook||'—')+' · '+(typeof q.american_odds==='number'?(q.american_odds>0?'+':'')+q.american_odds:'—'),Number.isFinite(Date.parse(q.captured_at))?new Date(q.captured_at).toLocaleString():'—',label];
    for(const val of fields){const td=document.createElement('td');td.textContent=val;tr.appendChild(td)}rows.appendChild(tr);
   }
   if(!shown){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.textContent='No matching published quotes. No recommendations available.';tr.appendChild(td);rows.appendChild(tr)}
+  const pairs=[...groups.values()].filter(v=>v.size>=2).length;
+  status.textContent='Published NBA research quotes: '+quotes.length+' · '+pairs+' matching cross-book groups · EV disabled (model not verified)';
  }
  search.addEventListener('input',render);market.addEventListener('change',render);
  try{
@@ -63,8 +74,7 @@
   if(!response.ok)throw Error('No published NBA props snapshot');
   const payload=await response.json();
   if(!Array.isArray(payload.quotes))throw Error('Invalid NBA props snapshot');
-  quotes=payload.quotes.filter(q=>q && typeof q==='object');
-  status.textContent='Published NBA research quotes: '+quotes.length+' · Every quote requires independent validation · EV disabled';
+  quotes=payload.quotes.filter(q=>q&&typeof q==='object');
  }catch(e){status.textContent='NBA research feed unavailable: '+e.message+' · No live provider calls made.'}
  render();
 })();
