@@ -42,3 +42,18 @@ test('object player identifier is rejected rather than string-coerced',()=>{
 test('object market stat is rejected rather than string-coerced',()=>{
  assert.equal(crossBookGroups([q,{...q,stat:{name:'points'},sportsbook:'Book B'}],now).length,0);
 });
+
+test('production gate rejects duplicate upstream record masquerading as two sportsbooks',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B'}],{
+  now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]
+ });
+ assert.equal(result.enabled,false);
+ assert.equal(result.groups.length,0);
+});
+test('production gate permits independently sourced sportsbook records',()=>{
+ const result=verifiedCrossBookGroups([q,{...q,sportsbook:'Book B',sourceId:'quote2'}],{
+  now,trustedProviders:['trusted-ingest'],verifiedIdentityKeys:[JSON.stringify(['NBA','game1','player1'])]
+ });
+ assert.equal(result.enabled,true);
+ assert.equal(result.groups.length,1);
+});
