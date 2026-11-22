@@ -36,3 +36,9 @@ test('historical odds table labels earliest observed price accurately',()=>{
  assert.match(html,/<th>Snapshots<\/th>/);
  assert.match(html,/String\(q\.snapshotCount\)/);
 });
+
+test('NBA live research feed distinguishes eligible and rejected quotes',()=>{
+ assert.match(html,/const eligible=quotes\.filter\(valid\)\.length/);
+ assert.match(html,/Fresh eligible:/);
+ assert.match(html,/Unverified\/stale\/invalid:/);
+});
