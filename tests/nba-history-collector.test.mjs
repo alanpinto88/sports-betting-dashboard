@@ -5,7 +5,7 @@ const boxscore={players:[{team:{id:'1',displayName:'Atlanta Hawks'},statistics:[
 test('collects five distinct final player games without requesting future games',async()=>{
  const calls=[];
  const fetchJson=async url=>{calls.push(url);return url.includes('/schedule?')?{events}:
-  {header:{competitions:[{status:{type:{completed:true}}}]},boxscore}};
+  {header:{competitions:[{status:{type:{completed:true}},competitors:[{team:{id:'1'}},{team:{id:'2'}}]}]},boxscore}};
  const r=await collectNbaPlayerHistory({playerName:'Example Player',teamId:'1',before:'2026-11-06T00:00:00Z',fetchJson});
  assert.equal(r.games,5);assert.equal(r.complete,true);assert.equal(r.evEligible,false);
  assert.equal(calls.filter(u=>u.includes('/summary?')).length,5);
@@ -15,7 +15,7 @@ test('rejects invalid team identifiers before network access',async()=>{
  await assert.rejects(collectNbaPlayerHistory({playerName:'Example Player',teamId:'../bad',before:'2026-11-06',fetchJson:async()=>({})}),/Invalid ESPN history/);
 });
 test('does not count games whose summary is not confirmed final',async()=>{
- const fetchJson=async url=>url.includes('/schedule?')?{events:[events[0]]}:{header:{competitions:[{status:{type:{completed:false}}}]},boxscore};
+ const fetchJson=async url=>url.includes('/schedule?')?{events:[events[0]]}:{header:{competitions:[{status:{type:{completed:false}},competitors:[{team:{id:'1'}},{team:{id:'2'}}]}]},boxscore};
  const r=await collectNbaPlayerHistory({playerName:'Example Player',teamId:'1',before:'2026-11-06',fetchJson});
  assert.equal(r.games,0);assert.equal(r.complete,false);
 });
@@ -23,14 +23,21 @@ test('does not count games whose summary is not confirmed final',async()=>{
 test('rejects player results belonging to a different ESPN team',async()=>{
  const other=structuredClone(boxscore);other.players[0].team.id='2';
  const fetchJson=async url=>url.includes('/schedule?')?{events:[events[0]]}:
-  {header:{competitions:[{status:{type:{completed:true}}}]},boxscore:other};
+  {header:{competitions:[{status:{type:{completed:true}},competitors:[{team:{id:'1'}},{team:{id:'2'}}]}]},boxscore:other};
  const r=await collectNbaPlayerHistory({playerName:'Example Player',teamId:'1',before:'2026-11-06',fetchJson});
  assert.equal(r.games,0);assert.match(r.warnings.join(' '),/team ID does not match/);
 });
 test('excludes historical box scores missing player team identity',async()=>{
  const missing=structuredClone(boxscore);delete missing.players[0].team.id;
  const fetchJson=async url=>url.includes('/schedule?')?{events:[events[0]]}:
-  {header:{competitions:[{status:{type:{completed:true}}}]},boxscore:missing};
+  {header:{competitions:[{status:{type:{completed:true}},competitors:[{team:{id:'1'}},{team:{id:'2'}}]}]},boxscore:missing};
  const r=await collectNbaPlayerHistory({playerName:'Example Player',teamId:'1',before:'2026-11-06',fetchJson});
  assert.equal(r.games,0);assert.match(r.warnings.join(' '),/team ID unavailable/);
+});
+
+test('rejects a game summary that does not include the requested team',async()=>{
+ const fetchJson=async url=>url.includes('/schedule?')?{events:[events[0]]}:
+  {header:{competitions:[{status:{type:{completed:true}},competitors:[{team:{id:'3'}},{team:{id:'4'}}]}]},boxscore};
+ const r=await collectNbaPlayerHistory({playerName:'Example Player',teamId:'1',before:'2026-11-06',fetchJson});
+ assert.equal(r.games,0);assert.match(r.warnings.join(' '),/requested team missing/);
 });
