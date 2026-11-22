@@ -58,3 +58,11 @@ test('aborted ESPN requests stop the collector immediately',async()=>{
  };
  await assert.rejects(collectNbaPlayerHistory({playerName:'Example Player',teamId:'1',before:'2026-11-06',fetchJson}),{name:'AbortError'});
 });
+
+test('accepts explicit STATUS_FINAL schedule and summary status',async()=>{
+ const scheduleEvent={id:'200',date:'2026-11-01T00:00:00Z',status:{type:{name:'STATUS_FINAL'}}};
+ const fetchJson=async url=>url.includes('/schedule?')?{events:[scheduleEvent]}:
+  {header:{competitions:[{status:{type:{name:'STATUS_FINAL'}},competitors:[{team:{id:'1'}},{team:{id:'2'}}]}]},boxscore};
+ const r=await collectNbaPlayerHistory({playerName:'Example Player',teamId:'1',before:'2026-11-06',fetchJson});
+ assert.equal(r.games,1);assert.deepEqual(r.gameIds,['200']);
+});
