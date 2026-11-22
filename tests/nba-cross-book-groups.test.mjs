@@ -129,3 +129,13 @@ test('noncanonical identity tuple is rejected',()=>{
  assert.equal(result.enabled,false);
  assert.equal(result.reason,'invalid_verification_inputs');
 });
+
+test('same-timestamp conflicting sportsbook prices are quarantined',()=>{
+ const result=crossBookGroups([q,{...q,americanOdds:-120,sourceId:'conflict'}, {...q,sportsbook:'Book B',sourceId:'b'}],now);
+ assert.equal(result.length,0);
+});
+test('later sportsbook update supersedes earlier quote',()=>{
+ const result=crossBookGroups([q,{...q,americanOdds:-120,sourceId:'new',capturedAt:'2026-11-21T19:59:30Z'}, {...q,sportsbook:'Book B',sourceId:'b'}],now);
+ assert.equal(result.length,1);
+ assert.equal(result[0].quotes.find(x=>x.sportsbook==='Book A').americanOdds,-120);
+});
