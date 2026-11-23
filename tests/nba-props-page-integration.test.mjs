@@ -45,3 +45,8 @@ test('validation gate flags quotes updated after snapshot capture', () => {
   assert.match(page, /postCaptureTimestamps/);
   assert.match(page, /timestamps after snapshot capture/);
 });
+
+test('quote audit compares timestamps to recorded capture time', () => {
+  assert.match(page, /snapshotCapturedAt:data\.captured_at/);
+  assert.match(page, /updatedAt > captureTime/);
+});
