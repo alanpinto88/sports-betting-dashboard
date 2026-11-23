@@ -412,3 +412,14 @@ test('NBA archive comparison normalizes source identity whitespace before matchi
   assert.match(importer, /marketKey=r\[cols\.market\]\.trim\(\)/);
   assert.match(importer, /player=r\[cols\.player_label_unverified\]\.trim\(\)/);
 });
+
+test('locally saved NBA archive comparisons normalize event, book and market identities', () => {
+  const start = page.indexOf('function localArchive(record){');
+  const end = page.indexOf('function compareLocalHistory(){', start);
+  const importer = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(importer, /eventId=String\(game\.id\)\.trim\(\)/);
+  assert.match(importer, /bookKey=String\(book\.key\)\.trim\(\)/);
+  assert.match(importer, /marketKey=String\(market\.key\)\.trim\(\)/);
+  assert.match(importer, /JSON\.stringify\(\[eventId,bookKey,marketKey,player\.toLowerCase\(\),side,line\]\)/);
+});
