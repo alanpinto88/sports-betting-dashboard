@@ -170,3 +170,15 @@ test('a conflict at another timestamp blocks the group-wide paired-price badge',
  assert.equal(g.sameTimestampTwoSided,false);
  assert.equal(g.eligibleForEv,false);
 });
+
+test('missing timestamps elsewhere in group prevent a group-wide alignment claim',()=>{
+ const at='2026-11-22T19:00:00Z';
+ const [g]=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:at}),
+  q({side:'under',capturedAt:at}),
+  q({side:'over',provider:'book-b'})
+ ]);
+ assert.equal(g.missingOrInvalidQuoteTimestamps,1);
+ assert.equal(g.sameTimestampTwoSided,false);
+ assert.equal(g.eligibleForEv,false);
+});
