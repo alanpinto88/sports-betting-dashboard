@@ -659,7 +659,7 @@ byId("refresh").addEventListener("click",()=>load().catch(error=>{window.dispatc
 load().catch(error=>{window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));show("Data loading error: "+error.message,false);byId("auditNote").textContent="Loading failed; see status at top.";byId("reviewQueue").textContent="Loading failed; see status at top.";});
 })();
 </script><script type="module">
-import { validatePropQuote, comparePropQuotes } from './src/nba-prop-quote-validation.mjs';
+import { validatePropQuote, comparePropQuotes, validateTwoWayPropMarket } from './src/nba-prop-quote-validation.mjs';
 const gate = document.getElementById('nbaValidationGate');
 const detail = document.getElementById('nbaValidationDetail');
 window.addEventListener('evsports:nba-snapshot-loaded', event => {
@@ -673,5 +673,5 @@ window.addEventListener('evsports:nba-snapshot-unavailable', () => {
   detail.textContent = 'Unable to load published snapshot. No quotes were verified.';
 });
 // Expose pure functions for browser console diagnostics, not as a claim of verified odds.
-window.EVSportsNbaValidation = Object.freeze({ validatePropQuote, comparePropQuotes });
+window.EVSportsNbaValidation = Object.freeze({ validatePropQuote, comparePropQuotes, validateTwoWayPropMarket });
 </script></body></html>
