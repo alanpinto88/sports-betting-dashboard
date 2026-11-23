@@ -416,7 +416,7 @@ const side=String(o.name||"").trim().toLowerCase(),lineText=String(o.point??"").
 if(!["over","under"].includes(side))throw Error("Saved player quote has unsupported side");
 if(!/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(lineText)||!/^[+-]?\d+$/.test(priceText))throw Error("Saved player quote has invalid odds or threshold");
 const line=Number(lineText),price=Number(priceText);
-if(!Number.isFinite(line)||!Number.isInteger(price)||price===0||Math.abs(price)<100)throw Error("Saved player quote has invalid odds or threshold");
+if(!Number.isFinite(line)||line<0||!Number.isInteger(price)||price===0||Math.abs(price)<100)throw Error("Saved player quote has invalid odds or threshold");
 const player=String(o.description||o.player||"").trim();if(!player)throw Error("Saved player quote is missing player label");
 validateQuoteTimestamp(market.last_update||book.last_update,record.capture);
 if(!String(game.id||"").trim()||!String(book.key||"").trim()||!String(market.key||"").trim())throw Error("Saved quote is missing source identity fields");
@@ -513,7 +513,7 @@ const side=r[cols.side].trim().toLowerCase();if(!["over","under"].includes(side)
 const priceText=r[cols.american_odds].trim(),lineText=r[cols.threshold].trim();
 if(!/^[+-]?\d+$/.test(priceText)||!/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(lineText))throw Error("Invalid player quote odds or threshold in archive");
 const price=Number(priceText),line=Number(lineText);
-if(!Number.isInteger(price)||price===0||Math.abs(price)<100||!Number.isFinite(line))throw Error("Invalid player quote odds or threshold in archive");
+if(!Number.isInteger(price)||price===0||Math.abs(price)<100||!Number.isFinite(line)||line<0)throw Error("Invalid player quote odds or threshold in archive");
 validateQuoteTimestamp(r[cols.market_updated_utc],capture);
 if(!r[cols.source_event_id]?.trim()||!r[cols.sportsbook_key]?.trim()||!r[cols.market]?.trim()||!r[cols.player_label_unverified]?.trim())throw Error("CSV quote is missing source identity fields");
 const key=JSON.stringify([r[cols.source_event_id],r[cols.sportsbook_key],r[cols.market],r[cols.player_label_unverified].toLowerCase(),side,line]);
