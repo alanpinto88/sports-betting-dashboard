@@ -83,3 +83,14 @@ test('different timestamps never imply simultaneous two-sided quotes',()=>{
  assert.equal(g.sameBookTwoSided,true);
  assert.equal(g.sameTimestampTwoSided,false);
 });
+
+test('malformed timestamps cannot establish a synchronized two-sided market',()=>{
+ for(const capturedAt of ['not-a-date','2026-11-31T19:00:00Z','2026-11-22T19:00:00+00:00']){
+  const [g]=groupNbaResearchQuotes([
+   q({side:'over',capturedAt}),q({side:'under',capturedAt})
+  ]);
+  assert.equal(g.sameBookTwoSided,true);
+  assert.equal(g.sameTimestampTwoSided,false,capturedAt);
+  assert.equal(g.eligibleForEv,false);
+ }
+});
