@@ -50,3 +50,8 @@ test('quote audit compares timestamps to recorded capture time', () => {
   assert.match(page, /snapshotCapturedAt:data\.captured_at/);
   assert.match(page, /updatedAt > captureTime/);
 });
+
+test('snapshot capture timestamp requires explicit UTC format', () => {
+  assert.match(page, /const captureValue = info\.snapshotCapturedAt/);
+  assert.match(page, /Invalid or missing UTC capture timestamp/);
+});
