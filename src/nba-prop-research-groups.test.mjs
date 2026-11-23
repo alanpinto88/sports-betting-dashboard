@@ -158,3 +158,15 @@ test('research groups disclose missing and invalid timestamps without promoting 
  assert.equal(g.sameTimestampTwoSided,false);
  assert.equal(g.eligibleForEv,false);
 });
+
+test('a conflict at another timestamp blocks the group-wide paired-price badge',()=>{
+ const [g]=groupNbaResearchQuotes([
+  q({side:'over',americanOdds:-110,capturedAt:'2026-11-22T19:00:00Z'}),
+  q({side:'under',americanOdds:-110,capturedAt:'2026-11-22T19:00:00Z'}),
+  q({side:'over',americanOdds:-115,capturedAt:'2026-11-22T19:05:00Z'}),
+  q({side:'over',americanOdds:-120,capturedAt:'2026-11-22T19:05:00Z'})
+ ]);
+ assert.equal(g.sameTimestampPriceConflict,true);
+ assert.equal(g.sameTimestampTwoSided,false);
+ assert.equal(g.eligibleForEv,false);
+});
