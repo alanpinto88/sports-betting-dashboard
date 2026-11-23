@@ -15,3 +15,10 @@ for(const [name,change] of [['line',{line:25.5}],['event',{eventId:'e2'}],['play
 test('same-time conflicting prices are excluded',()=>assert.deepEqual(historicalNbaPriceMovements([q(),q({americanOdds:-120}),q({capturedAt:'2026-11-22T19:05:00Z'})]),[]));
 test('rejects noncanonical time',()=>assert.deepEqual(historicalNbaPriceMovements([q(),q({capturedAt:'2026-11-22T19:05:00+00:00'})]),[]));
 test('rejects EV eligible quotes',()=>assert.deepEqual(historicalNbaPriceMovements([q(),q({capturedAt:'2026-11-22T19:05:00Z',eligibleForEv:true})]),[]));
+
+test('unchanged recorded odds are not reported as price movement',()=>{
+ assert.deepEqual(historicalNbaPriceMovements([q(),q({capturedAt:'2026-11-22T19:05:00Z'})]),[]);
+});
+test('round-trip price returning to original is not an endpoint movement',()=>{
+ assert.deepEqual(historicalNbaPriceMovements([q(),q({capturedAt:'2026-11-22T19:03:00Z',americanOdds:-120}),q({capturedAt:'2026-11-22T19:05:00Z'})]),[]);
+});
