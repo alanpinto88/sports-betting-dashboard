@@ -54,7 +54,7 @@ test('invalid validation clock fails closed', () => {
 });
 
 test('matching opposite-side quotes pass two-way structural validation', () => {
-  assert.equal(validateTwoWayPropMarket(quote(), quote({ side: 'under' }), NOW).valid, true);
+  assert.equal(validateTwoWayPropMarket(quote(), quote({ side: 'under', sourceRecordId: 'quote-record-790' }), NOW).valid, true);
 });
 test('same-side quotes cannot form a two-way market', () => {
   assert.ok(validateTwoWayPropMarket(quote(), quote(), NOW).errors.includes('invalid_under_side'));
@@ -66,7 +66,7 @@ test('different lines cannot form one two-way market', () => {
   assert.ok(validateTwoWayPropMarket(quote(), quote({ side: 'under', line: 25.5 }), NOW).errors.includes('mismatch_line'));
 });
 test('unverified quote blocks two-way market validation', () => {
-  assert.ok(validateTwoWayPropMarket(quote({ providerVerified: false }), quote({ side: 'under' }), NOW).errors.includes('over_provider_unverified'));
+  assert.ok(validateTwoWayPropMarket(quote({ providerVerified: false }), quote({ side: 'under', sourceRecordId: 'quote-record-790' }), NOW).errors.includes('over_provider_unverified'));
 });
 
 test('ambiguous date-only quote timestamps fail closed', () => {
@@ -87,4 +87,10 @@ test('quote without source record ID fails traceability check', () => {
 });
 test('source record ID must be a nonblank string', () => {
   assert.ok(validatePropQuote(quote({ sourceRecordId: 123 }), NOW).errors.includes('missing_source_record_id'));
+});
+
+test('two-way market cannot reuse one source record for both sides', () => {
+  const result = validateTwoWayPropMarket(quote(), quote({ side: 'under' }), NOW);
+  assert.ok(result.errors.includes('duplicate_source_record_id'));
+  assert.equal(result.valid, false);
 });
