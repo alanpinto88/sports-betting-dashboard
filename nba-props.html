@@ -617,6 +617,7 @@ return await response.json();
 }finally{clearTimeout(timer)}
 }
 async function load(){
+window.__evsportsResearchSnapshot=null;
 const revision=++snapshotRevision;
 propEvents=[];loadedSnapshot=null;quoteArchiveCapture='';
 byId("results").replaceChildren();
@@ -691,7 +692,9 @@ renderFreshness(data);
 const rawQuoteCount=propEvents.reduce((total,game)=>total+(game.bookmakers||[]).reduce((sum,book)=>sum+(book.markets||[]).reduce((n,market)=>n+(String(market.key||'').startsWith('player_')?(market.outcomes||[]).length:0),0),0),0);
 const snapshotTime=Date.parse(data.captured_at||'');
 const snapshotAgeMinutes=Number.isFinite(snapshotTime)?(Date.now()-snapshotTime)/60000:NaN;
-window.dispatchEvent(new CustomEvent('evsports:nba-snapshot-loaded',{detail:{rawQuoteCount,snapshotAgeMinutes,snapshotCapturedAt:data.captured_at,eventCount:propEvents.length,events:propEvents}}));
+const researchSnapshotDetail={rawQuoteCount,snapshotAgeMinutes,snapshotCapturedAt:data.captured_at,eventCount:propEvents.length,events:propEvents};
+window.__evsportsResearchSnapshot=researchSnapshotDetail;
+window.dispatchEvent(new CustomEvent('evsports:nba-snapshot-loaded',{detail:researchSnapshotDetail}));
 auditSnapshot(propEvents,data.captured_at);
 renderIdentityReviewQueue(propEvents);
 byId("exportReview").disabled=false;
@@ -884,5 +887,6 @@ window.addEventListener('evsports:nba-snapshot-unavailable',()=>{
 });
 for(const id of ['player','market','book'])input(id).addEventListener('input',showRows);
 for(const id of ['saveLocalSnapshot','clearLocalSnapshots'])input(id).addEventListener('click',()=>queueMicrotask(showRows));
-showRows();
+if(window.__evsportsResearchSnapshot){const detail=window.__evsportsResearchSnapshot;window.dispatchEvent(new CustomEvent('evsports:nba-snapshot-loaded',{detail}));}
+else showRows();
 </script></body></html>
