@@ -80,3 +80,14 @@ test('movement series preserves its exact period and does not authenticate sharp
  assert.equal(result[0].sharpMoneyVerified,false);
  assert.equal(result[0].status,'HISTORICAL_RESEARCH');
 });
+
+test('historical movement matches whitespace-normalized source identifiers',()=>{
+ const result=historicalNbaPriceMovements([
+  q({eventId:' e1 ',market:' player_points ',period:' unverified ',provider:' book-a '}),
+  q({capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})
+ ]);
+ assert.equal(result.length,1);
+ assert.equal(result[0].openingRecordedOdds,-110);
+ assert.equal(result[0].latestRecordedOdds,-120);
+ assert.equal(result[0].eligibleForEv,false);
+});
