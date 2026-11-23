@@ -73,3 +73,15 @@ test('blank explicit player description cannot silently fall back to another ide
  assert.equal(rows.length,1);
  assert.equal(rows[0].side,'under');
 });
+
+test('normalizes whitespace around event, sportsbook and market identifiers',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].id=' event-1 ';
+ altered.events[0].bookmakers[0].key=' book-a ';
+ altered.events[0].bookmakers[0].markets[0].key='player_points ';
+ const [row]=normalizeNbaPropOutcomes(altered);
+ assert.equal(row.eventId,'event-1');
+ assert.equal(row.provider,'book-a');
+ assert.equal(row.market,'player_points');
+ assert.equal(row.eligibleForEv,false);
+});
