@@ -836,7 +836,7 @@ function showRows(){
   const title=document.createElement('strong');title.style.fontSize='15px';
   title.textContent=group.playerLabel+' · '+group.market+' · '+group.period+' · '+group.line;
   const info=document.createElement('p');info.className='muted';
-  info.textContent=group.bookCount+' sportsbook(s) · '+group.quotes.length+' research quote(s) · '+(group.sameTimestampTwoSided?'both sides share a recorded timestamp (unverified)':group.sameBookTwoSided?'both sides at same sportsbook; timing unconfirmed':group.hasBothSides?'both sides across different sportsbooks':'one side only')+(group.conflictingSameSidePrices?' · conflicting same-side prices; review timestamps':'')+' · identity unverified';
+  info.textContent=group.bookCount+' sportsbook(s) · '+group.quotes.length+' research quote(s) · '+(group.sameTimestampTwoSided?'both sides share a recorded timestamp (unverified)':group.sameBookTwoSided?'both sides at same sportsbook; timing unconfirmed':group.hasBothSides?'both sides across different sportsbooks':'one side only')+(group.sameTimestampPriceConflict?' · conflicting prices at identical timestamp':group.conflictingSameSidePrices?' · same-side prices differ across records; review timestamps':'')+' · identity unverified';
   card.append(title,info);
   const unique=new Set();
   for(const q of group.quotes){
