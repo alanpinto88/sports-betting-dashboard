@@ -440,8 +440,9 @@ status.textContent=(message?message+" ":"")+records.length+" locally saved captu
 function saveLocalHistory(){
 if(!loadedSnapshot){showLocalHistory("No snapshot loaded.");return}
 const capture=String(loadedSnapshot.captured_at||"");
-if(!Number.isFinite(Date.parse(capture))){showLocalHistory("Invalid capture timestamp; nothing saved.");return}
 try{
+validateQuoteTimestamp(capture,capture);
+localArchive({capture,events:loadedSnapshot.events});
 const records=localHistory();
 if(records.some(r=>r.capture===capture)){showLocalHistory("This capture is already saved.");return}
 const slim={capture,source:loadedSnapshot.source,events:loadedSnapshot.events};
