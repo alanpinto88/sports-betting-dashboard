@@ -2,7 +2,7 @@ import {normalizeNbaPropOutcomes} from './nba-prop-research-normalizer.mjs';
 import {historicalNbaPriceMovements} from './nba-prop-historical-movement.mjs';
 // Historical local captures only. No network, no provider authentication, no EV signals.
 export function movementsFromSavedNbaSnapshots(records, now=Date.now()) {
- if(!Array.isArray(records)||!Number.isFinite(now))return [];
+ if(!Array.isArray(records)||!Number.isFinite(now)||now<0)return [];
  const rows=[];
  const validUtc=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value)&&
    Number.isFinite(Date.parse(value))&&
@@ -14,10 +14,15 @@ export function movementsFromSavedNbaSnapshots(records, now=Date.now()) {
  for(const record of records){
   if(!record||!Array.isArray(record.events)||!validUtc(record.capture)||Date.parse(record.capture)>now)continue;
   const timestamp=Date.parse(record.capture);
-  if(!distinct.has(timestamp))distinct.set(timestamp,record);
-  else if(distinct.get(timestamp)!==null&&JSON.stringify(distinct.get(timestamp).events)!==JSON.stringify(record.events))distinct.set(timestamp,null);
+  // Browser storage is JSON, but callers may supply malformed cyclic objects.
+  // Fail closed rather than letting one bad record crash the movement display.
+  let fingerprint;
+  try{fingerprint=JSON.stringify(record.events);}catch{continue;}
+  if(typeof fingerprint!=='string')continue;
+  if(!distinct.has(timestamp))distinct.set(timestamp,{record,fingerprint});
+  else if(distinct.get(timestamp)!==null&&distinct.get(timestamp).fingerprint!==fingerprint)distinct.set(timestamp,null);
  }
- const ordered=[...distinct.values()].filter(Boolean).sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture));
+ const ordered=[...distinct.values()].filter(Boolean).map(entry=>entry.record).sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture));
  for(const record of ordered.slice(-8)){
   if(!record||!Array.isArray(record.events)||typeof record.capture!=='string')continue;
  
