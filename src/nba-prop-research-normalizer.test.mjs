@@ -101,7 +101,7 @@ test('non-player markets stay excluded after whitespace normalization',()=>{
 });
 
 test('incomplete and malformed player market keys are excluded',()=>{
- for(const key of ['player_','player_ ','player_points extra','player_points/other','player_🏀']){
+ for(const key of ['player_','player_ ','player_points extra','player_points/other','player_points_','player__points','player_🏀']){
   const altered=structuredClone(snapshot);
   altered.events[0].bookmakers[0].markets[0].key=key;
   assert.deepEqual(normalizeNbaPropOutcomes(altered),[],key);
