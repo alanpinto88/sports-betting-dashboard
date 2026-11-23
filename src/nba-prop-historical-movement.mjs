@@ -9,13 +9,13 @@ export function historicalNbaPriceMovements(rows) {
  const buckets=new Map();
  for(const q of rows){
   if(!q||q.status!=='RESEARCH_ONLY'||q.eligibleForEv!==false||
-     ![q.eventId,q.playerLabel,q.market,q.provider,q.side].every(v=>typeof v==='string'&&v.trim())||
+     ![q.eventId,q.playerLabel,q.market,q.provider,q.side,q.period].every(v=>typeof v==='string'&&v.trim())||
      !Number.isFinite(q.line)||q.line<0||!['over','under'].includes(q.side)||
      americanImpliedProbability(q.americanOdds)===null||
      typeof q.capturedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(q.capturedAt))continue;
   const t=Date.parse(q.capturedAt);
   if(!Number.isFinite(t)||new Date(t).toISOString()!==q.capturedAt&&new Date(t).toISOString().replace(/\.000Z$/,'Z')!==q.capturedAt)continue;
-  const key=JSON.stringify([q.eventId,q.playerLabel.trim().toLowerCase(),q.market,q.provider,q.side,q.line]);
+  const key=JSON.stringify([q.eventId,q.playerLabel.trim().toLowerCase(),q.market,q.period,q.provider,q.side,q.line]);
   if(!buckets.has(key))buckets.set(key,[]);
   buckets.get(key).push({q,t});
  }
@@ -36,7 +36,7 @@ export function historicalNbaPriceMovements(rows) {
   const initial=americanImpliedProbability(first.americanOdds),final=americanImpliedProbability(last.americanOdds);
   results.push(Object.freeze({
    eventId:first.eventId,playerLabel:first.playerLabel,market:first.market,
-   provider:first.provider,side:first.side,line:first.line,
+   provider:first.provider,period:first.period,side:first.side,line:first.line,
    openingRecordedOdds:first.americanOdds,latestRecordedOdds:last.americanOdds,
    firstCapturedAt:first.capturedAt,lastCapturedAt:last.capturedAt,
    observations:dedup.length,impliedProbabilityChangePoints:Number(((final-initial)*100).toFixed(2)),
