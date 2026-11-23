@@ -42,7 +42,12 @@ export function historicalNbaPriceMovements(rows) {
    }else dedup.push({...entry,conflict:false});
   }
   if(dedup.length<2||dedup.some(x=>x.conflict))continue;
+  // A historical movement needs independently traceable endpoints. Without
+  // record IDs we cannot distinguish true updates from recycled payloads.
   const first=dedup[0].q,last=dedup[dedup.length-1].q;
+  if(typeof first.sourceRecordId!=='string'||!first.sourceRecordId.trim()||
+     typeof last.sourceRecordId!=='string'||!last.sourceRecordId.trim()||
+     first.sourceRecordId.trim()===last.sourceRecordId.trim())continue;
   // Identical recorded prices do not constitute a price-movement event.
   if(first.americanOdds===last.americanOdds)continue;
   const initial=americanImpliedProbability(first.americanOdds),final=americanImpliedProbability(last.americanOdds);
