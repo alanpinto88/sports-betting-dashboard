@@ -123,3 +123,19 @@ test('core historical calculator rejects absent timestamp provenance',()=>{
  const rows=[q({timestampSource:undefined}),q({timestampSource:undefined,capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})];
  assert.deepEqual(historicalNbaPriceMovements(rows),[]);
 });
+
+test('historical movement is suppressed when one source ID represents different observations',()=>{
+ const rows=[
+  q({sourceRecordId:'same-id'}),
+  q({sourceRecordId:'same-id',capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})
+ ];
+ assert.deepEqual(historicalNbaPriceMovements(rows),[]);
+});
+test('historical movement accepts distinct source IDs and identical duplicate records',()=>{
+ const first=q({sourceRecordId:'id-1'});
+ const second=q({sourceRecordId:'id-2',capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120});
+ const result=historicalNbaPriceMovements([first,{...first},second]);
+ assert.equal(result.length,1);
+ assert.equal(result[0].observations,2);
+ assert.equal(result[0].eligibleForEv,false);
+});
