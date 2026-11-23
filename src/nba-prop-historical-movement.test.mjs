@@ -69,3 +69,14 @@ test('invalid quote dates cannot create historical movement',()=>{
  ]);
  assert.deepEqual(result,[]);
 });
+
+test('movement series preserves its exact period and does not authenticate sharp money',()=>{
+ const result=historicalNbaPriceMovements([
+  q({period:'first-half'}),
+  q({period:'first-half',capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})
+ ]);
+ assert.equal(result.length,1);
+ assert.equal(result[0].period,'first-half');
+ assert.equal(result[0].sharpMoneyVerified,false);
+ assert.equal(result[0].status,'HISTORICAL_RESEARCH');
+});
