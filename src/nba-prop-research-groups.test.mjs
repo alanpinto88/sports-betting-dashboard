@@ -203,3 +203,17 @@ test('market-level paired timestamps are distinct from bookmaker fallback times'
  ])[0];
  assert.equal(mixed.marketTimestampAlignedTwoSided,false);
 });
+
+test('group counts only valid UTC timestamps by market versus bookmaker provenance',()=>{
+ const at='2026-11-22T19:00:00Z';
+ const [g]=groupNbaResearchQuotes([
+  q({capturedAt:at,timestampSource:'market'}),
+  q({side:'under',capturedAt:at,timestampSource:'bookmaker'}),
+  q({provider:'book-b',capturedAt:'bad-date',timestampSource:'market'}),
+  q({provider:'book-c',capturedAt:at})
+ ]);
+ assert.equal(g.marketTimestampQuotes,1);
+ assert.equal(g.bookmakerTimestampQuotes,1);
+ assert.equal(g.missingOrInvalidQuoteTimestamps,1);
+ assert.equal(g.eligibleForEv,false);
+});
