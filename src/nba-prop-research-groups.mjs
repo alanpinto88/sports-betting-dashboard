@@ -7,11 +7,12 @@ export function groupNbaResearchQuotes(rows) {
         typeof q.eventId!=='string' || !q.eventId ||
         typeof q.playerLabel!=='string' || !q.playerLabel.trim() ||
         typeof q.market!=='string' || !q.market ||
+        typeof q.period!=='string' || !q.period.trim() ||
         !Number.isFinite(q.line) || q.line<0 ||
         !['over','under'].includes(q.side) ||
         typeof q.provider!=='string' || !q.provider) continue;
-    const key=JSON.stringify([q.eventId,q.playerLabel.trim().toLowerCase(),q.market,q.line]);
-    if(!groups.has(key))groups.set(key,{eventId:q.eventId,playerLabel:q.playerLabel,market:q.market,line:q.line,quotes:[],status:'RESEARCH_ONLY',eligibleForEv:false});
+    const key=JSON.stringify([q.eventId,q.playerLabel.trim().toLowerCase(),q.market,q.period,q.line]);
+    if(!groups.has(key))groups.set(key,{eventId:q.eventId,playerLabel:q.playerLabel,market:q.market,period:q.period,line:q.line,quotes:[],status:'RESEARCH_ONLY',eligibleForEv:false});
     groups.get(key).quotes.push(q);
   }
   return [...groups.values()].map(g=>{
