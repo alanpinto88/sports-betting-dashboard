@@ -8,7 +8,7 @@ export function historicalNbaPriceMovements(rows) {
  if(!Array.isArray(rows))return [];
  const buckets=new Map();
  for(const q of rows){
-  if(!q||q.status!=='RESEARCH_ONLY'||q.eligibleForEv!==false||
+  if(!q||q.status!=='RESEARCH_ONLY'||q.eligibleForEv!==false||q.timestampSource!=='market'||
      ![q.eventId,q.playerLabel,q.market,q.provider,q.side,q.period].every(v=>typeof v==='string'&&v.trim())||
      !Number.isFinite(q.line)||q.line<0||!['over','under'].includes(q.side)||
      americanImpliedProbability(q.americanOdds)===null||
