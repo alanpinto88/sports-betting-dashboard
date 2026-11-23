@@ -94,3 +94,7 @@ test('NBA research cards explain suppressed paired timing after source ID collis
  assert.match(html,/if\(group\.conflictingSourceRecordIds\)/);
  assert.match(html,/Timestamp-aligned pair indicators suppressed; research only/);
 });
+
+test('historical NBA movement cards show source ID coverage',()=>{
+ assert.ok(html.includes("m.sourceRecordIdsPresent+'/'+m.observations+' source IDs present"));
+});
