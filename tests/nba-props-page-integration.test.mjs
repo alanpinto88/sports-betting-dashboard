@@ -433,3 +433,13 @@ test('NBA local history filters duplicate capture timestamps', () => {
   assert.match(source, /captures\.has\(item\.capture\)/);
   assert.match(source, /captures\.add\(item\.capture\)/);
 });
+
+test('NBA movement comparison reports stale and non-newer market timestamps', () => {
+  const start = page.indexOf('function compareArchiveData(a,b){');
+  const end = page.indexOf('function auditSnapshot(events, capturedAt){', start);
+  const comparison = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(comparison, /let matched=0,changed=0,stale=0/);
+  assert.match(comparison, /stale\+\+;continue/);
+  assert.match(comparison, /skipped for non-newer or invalid market timestamps/);
+});
