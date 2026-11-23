@@ -228,3 +228,14 @@ test('NBA archive CSV rejects duplicate column names before importing quotes', (
   assert.match(importer, /new Set\(header\)\.size!==header\.length/);
   assert.match(importer, /CSV has duplicate archive column names/);
 });
+
+test('NBA CSV parser executes strict quote handling with valid multiline fields', () => {
+  const start = page.indexOf('function parseCsv(text){');
+  const end = page.indexOf('function archiveRows(csv){', start);
+  assert.ok(start >= 0 && end > start);
+  const parse = runInNewContext(page.slice(start, end) + '\nparseCsv', {}, { timeout: 1000 });
+  assert.deepEqual(JSON.parse(JSON.stringify(parse('"a,b","c""d"\r\n"multi\nline",x'))), [['a,b', 'c"d'], ['multi\nline', 'x']]);
+  assert.throws(() => parse('a"b,c'), /Unexpected quote/);
+  assert.throws(() => parse('"a"junk,c'), /Unexpected characters/);
+  assert.throws(() => parse('"unclosed,c'), /Unclosed CSV quote/);
+});
