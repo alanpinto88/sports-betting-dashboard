@@ -444,8 +444,9 @@ try{localStorage.removeItem(historyKey);showLocalHistory("Local history cleared.
 }
 let quoteArchiveCapture="";
 function exportQuoteArchive(){
+if(!loadedSnapshot || !quoteArchiveCapture){byId("quoteArchiveStatus").textContent="No validated snapshot loaded. Export unavailable.";return}
 const header=["capture_utc","source_event_id","snapshot_away_label_unverified","snapshot_home_label_unverified","snapshot_start_utc","sportsbook","sportsbook_key","market","player_label_unverified","side","threshold","american_odds","market_updated_utc","verification_status"];
-const rows=[header],clean=v=>{const str=String(v??"");return /^[\\s]*[=+@-]/.test(str)&&!/^[-+]?[0-9]+(?:\\.[0-9]+)?$/.test(str)?"\u0027"+str:str};
+const rows=[header],clean=v=>{const str=String(v??"");return /^\s*[=+@-]/.test(str)&&!/^[-+]?[0-9]+(?:\\.[0-9]+)?$/.test(str)?"\u0027"+str:str};
 for(const game of propEvents)for(const book of game.bookmakers||[])for(const market of book.markets||[]){
 if(!String(market.key||"").startsWith("player_"))continue;
 for(const outcome of market.outcomes||[]){
