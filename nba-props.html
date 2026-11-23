@@ -599,7 +599,7 @@ let data=null;
 try{data=await readJson("./data/nba-player-props-latest.json")}
 catch(error){try{data=await readJson("https://raw.githubusercontent.com/alanpinto88/sports-betting-dashboard/main/data/nba-player-props-latest.json")}catch(fallbackError){if(revision!==snapshotRevision)return;show("NBA player props unavailable. Both published and GitHub fallback sources failed. First source: "+error.message+"; fallback: "+fallbackError.message+". Please retry later.",false);byId("auditNote").textContent="Snapshot unavailable; no player audit can run.";byId("reviewQueue").textContent="Snapshot unavailable; verification queue cannot load.";byId("identityAnomaly").textContent="Snapshot unavailable; grouping cannot be checked.";byId("rosterCheckStatus").textContent="Roster research requires a loaded snapshot.";byId("results").replaceChildren();row(["Snapshot unavailable; try Refresh published data.","","","","","","",""]);return}}
 if(revision!==snapshotRevision)return;
-if(data?.source!=="The Odds API"||!Array.isArray(data.events)){show("Published NBA player-prop snapshot has an unexpected format.",false);byId("auditNote").textContent="Snapshot format invalid.";byId("reviewQueue").textContent="Snapshot format invalid.";return}
+if(data?.source!=="The Odds API"||!Array.isArray(data.events)){show("Published NBA player-prop snapshot has an unexpected format.",false);byId("auditNote").textContent="Snapshot format invalid.";byId("reviewQueue").textContent="Snapshot format invalid.";window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));return}
 const snapshotCapturedAt = data.captured_at;
 const parsedSnapshotTime = typeof snapshotCapturedAt === 'string' &&
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(snapshotCapturedAt)
@@ -608,6 +608,7 @@ const canonicalSnapshotTime = Number.isFinite(parsedSnapshotTime) &&
   (new Date(parsedSnapshotTime).toISOString() === snapshotCapturedAt ||
    new Date(parsedSnapshotTime).toISOString().replace(/\.000Z$/, 'Z') === snapshotCapturedAt);
 if (!canonicalSnapshotTime || parsedSnapshotTime > Date.now() + 30_000) {
+  window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));
   show("NBA snapshot rejected: missing, invalid, or future-dated UTC capture time.", false);
   byId("auditNote").textContent="Invalid snapshot capture time. No quotes verified.";
   byId("reviewQueue").textContent="Invalid snapshot capture time.";
