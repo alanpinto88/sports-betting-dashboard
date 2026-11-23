@@ -7,7 +7,8 @@ const quote = (changes = {}) => ({
   provider: 'licensed-test-feed', playerId: 'nba-player-123',
   eventId: 'nba-event-456', market: 'points', period: 'full_game',
   side: 'over', line: 24.5, americanOdds: -110,
-  capturedAt: '2026-11-22T19:59:00.000Z', providerVerified: true, ...changes
+  capturedAt: '2026-11-22T19:59:00.000Z', providerVerified: true,
+  sourceRecordId: 'quote-record-789', ...changes
 });
 
 test('valid fresh quote passes structural checks', () => {
@@ -79,4 +80,11 @@ test('UTC ISO timestamps with milliseconds remain valid', () => {
 });
 test('American odds minus 99 are rejected', () => {
   assert.ok(validatePropQuote(quote({ americanOdds: -99 }), NOW).errors.includes('invalid_odds'));
+});
+
+test('quote without source record ID fails traceability check', () => {
+  assert.ok(validatePropQuote(quote({ sourceRecordId: '' }), NOW).errors.includes('missing_source_record_id'));
+});
+test('source record ID must be a nonblank string', () => {
+  assert.ok(validatePropQuote(quote({ sourceRecordId: 123 }), NOW).errors.includes('missing_source_record_id'));
 });
