@@ -507,3 +507,14 @@ test('NBA CSV importer executes identity normalization and duplicate rejection',
     /non-player market/
   );
 });
+
+test('NBA local snapshot saving validates UTC timestamps and quote integrity before storage', () => {
+  const start = page.indexOf('function saveLocalHistory(){');
+  const end = page.indexOf('function clearLocalHistory(){', start);
+  const source = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(source, /validateQuoteTimestamp\(capture,capture\)/);
+  assert.match(source, /localArchive\(\{capture,events:loadedSnapshot\.events\}\)/);
+  assert.ok(source.indexOf('localArchive({capture,events:loadedSnapshot.events})') <
+    source.indexOf('localStorage.setItem(historyKey,'));
+});
