@@ -142,3 +142,21 @@ test('market timestamp whitespace is trimmed without altering its source',()=>{
  const [row]=normalizeNbaPropOutcomes(altered);
  assert.equal(row.capturedAt,'2026-11-22T20:01:00Z');
 });
+
+test('research quotes label timestamp provenance without treating it as provider verification',()=>{
+ const [fallback]=normalizeNbaPropOutcomes(snapshot);
+ assert.equal(fallback.timestampSource,'bookmaker');
+ const market=structuredClone(snapshot);
+ market.events[0].bookmakers[0].markets[0].last_update='2026-11-22T19:58:00Z';
+ const [direct]=normalizeNbaPropOutcomes(market);
+ assert.equal(direct.timestampSource,'market');
+ const absent=structuredClone(snapshot);
+ delete absent.events[0].bookmakers[0].last_update;
+ const [missing]=normalizeNbaPropOutcomes(absent);
+ assert.equal(missing.timestampSource,'missing');
+ assert.equal(missing.capturedAt,null);
+ for(const row of [fallback,direct,missing]){
+  assert.equal(row.providerVerified,false);
+  assert.equal(row.eligibleForEv,false);
+ }
+});
