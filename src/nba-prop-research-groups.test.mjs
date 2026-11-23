@@ -260,3 +260,16 @@ test('identical source record duplicates do not create a source ID conflict',()=
  const [g]=groupNbaResearchQuotes([quote,{...quote}]);
  assert.equal(g.conflictingSourceRecordIds,0);
 });
+
+test('source record ID collisions block market timestamp alignment badges',()=>{
+ const at='2026-11-22T19:00:00Z';
+ const [g]=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:at,timestampSource:'market',sourceRecordId:'over-id'}),
+  q({side:'under',capturedAt:at,timestampSource:'market',sourceRecordId:'under-id'}),
+  q({side:'over',capturedAt:'2026-11-22T19:05:00Z',timestampSource:'market',sourceRecordId:'over-id'})
+ ]);
+ assert.equal(g.sameTimestampTwoSided,true);
+ assert.equal(g.conflictingSourceRecordIds,1);
+ assert.equal(g.marketTimestampAlignedTwoSided,false);
+ assert.equal(g.eligibleForEv,false);
+});
