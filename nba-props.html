@@ -606,7 +606,7 @@ renderFreshness(data);
 const rawQuoteCount=propEvents.reduce((total,game)=>total+(game.bookmakers||[]).reduce((sum,book)=>sum+(book.markets||[]).reduce((n,market)=>n+(String(market.key||'').startsWith('player_')?(market.outcomes||[]).length:0),0),0),0);
 const snapshotTime=Date.parse(data.captured_at||'');
 const snapshotAgeMinutes=Number.isFinite(snapshotTime)?(Date.now()-snapshotTime)/60000:NaN;
-window.dispatchEvent(new CustomEvent('evsports:nba-snapshot-loaded',{detail:{rawQuoteCount,snapshotAgeMinutes,eventCount:propEvents.length}}));
+window.dispatchEvent(new CustomEvent('evsports:nba-snapshot-loaded',{detail:{rawQuoteCount,snapshotAgeMinutes,eventCount:propEvents.length,events:propEvents}}));
 auditSnapshot(propEvents,data.captured_at);
 renderIdentityReviewQueue(propEvents);
 byId("exportReview").disabled=false;
@@ -673,7 +673,25 @@ window.addEventListener('evsports:nba-snapshot-loaded', event => {
   const ageWarning = Number.isFinite(age) && age > 5
     ? 'Historical snapshot — not current odds. '
     : '';
-  detail.textContent = count + ' raw quote(s) observed. ' + ageText + ageWarning + 'Provider authentication, per-quote freshness, and player-event identity remain unverified. No picks or EV predictions.';
+  const events = Array.isArray(info.events) ? info.events : [];
+  let missingPlayerLabels = 0, invalidPrices = 0, missingMarketTimestamps = 0;
+  for (const game of events) {
+    for (const book of (Array.isArray(game.bookmakers) ? game.bookmakers : [])) {
+      for (const market of (Array.isArray(book.markets) ? book.markets : [])) {
+        if (!String(market.key || '').startsWith('player_')) continue;
+        const timestamp = market.last_update || book.last_update;
+        for (const outcome of (Array.isArray(market.outcomes) ? market.outcomes : [])) {
+          if (!String(outcome.description || outcome.player || '').trim()) missingPlayerLabels++;
+          if (!Number.isInteger(outcome.price) || Math.abs(outcome.price) < 100) invalidPrices++;
+          if (!Number.isFinite(Date.parse(timestamp || ''))) missingMarketTimestamps++;
+        }
+      }
+    }
+  }
+  detail.textContent = count + ' raw quote(s) observed. ' + ageText + ageWarning +
+    'Raw diagnostics: ' + missingPlayerLabels + ' missing player labels, ' + invalidPrices +
+    ' invalid prices, ' + missingMarketTimestamps + ' missing market timestamps. ' +
+    'Provider authentication, per-quote freshness, and player-event identity remain unverified. No picks or EV predictions.';
 });
 window.addEventListener('evsports:nba-snapshot-unavailable', () => {
   gate.textContent = 'NBA snapshot unavailable · EV recommendations disabled';
