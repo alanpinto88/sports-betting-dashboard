@@ -52,3 +52,10 @@ test('NBA comparison cards disclose missing or invalid source timestamps',()=>{
  assert.match(html,/group\.missingOrInvalidQuoteTimestamps\?' · '/);
  assert.match(html,/quote\(s\) missing valid UTC time/);
 });
+
+test('research cards preserve distinct quote times and disclose timestamp provenance',()=>{
+ assert.match(html,/const signature=JSON\.stringify\(\[q\.provider,q\.side,q\.line,q\.americanOdds,q\.capturedAt,q\.timestampSource\]\)/);
+ assert.match(html,/q\.timestampSource==='market'\?'market timestamp'/);
+ assert.match(html,/q\.timestampSource==='bookmaker'\?'sportsbook timestamp'/);
+ assert.match(html,/q\.capturedAt\|\|'no UTC time'/);
+});
