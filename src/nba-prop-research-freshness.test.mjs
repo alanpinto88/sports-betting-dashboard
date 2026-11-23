@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {researchQuoteTimeStatus} from './nba-prop-research-freshness.mjs';
+const now=Date.parse('2026-11-22T20:00:00Z'),snap='2026-11-22T19:59:30Z';
+test('historical quote remains ineligible for EV',()=>{const result=researchQuoteTimeStatus('2026-11-22T19:59:00Z',snap,now);assert.equal(result.status,'HISTORICAL_RESEARCH');assert.equal(result.eligibleForEv,false);assert.equal(result.ageMinutes,1)});
+for(const [name,quote,snapshot,expected] of [
+ ['missing',null,snap,'MISSING_OR_INVALID_TIME'],
+ ['malformed','2026-11-22T19:59:00+00:00',snap,'MISSING_OR_INVALID_TIME'],
+ ['future','2026-11-22T20:01:00Z',snap,'FUTURE_QUOTE_TIME'],
+ ['missing snapshot','2026-11-22T19:59:00Z',null,'SNAPSHOT_TIME_UNVERIFIED'],
+ ['after snapshot','2026-11-22T19:59:45Z',snap,'AFTER_SNAPSHOT_CAPTURE'],
+ ['future snapshot','2026-11-22T19:59:00Z','2026-11-22T20:01:00Z','FUTURE_SNAPSHOT_TIME']
+])test(name,()=>assert.equal(researchQuoteTimeStatus(quote,snapshot,now).status,expected));
+test('invalid clock rejected',()=>assert.equal(researchQuoteTimeStatus(snap,snap,NaN).status,'INVALID_CLOCK'));
