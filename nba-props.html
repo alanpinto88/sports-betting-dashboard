@@ -577,7 +577,12 @@ return await response.json();
 }
 async function load(){
 const revision=++snapshotRevision;
-propEvents=[];loadedSnapshot=null;
+propEvents=[];loadedSnapshot=null;quoteArchiveCapture='';
+byId("results").replaceChildren();
+byId("mobileProps").replaceChildren();
+byId("captured").textContent="—";
+byId("quota").textContent="—";
+byId("quoteArchiveStatus").textContent="No validated snapshot loaded. Export unavailable.";
 byId('checkRosters').disabled=true;byId('checkSchedule').disabled=true;byId('checkBoxscores').disabled=true;byId('checkLastFive').disabled=true;
 byId('exportReview').disabled=true;byId('exportQuoteArchive').disabled=true;
 byId('saveLocalSnapshot').disabled=true;
