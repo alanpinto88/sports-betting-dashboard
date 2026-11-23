@@ -35,8 +35,8 @@ export function historicalNbaPriceMovements(rows) {
   if(first.americanOdds===last.americanOdds)continue;
   const initial=americanImpliedProbability(first.americanOdds),final=americanImpliedProbability(last.americanOdds);
   results.push(Object.freeze({
-   eventId:first.eventId,playerLabel:first.playerLabel,market:first.market,
-   provider:first.provider,period:first.period,side:first.side,line:first.line,
+   eventId:first.eventId.trim(),playerLabel:first.playerLabel.trim(),market:first.market.trim(),
+   provider:first.provider.trim(),period:first.period.trim(),side:first.side,line:first.line,
    openingRecordedOdds:first.americanOdds,latestRecordedOdds:last.americanOdds,
    firstCapturedAt:first.capturedAt,lastCapturedAt:last.capturedAt,
    observations:dedup.length,impliedProbabilityChangePoints:Number(((final-initial)*100).toFixed(2)),
