@@ -606,6 +606,12 @@ const validSnapshotShape = data.events.every(game =>
   )
 );
 if (!validSnapshotShape) {
+  propEvents=[];
+  loadedSnapshot=null;
+  byId("results").replaceChildren();
+  byId("mobileProps").replaceChildren();
+  byId("saveLocalSnapshot").disabled=true;
+  byId("exportQuoteArchive").disabled=true;
   show("Published NBA snapshot contains malformed game, sportsbook, market, or outcome records.", false);
   byId("auditNote").textContent="Malformed snapshot rejected. No quotes or picks verified.";
   byId("reviewQueue").textContent="Malformed snapshot rejected.";
