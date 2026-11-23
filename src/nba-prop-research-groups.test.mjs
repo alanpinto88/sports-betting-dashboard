@@ -217,3 +217,20 @@ test('group counts only valid UTC timestamps by market versus bookmaker provenan
  assert.equal(g.missingOrInvalidQuoteTimestamps,1);
  assert.equal(g.eligibleForEv,false);
 });
+
+test('missing market-level chronology is explicitly warned about',()=>{
+ const at='2026-11-22T19:00:00Z';
+ const [fallback]=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:at,timestampSource:'bookmaker'}),
+  q({side:'under',capturedAt:at,timestampSource:'bookmaker'})
+ ]);
+ assert.equal(fallback.hasMarketTimestampEvidence,false);
+ assert.match(fallback.timestampEvidenceWarning,/No valid market-level update timestamps/);
+ assert.equal(fallback.eligibleForEv,false);
+ const [market]=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:at,timestampSource:'market'}),
+  q({side:'under',capturedAt:at,timestampSource:'market'})
+ ]);
+ assert.equal(market.hasMarketTimestampEvidence,true);
+ assert.equal(market.timestampEvidenceWarning,null);
+});
