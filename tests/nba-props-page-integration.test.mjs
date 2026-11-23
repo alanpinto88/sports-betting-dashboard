@@ -276,3 +276,12 @@ test('locally stored NBA history ignores malformed records and caps retained sel
   assert.match(source, /Array\.isArray\(item\.events\)/);
   assert.match(source, /\.sort\(\(a,b\)=>Date\.parse\(a\.capture\)-Date\.parse\(b\.capture\)\)\.slice\(-8\)/);
 });
+
+test('NBA local-history selection filters ambiguous or impossible capture timestamps', () => {
+  const start = page.indexOf('function localHistory(){');
+  const end = page.indexOf('function updateLocalSelections(){', start);
+  const source = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(source, /validateQuoteTimestamp\(item\.capture,item\.capture\)/);
+  assert.match(source, /catch\{return false\}/);
+});
