@@ -45,3 +45,13 @@ export function historicalNbaPriceMovements(rows) {
  }
  return results.sort((a,b)=>Math.abs(b.impliedProbabilityChangePoints)-Math.abs(a.impliedProbabilityChangePoints));
 }
+
+// The snapshot capture time is an upper bound on every source quote update.
+// This is chronology validation only, never proof of provider authenticity.
+import {researchQuoteTimeStatus} from './nba-prop-research-freshness.mjs';
+export function historicalNbaMovementsFromSnapshot(rows,snapshotCapturedAt,now=Date.now()) {
+ if(!Array.isArray(rows))return [];
+ return historicalNbaPriceMovements(rows.filter(q=>
+  researchQuoteTimeStatus(q?.capturedAt,snapshotCapturedAt,now).status==='HISTORICAL_RESEARCH'
+ ));
+}
