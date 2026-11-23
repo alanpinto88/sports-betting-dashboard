@@ -55,3 +55,12 @@ test('snapshot capture timestamp requires explicit UTC format', () => {
   assert.match(page, /const captureValue = info\.snapshotCapturedAt/);
   assert.match(page, /Invalid or missing UTC capture timestamp/);
 });
+
+test('raw NBA audit reports missing explicit source record IDs', () => {
+  assert.match(page, /missingSourceRecordIds/);
+  assert.match(page, /missing explicit source record IDs/);
+});
+test('snapshot capture check uses canonical UTC timestamps', () => {
+  assert.match(page, /canonicalCaptureTime/);
+  assert.match(page, /new Date\(captureTime\)\.toISOString\(\)/);
+});
