@@ -393,8 +393,15 @@ if(records.length>1){const early=byId("localEarlier"),late=byId("localLater");if
 byId("compareLocalHistory").disabled=records.length<2;
 }
 function validateQuoteTimestamp(updated,capture){
-const marketTime=Date.parse(String(updated||"")),captureTime=Date.parse(String(capture||""));
-if(!Number.isFinite(marketTime)||!Number.isFinite(captureTime))throw Error("Missing or invalid market/capture timestamp");
+const utc=/^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})(?:\\.(\\d{1,6}))?(Z|\\+00:00)$/;
+const parseUtc=value=>{
+  const match=typeof value==="string"?value.match(utc):null;
+  const time=match?Date.parse(value):NaN;
+  if(!Number.isFinite(time)||new Date(time).toISOString().slice(0,19)!==match[1]||new Date(time).getUTCMilliseconds()!==Number((match[2]||"").padEnd(3,"0").slice(0,3)))return NaN;
+  return time;
+};
+const marketTime=parseUtc(updated),captureTime=parseUtc(capture);
+if(!Number.isFinite(marketTime)||!Number.isFinite(captureTime))throw Error("Missing or invalid explicit UTC market/capture timestamp");
 if(marketTime>captureTime+60000)throw Error("Market timestamp is later than its capture by more than 60 seconds");
 return marketTime;
 }
