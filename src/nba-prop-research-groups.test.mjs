@@ -48,3 +48,16 @@ test('different sportsbook prices are not same-side conflicts',()=>{
  const [g]=groupNbaResearchQuotes([q(),q({provider:'book-b',americanOdds:-120})]);
  assert.equal(g.conflictingSameSidePrices,false);
 });
+
+test('whitespace in identifiers cannot create fake additional sportsbooks or markets',()=>{
+ const groups=groupNbaResearchQuotes([
+  q({eventId:' event-1 ',market:' player_points ',provider:' book-a ',side:'over'}),
+  q({eventId:'event-1',market:'player_points',provider:'book-a',side:'under'})
+ ]);
+ assert.equal(groups.length,1);
+ assert.equal(groups[0].bookCount,1);
+ assert.equal(groups[0].sameBookTwoSided,true);
+});
+test('whitespace-only sportsbook identifiers are rejected',()=>{
+ assert.deepEqual(groupNbaResearchQuotes([q({provider:'  '})]),[]);
+});
