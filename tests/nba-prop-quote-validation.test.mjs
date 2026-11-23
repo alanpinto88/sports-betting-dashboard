@@ -102,3 +102,13 @@ test('zero or negative freshness window fails closed', () => {
   assert.ok(validatePropQuote(quote(), NOW, 0).errors.includes('invalid_validation_clock'));
   assert.ok(validatePropQuote(quote(), NOW, -1).errors.includes('invalid_validation_clock'));
 });
+
+test('impossible February date fails timestamp validation', () => {
+  assert.ok(validatePropQuote(quote({ capturedAt: '2026-02-30T19:59:00.000Z' }), NOW).errors.includes('invalid_timestamp'));
+});
+test('noncanonical fractional UTC timestamp fails closed', () => {
+  assert.ok(validatePropQuote(quote({ capturedAt: '2026-11-22T19:59:00.1Z' }), NOW).errors.includes('invalid_timestamp'));
+});
+test('canonical UTC timestamp without milliseconds remains accepted', () => {
+  assert.equal(validatePropQuote(quote({ capturedAt: '2026-11-22T19:59:00Z' }), NOW).valid, true);
+});
