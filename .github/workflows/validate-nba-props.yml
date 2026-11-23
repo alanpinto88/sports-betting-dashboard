@@ -11,6 +11,8 @@ on:
     paths:
       - 'lib/validate-prop-comparison.mjs'
       - 'lib/validate-prop-comparison.test.mjs'
+      - 'src/nba-prop-quote-validation.mjs'
+      - 'src/nba-prop-quote-validation.test.mjs'
       - '.github/workflows/validate-nba-props.yml'
 permissions:
   contents: read
