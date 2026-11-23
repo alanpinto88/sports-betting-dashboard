@@ -64,3 +64,10 @@ test('snapshot capture check uses canonical UTC timestamps', () => {
   assert.match(page, /canonicalCaptureTime/);
   assert.match(page, /new Date\(captureTime\)\.toISOString\(\)/);
 });
+
+test('raw snapshot audit tolerates null games, books, markets, and outcomes', () => {
+  assert.match(page, /Array\.isArray\(game\?\.bookmakers\)/);
+  assert.match(page, /Array\.isArray\(book\?\.markets\)/);
+  assert.match(page, /String\(market\?\.key \|\| ''\)/);
+  assert.match(page, /rawOutcome && typeof rawOutcome === 'object'/);
+});
