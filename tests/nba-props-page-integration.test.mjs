@@ -306,3 +306,13 @@ test('NBA audit does not turn missing player prop thresholds into zero-point lin
   assert.match(audit, /String\(outcome\.point\)\.trim\(\)===""/);
   assert.match(audit, /\?NaN:Number\(outcome\.point\)/);
 });
+
+test('NBA archive CSV parser strips a UTF-8 BOM before reading the header', () => {
+  const start = page.indexOf('function parseCsv(text){');
+  const end = page.indexOf('function archiveRows(csv){', start);
+  const parser = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(parser, /text\.charCodeAt\(0\)===0xFEFF/);
+  const parse = runInNewContext(parser + '\nparseCsv');
+  assert.deepEqual(Array.from(parse('\uFEFFcapture_utc,market\n2026-11-20T21:14:27Z,player_points')[0]), ['capture_utc', 'market']);
+});
