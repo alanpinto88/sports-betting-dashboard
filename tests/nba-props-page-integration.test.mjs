@@ -478,3 +478,32 @@ test('NBA historical comparison executes stale exclusion and renders only newer 
   assert.equal(byId('archiveCompareResults').children.length, 1);
   assert.match(byId('archiveCompareResults').children[0].textContent, /Test Player/);
 });
+
+test('NBA CSV importer executes identity normalization and duplicate rejection', () => {
+  const timestampStart = page.indexOf('function validateQuoteTimestamp(updated,capture){');
+  const timestampEnd = page.indexOf('function localArchive(record){', timestampStart);
+  const csvStart = page.indexOf('function parseCsv(text){');
+  const csvEnd = page.indexOf('const implied=', csvStart);
+  assert.ok(timestampStart >= 0 && timestampEnd > timestampStart && csvStart >= 0 && csvEnd > csvStart);
+  const archiveRows = runInNewContext(
+    page.slice(timestampStart, timestampEnd) + '\n' +
+    page.slice(csvStart, csvEnd) + '\narchiveRows',
+    { Date, Number, String, Set, Map, JSON, Error }
+  );
+  const d = '2026-11-20T21:14:27Z';
+  const header = 'capture_utc,source_event_id,sportsbook_key,market,player_label_unverified,side,threshold,american_odds,market_updated_utc';
+  const row = (event, book, market, player) =>
+    [d, event, book, market, player, 'Over', '10.5', '-110', d].join(',');
+  const clean = archiveRows(header + '\n' + row('evt', 'book', 'player_points', 'Player'));
+  const padded = archiveRows(header + '\n' + row(' evt ', ' book ', ' player_points ', ' Player '));
+  assert.equal([...clean.quotes.keys()][0], [...padded.quotes.keys()][0]);
+  assert.throws(
+    () => archiveRows(header + '\n' + row('evt', 'book', 'player_points', 'Player') +
+      '\n' + row(' evt ', ' book ', ' player_points ', ' Player ')),
+    /Duplicate selection/
+  );
+  assert.throws(
+    () => archiveRows(header + '\n' + row('evt', 'book', 'totals', 'Player')),
+    /non-player market/
+  );
+});
