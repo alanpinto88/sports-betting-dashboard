@@ -17,7 +17,7 @@ export function normalizeNbaPropOutcomes(snapshot) {
           const line=outcome.point, price=outcome.price;
           if (typeof line!=='number' || !Number.isFinite(line) || line<0 ||
               !Number.isInteger(price) || Math.abs(price)<100) continue;
-          const rawPlayer=outcome.description||outcome.player;
+          const rawPlayer=outcome.description??outcome.player;
           if(typeof rawPlayer!=='string')continue;
           const playerLabel=rawPlayer.trim();
           if (!playerLabel) continue;
