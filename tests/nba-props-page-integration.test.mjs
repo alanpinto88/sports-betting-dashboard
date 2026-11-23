@@ -248,3 +248,12 @@ test('NBA archive importer rejects invalid odds and thresholds rather than silen
   assert.match(importer, /throw Error\("Invalid player quote odds or threshold in archive"\)/);
   assert.ok(!importer.includes('Math.abs(price)<100||!Number.isFinite(line))continue'));
 });
+
+test('NBA archive CSV rejects blank thresholds and scientific-notation numbers', () => {
+  const start = page.indexOf('function archiveRows(csv){');
+  const end = page.indexOf('const implied=', start);
+  const importer = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(importer, /const priceText=r\[cols\.american_odds\]\.trim\(\),lineText=r\[cols\.threshold\]\.trim\(\)/);
+  assert.match(importer, /Number\(priceText\),line=Number\(lineText\)/);
+});
