@@ -33,7 +33,9 @@ export function movementsFromSavedNbaSnapshots(records, now=Date.now()) {
   for(const quote of normalizeNbaPropOutcomes({events:record.events})){
    // A stored capture establishes when the snapshot was saved, not when the bookmaker updated a price.
    // Require an explicit quote-level update timestamp, valid and no later than the capture.
-   if(!validUtc(quote.capturedAt))continue;
+   // A bookmaker-wide update timestamp does not establish when this prop
+   // market changed. Require explicit market-level provenance for movement.
+   if(quote.timestampSource!=='market'||!validUtc(quote.capturedAt))continue;
    const quoteTime=Date.parse(quote.capturedAt);
    if(quoteTime>t||quoteTime>now)continue;
    rows.push(quote);
