@@ -110,3 +110,25 @@ test('different millisecond instants do not establish timestamp alignment',()=>{
  ]);
  assert.equal(g.sameTimestampTwoSided,false);
 });
+
+test('conflicting same-instant over prices cannot form a timestamp-aligned pair',()=>{
+ const capturedAt='2026-11-22T19:00:00Z';
+ const [g]=groupNbaResearchQuotes([
+  q({side:'over',americanOdds:-110,capturedAt}),
+  q({side:'over',americanOdds:-120,capturedAt}),
+  q({side:'under',americanOdds:-110,capturedAt})
+ ]);
+ assert.equal(g.sameBookTwoSided,true);
+ assert.equal(g.conflictingSameSidePrices,true);
+ assert.equal(g.sameTimestampTwoSided,false);
+ assert.equal(g.eligibleForEv,false);
+});
+test('duplicate identical prices still allow a research timestamp-aligned pair',()=>{
+ const capturedAt='2026-11-22T19:00:00Z';
+ const [g]=groupNbaResearchQuotes([
+  q({side:'over',capturedAt}),q({side:'over',capturedAt}),
+  q({side:'under',capturedAt})
+ ]);
+ assert.equal(g.sameTimestampTwoSided,true);
+ assert.equal(g.conflictingSameSidePrices,false);
+});
