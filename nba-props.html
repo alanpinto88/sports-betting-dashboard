@@ -507,7 +507,7 @@ for(const r of rows){
 if(r.length!==header.length)throw Error("Malformed CSV row");
 const capture=r[cols.capture_utc];validateQuoteTimestamp(capture,capture);
 captures.add(capture);
-const side=r[cols.side].toLowerCase();if(!["over","under"].includes(side))continue;
+const side=r[cols.side].trim().toLowerCase();if(!["over","under"].includes(side))throw Error("Unsupported player quote side in archive");
 const priceText=r[cols.american_odds].trim(),lineText=r[cols.threshold].trim();
 if(!/^[+-]?\d+$/.test(priceText)||!/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(lineText))throw Error("Invalid player quote odds or threshold in archive");
 const price=Number(priceText),line=Number(lineText);
