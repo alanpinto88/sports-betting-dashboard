@@ -484,6 +484,7 @@ return rows;
 function archiveRows(csv){
 const rows=parseCsv(csv);if(rows.length<2)throw Error("CSV has no quote rows");
 const header=rows.shift(),required=["capture_utc","source_event_id","sportsbook_key","market","player_label_unverified","side","threshold","american_odds","market_updated_utc"];
+if(new Set(header).size!==header.length)throw Error("CSV has duplicate archive column names");
 const cols=Object.fromEntries(required.map(k=>[k,header.indexOf(k)]));
 if(Object.values(cols).some(i=>i<0))throw Error("CSV missing required archive columns");
 const quotes=new Map(),captures=new Set();
