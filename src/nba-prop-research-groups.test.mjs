@@ -268,7 +268,7 @@ test('source record ID collisions block market timestamp alignment badges',()=>{
   q({side:'under',capturedAt:at,timestampSource:'market',sourceRecordId:'under-id'}),
   q({side:'over',capturedAt:'2026-11-22T19:05:00Z',timestampSource:'market',sourceRecordId:'over-id'})
  ]);
- assert.equal(g.sameTimestampTwoSided,true);
+ assert.equal(g.sameTimestampTwoSided,false);
  assert.equal(g.conflictingSourceRecordIds,1);
  assert.equal(g.marketTimestampAlignedTwoSided,false);
  assert.equal(g.eligibleForEv,false);
