@@ -719,12 +719,13 @@ window.addEventListener('evsports:nba-snapshot-loaded', event => {
     ? 'Historical snapshot — not current odds. '
     : '';
   const captureValue = info.snapshotCapturedAt;
-  const captureTime = typeof captureValue === 'string' &&
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(captureValue)
-    ? Date.parse(captureValue) : NaN;
+  const captureMatch = typeof captureValue === 'string'
+    ? captureValue.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,6}))?(Z|\+00:00)$/)
+    : null;
+  const captureTime = captureMatch ? Date.parse(captureValue) : NaN;
   const canonicalCaptureTime = Number.isFinite(captureTime) &&
-    (new Date(captureTime).toISOString() === captureValue ||
-      new Date(captureTime).toISOString().replace(/\.000Z$/, 'Z') === captureValue);
+    new Date(captureTime).toISOString().slice(0, 19) === captureMatch[1] &&
+    new Date(captureTime).getUTCMilliseconds() === Number((captureMatch[2] || '').padEnd(3, '0').slice(0, 3));
   const events = Array.isArray(info.events) ? info.events : [];
   let missingPlayerLabels = 0, invalidPrices = 0, missingMarketTimestamps = 0, postCaptureTimestamps = 0, missingSourceRecordIds = 0;
   for (const game of events) {
