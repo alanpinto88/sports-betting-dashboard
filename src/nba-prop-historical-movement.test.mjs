@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {historicalNbaPriceMovements,historicalNbaMovementsFromSnapshot,americanImpliedProbability} from './nba-prop-historical-movement.mjs';
-const base={eventId:'e1',playerLabel:'Example Player',market:'player_points',period:'unverified',provider:'book-a',side:'over',line:24.5,americanOdds:-110,capturedAt:'2026-11-22T19:00:00Z',status:'RESEARCH_ONLY',eligibleForEv:false};
+const base={eventId:'e1',playerLabel:'Example Player',market:'player_points',period:'unverified',provider:'book-a',side:'over',line:24.5,americanOdds:-110,capturedAt:'2026-11-22T19:00:00Z',timestampSource:'market',status:'RESEARCH_ONLY',eligibleForEv:false};
 const q=(change={})=>({...base,...change});
 test('probability conversion handles positive and negative prices',()=>{assert.equal(americanImpliedProbability(100),.5);assert.equal(americanImpliedProbability(-100),.5);assert.equal(americanImpliedProbability(-90),null)});
 test('two ordered records produce historical change only',()=>{
@@ -94,4 +94,19 @@ test('historical movement matches whitespace-normalized source identifiers',()=>
  assert.equal(result[0].market,'player_points');
  assert.equal(result[0].period,'unverified');
  assert.equal(result[0].provider,'book-a');
+});
+
+test('loaded snapshot movement rejects bookmaker-wide timestamp fallbacks',()=>{
+ const rows=[
+  q({timestampSource:'bookmaker'}),
+  q({capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120,timestampSource:'bookmaker'})
+ ];
+ assert.deepEqual(historicalNbaMovementsFromSnapshot(rows,'2026-11-22T19:06:00Z',Date.parse('2026-11-22T20:00:00Z')),[]);
+});
+test('loaded snapshot movement requires market provenance for both endpoints',()=>{
+ const rows=[
+  q({timestampSource:'market'}),
+  q({capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120,timestampSource:'bookmaker'})
+ ];
+ assert.deepEqual(historicalNbaMovementsFromSnapshot(rows,'2026-11-22T19:06:00Z',Date.parse('2026-11-22T20:00:00Z')),[]);
 });
