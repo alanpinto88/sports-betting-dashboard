@@ -9,6 +9,7 @@ export function groupNbaResearchQuotes(rows) {
         typeof q.market!=='string' || !q.market ||
         typeof q.period!=='string' || !q.period.trim() ||
         !Number.isFinite(q.line) || q.line<0 ||
+        !Number.isInteger(q.americanOdds) || Math.abs(q.americanOdds)<100 ||
         !['over','under'].includes(q.side) ||
         typeof q.provider!=='string' || !q.provider) continue;
     const key=JSON.stringify([q.eventId,q.playerLabel.trim().toLowerCase(),q.market,q.period,q.line]);
@@ -18,8 +19,14 @@ export function groupNbaResearchQuotes(rows) {
   return [...groups.values()].map(g=>{
     const books=new Set(g.quotes.map(q=>q.provider));
     const sides=new Set(g.quotes.map(q=>q.side));
+    const bookSides=new Map();
+    for(const q of g.quotes){
+      if(!bookSides.has(q.provider))bookSides.set(q.provider,new Set());
+      bookSides.get(q.provider).add(q.side);
+    }
+    const sameBookTwoSided=[...bookSides.values()].some(s=>s.has('over')&&s.has('under'));
     return Object.freeze({...g,quotes:Object.freeze(g.quotes.slice()),bookCount:books.size,
-      hasBothSides:sides.has('over')&&sides.has('under'),
+      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,
       warning:'Player-event identity, provider authenticity, and price validity unverified; not an EV comparison.'});
   }).sort((a,b)=>b.bookCount-a.bookCount||a.playerLabel.localeCompare(b.playerLabel));
 }
