@@ -85,3 +85,7 @@ test('NBA research cards expose source record IDs without merging distinct recor
  assert.match(html,/q\.sourceRecordId\?'record ID: '\+q\.sourceRecordId:'source record ID missing'/);
  assert.match(html,/q\.capturedAt,q\.timestampSource,q\.sourceRecordId\]/);
 });
+
+test('NBA research cards disclose contradictory source record ID reuse',()=>{
+ assert.match(html,/group\.conflictingSourceRecordIds\+' conflicting source record ID\(s\)'/);
+});
