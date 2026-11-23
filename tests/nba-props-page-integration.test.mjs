@@ -343,3 +343,13 @@ test('locally saved NBA quotes reject unsupported sides rather than skipping the
   assert.match(source, /Saved player quote has unsupported side/);
   assert.match(source, /String\(o\.name\|\|""\)\.trim\(\)\.toLowerCase\(\)/);
 });
+
+test('saved NBA player quotes require decimal thresholds and integer American odds', () => {
+  const start = page.indexOf('function localArchive(record){');
+  const end = page.indexOf('function compareLocalHistory(){', start);
+  const source = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(source, /lineText=String\(o\.point\?\?""\)\.trim\(\)/);
+  assert.match(source, /priceText=String\(o\.price\?\?""\)\.trim\(\)/);
+  assert.match(source, /price===0\|\|Math\.abs\(price\)<100/);
+});
