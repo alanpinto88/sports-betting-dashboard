@@ -423,3 +423,13 @@ test('locally saved NBA archive comparisons normalize event, book and market ide
   assert.match(importer, /marketKey=String\(market\.key\)\.trim\(\)/);
   assert.match(importer, /JSON\.stringify\(\[eventId,bookKey,marketKey,player\.toLowerCase\(\),side,line\]\)/);
 });
+
+test('NBA local history filters duplicate capture timestamps', () => {
+  const start = page.indexOf('function localHistory(){');
+  const end = page.indexOf('function updateLocalSelections(){', start);
+  const source = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(source, /const captures=new Set\(\)/);
+  assert.match(source, /captures\.has\(item\.capture\)/);
+  assert.match(source, /captures\.add\(item\.capture\)/);
+});
