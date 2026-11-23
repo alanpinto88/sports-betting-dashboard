@@ -94,3 +94,11 @@ test('two-way market cannot reuse one source record for both sides', () => {
   assert.ok(result.errors.includes('duplicate_source_record_id'));
   assert.equal(result.valid, false);
 });
+
+test('negative validation clock fails closed', () => {
+  assert.ok(validatePropQuote(quote(), -1).errors.includes('invalid_validation_clock'));
+});
+test('zero or negative freshness window fails closed', () => {
+  assert.ok(validatePropQuote(quote(), NOW, 0).errors.includes('invalid_validation_clock'));
+  assert.ok(validatePropQuote(quote(), NOW, -1).errors.includes('invalid_validation_clock'));
+});
