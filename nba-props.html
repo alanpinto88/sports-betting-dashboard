@@ -666,7 +666,14 @@ window.addEventListener('evsports:nba-snapshot-loaded', event => {
   const info = event.detail || {};
   const count = Number.isInteger(info.rawQuoteCount) && info.rawQuoteCount >= 0 ? info.rawQuoteCount : 0;
   gate.textContent = '0 provider-verified NBA props · EV recommendations disabled';
-  detail.textContent = count + ' raw quote(s) observed in the published snapshot. Structural comparison functions loaded; provider authentication and player-event identity have not been established.';
+  const age = Number(info.snapshotAgeMinutes);
+  const ageText = Number.isFinite(age) && age >= 0
+    ? 'Snapshot age: ' + Math.floor(age) + ' minute(s). '
+    : 'Snapshot capture time missing, invalid, or future-dated. ';
+  const ageWarning = Number.isFinite(age) && age > 5
+    ? 'Historical snapshot — not current odds. '
+    : '';
+  detail.textContent = count + ' raw quote(s) observed. ' + ageText + ageWarning + 'Provider authentication, per-quote freshness, and player-event identity remain unverified. No picks or EV predictions.';
 });
 window.addEventListener('evsports:nba-snapshot-unavailable', () => {
   gate.textContent = 'NBA snapshot unavailable · EV recommendations disabled';
