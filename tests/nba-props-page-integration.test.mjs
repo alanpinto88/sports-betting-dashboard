@@ -175,3 +175,13 @@ test('NBA quote archive CSV decimal detection uses a real decimal-point regex', 
   assert.ok(exporter.includes(String.raw`(?:\.[0-9]+)?`));
   assert.ok(!exporter.includes(String.raw`(?:\\.[0-9]+)?`));
 });
+
+test('NBA freshness computation uses constant memory for market timestamps', () => {
+  const start = page.indexOf('function renderFreshness(data){');
+  const end = page.indexOf('const historyKey=', start);
+  const freshness = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(freshness, /let latestUpdate=-Infinity/);
+  assert.match(freshness, /Number\.isFinite\(t\)&&t>latestUpdate/);
+  assert.ok(!freshness.includes('Math.max(...updates)'));
+});
