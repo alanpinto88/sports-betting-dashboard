@@ -4,11 +4,11 @@ export function normalizeNbaPropOutcomes(snapshot) {
   if (!snapshot || !Array.isArray(snapshot.events)) return [];
   const rows=[];
   for (const event of snapshot.events) {
-    if (!event || typeof event !== 'object' || !String(event.id||'').trim()) continue;
+    if (!event || typeof event !== 'object' || typeof event.id!=='string' || !event.id.trim()) continue;
     for (const book of Array.isArray(event.bookmakers)?event.bookmakers:[]) {
-      if (!book || !String(book.key||'').trim()) continue;
+      if (!book || typeof book.key!=='string' || !book.key.trim()) continue;
       for (const market of Array.isArray(book.markets)?book.markets:[]) {
-        if (!market || !/^player_/.test(String(market.key||''))) continue;
+        if (!market || typeof market.key!=='string' || !/^player_/.test(market.key)) continue;
         for (const outcome of Array.isArray(market.outcomes)?market.outcomes:[]) {
           if (!outcome || typeof outcome !== 'object') continue;
           const side=String(outcome.name||'').toLowerCase();
