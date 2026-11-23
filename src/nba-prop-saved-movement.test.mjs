@@ -123,3 +123,22 @@ test('negative analysis clock cannot validate saved NBA captures',()=>{
   record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120)
  ],-1),[]);
 });
+
+test('bookmaker-wide timestamps cannot fabricate individual market movement',()=>{
+ const a=record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110);
+ const b=record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120);
+ for(const item of [a,b]){
+  const book=item.events[0].bookmakers[0];
+  book.last_update=book.markets[0].last_update;
+  delete book.markets[0].last_update;
+ }
+ assert.deepEqual(movementsFromSavedNbaSnapshots([a,b],now),[]);
+});
+test('mixed market-level and bookmaker-level quote times cannot establish movement',()=>{
+ const a=record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110);
+ const b=record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120);
+ const book=b.events[0].bookmakers[0];
+ book.last_update=book.markets[0].last_update;
+ delete book.markets[0].last_update;
+ assert.deepEqual(movementsFromSavedNbaSnapshots([a,b],now),[]);
+});
