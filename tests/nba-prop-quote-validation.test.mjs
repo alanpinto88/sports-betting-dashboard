@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePropQuote, comparePropQuotes } from '../src/nba-prop-quote-validation.mjs';
+import { validatePropQuote, comparePropQuotes, validateTwoWayPropMarket } from '../src/nba-prop-quote-validation.mjs';
 
 const NOW = Date.parse('2026-11-22T20:00:00.000Z');
 const quote = (changes = {}) => ({
@@ -50,4 +50,20 @@ test('unverified quotes still expose market mismatches for diagnosis', () => {
 });
 test('invalid validation clock fails closed', () => {
   assert.ok(validatePropQuote(quote(), Number.NaN).errors.includes('invalid_validation_clock'));
+});
+
+test('matching opposite-side quotes pass two-way structural validation', () => {
+  assert.equal(validateTwoWayPropMarket(quote(), quote({ side: 'under' }), NOW).valid, true);
+});
+test('same-side quotes cannot form a two-way market', () => {
+  assert.ok(validateTwoWayPropMarket(quote(), quote(), NOW).errors.includes('invalid_under_side'));
+});
+test('different sportsbook quotes cannot form one two-way market', () => {
+  assert.ok(validateTwoWayPropMarket(quote(), quote({ side: 'under', provider: 'other-feed' }), NOW).errors.includes('mismatch_provider'));
+});
+test('different lines cannot form one two-way market', () => {
+  assert.ok(validateTwoWayPropMarket(quote(), quote({ side: 'under', line: 25.5 }), NOW).errors.includes('mismatch_line'));
+});
+test('unverified quote blocks two-way market validation', () => {
+  assert.ok(validateTwoWayPropMarket(quote({ providerVerified: false }), quote({ side: 'under' }), NOW).errors.includes('over_provider_unverified'));
 });
