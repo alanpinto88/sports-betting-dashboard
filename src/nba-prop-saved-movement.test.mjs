@@ -23,3 +23,16 @@ test('future capture is excluded',()=>assert.deepEqual(movementsFromSavedNbaSnap
  record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110),
  record('2026-11-22T20:05:00Z','2026-11-22T19:14:00Z',-120)
 ],now),[]));
+
+test('rejects noncanonical UTC capture timestamps',()=>assert.deepEqual(movementsFromSavedNbaSnapshots([
+ record('2026-11-22T19:05:00+00:00','2026-11-22T19:04:00Z',-110),
+ record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120)
+],now),[]));
+test('rejects noncanonical UTC quote timestamps',()=>assert.deepEqual(movementsFromSavedNbaSnapshots([
+ record('2026-11-22T19:05:00Z','2026-11-22T19:04:00+00:00',-110),
+ record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120)
+],now),[]));
+test('duplicate capture timestamps do not fabricate movement',()=>assert.deepEqual(movementsFromSavedNbaSnapshots([
+ record('2026-11-22T19:15:00Z','2026-11-22T19:04:00Z',-110),
+ record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120)
+],now),[]));
