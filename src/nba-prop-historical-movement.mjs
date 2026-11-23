@@ -31,6 +31,8 @@ export function historicalNbaPriceMovements(rows) {
   }
   if(dedup.length<2||dedup.some(x=>x.conflict))continue;
   const first=dedup[0].q,last=dedup[dedup.length-1].q;
+  // Identical recorded prices do not constitute a price-movement event.
+  if(first.americanOdds===last.americanOdds)continue;
   const initial=americanImpliedProbability(first.americanOdds),final=americanImpliedProbability(last.americanOdds);
   results.push(Object.freeze({
    eventId:first.eventId,playerLabel:first.playerLabel,market:first.market,
