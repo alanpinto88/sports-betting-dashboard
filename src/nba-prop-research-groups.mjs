@@ -25,8 +25,17 @@ export function groupNbaResearchQuotes(rows) {
       bookSides.get(q.provider).add(q.side);
     }
     const sameBookTwoSided=[...bookSides.values()].some(s=>s.has('over')&&s.has('under'));
+    // Multiple prices for the same provider/side in one research group need
+    // chronology checks; never silently treat them as one authoritative quote.
+    const seenPrices=new Map();
+    let conflictingSameSidePrices=false;
+    for(const q of g.quotes){
+      const key=JSON.stringify([q.provider,q.side]);
+      if(seenPrices.has(key)&&seenPrices.get(key)!==q.americanOdds)conflictingSameSidePrices=true;
+      else if(!seenPrices.has(key))seenPrices.set(key,q.americanOdds);
+    }
     return Object.freeze({...g,quotes:Object.freeze(g.quotes.slice()),bookCount:books.size,
-      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,
+      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,conflictingSameSidePrices,
       warning:'Player-event identity, provider authenticity, and price validity unverified; not an EV comparison.'});
   }).sort((a,b)=>b.bookCount-a.bookCount||a.playerLabel.localeCompare(b.playerLabel));
 }
