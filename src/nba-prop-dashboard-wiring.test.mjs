@@ -40,3 +40,7 @@ test('NBA comparison cards show market period and same-book sides',()=>{
  assert.match(html,/group\.playerLabel\+' · '\+group\.market\+' · '\+group\.period/);
  assert.match(html,/group\.sameBookTwoSided\?'both sides at same sportsbook'/);
 });
+
+test('NBA research cards warn about conflicting same-side prices',()=>{
+ assert.match(html,/group\.conflictingSameSidePrices\?' · conflicting same-side prices; review timestamps'/);
+});
