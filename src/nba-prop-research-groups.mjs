@@ -28,10 +28,17 @@ export function groupNbaResearchQuotes(rows) {
     // A pair from one sportsbook is not necessarily a simultaneous market.
     // Only mark timestamp alignment when both sides share an explicit timestamp.
     const timedBookSides=new Map();
+    let missingOrInvalidQuoteTimestamps=0;
     for(const q of g.quotes){
-      if(typeof q.capturedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(q.capturedAt))continue;
+      if(typeof q.capturedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(q.capturedAt)){
+        missingOrInvalidQuoteTimestamps++;
+        continue;
+      }
       const timestamp=Date.parse(q.capturedAt);
-      if(!Number.isFinite(timestamp)||![new Date(timestamp).toISOString(),new Date(timestamp).toISOString().replace(/\.000Z$/,'Z')].includes(q.capturedAt))continue;
+      if(!Number.isFinite(timestamp)||![new Date(timestamp).toISOString(),new Date(timestamp).toISOString().replace(/\.000Z$/,'Z')].includes(q.capturedAt)){
+        missingOrInvalidQuoteTimestamps++;
+        continue;
+      }
       const key=JSON.stringify([q.provider.trim(),timestamp]);
       if(!timedBookSides.has(key))timedBookSides.set(key,{prices:new Map(),conflict:false});
       const pair=timedBookSides.get(key);
@@ -50,7 +57,7 @@ export function groupNbaResearchQuotes(rows) {
       else if(!seenPrices.has(key))seenPrices.set(key,q.americanOdds);
     }
     return Object.freeze({...g,quotes:Object.freeze(g.quotes.slice()),bookCount:books.size,
-      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,sameTimestampTwoSided,sameTimestampPriceConflict,conflictingSameSidePrices,
+      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,sameTimestampTwoSided,sameTimestampPriceConflict,missingOrInvalidQuoteTimestamps,conflictingSameSidePrices,
       warning:'Player-event identity, provider authenticity, and price validity unverified; not an EV comparison.'});
   }).sort((a,b)=>b.bookCount-a.bookCount||a.playerLabel.localeCompare(b.playerLabel));
 }
