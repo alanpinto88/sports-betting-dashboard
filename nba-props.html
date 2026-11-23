@@ -803,6 +803,7 @@ import {normalizeNbaPropOutcomes} from './src/nba-prop-research-normalizer.mjs';
 import {groupNbaResearchQuotes} from './src/nba-prop-research-groups.mjs';
 import {researchQuoteTimeStatus} from './src/nba-prop-research-freshness.mjs';
 import {historicalNbaPriceMovements} from './src/nba-prop-historical-movement.mjs';
+import {movementsFromSavedNbaSnapshots} from './src/nba-prop-saved-movement.mjs';
 const status=document.getElementById('nbaNormalizedStatus');
 const body=document.getElementById('nbaNormalizedRows');
 const limit=document.getElementById('nbaNormalizedLimit');
@@ -846,10 +847,16 @@ function showRows(){
  }
  if(!groups.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='No matching grouped research quotes.';container.append(empty);}
  document.getElementById('nbaResearchGroupLimit').textContent='Showing '+Math.min(groups.length,20)+' of '+groups.length+' research groups. No verified EV.';
- const movements=historicalNbaPriceMovements(matches);
+ let savedMovements=[];
+ try {
+  const saved=JSON.parse(localStorage.getItem('evsports-nba-local-history-v1')||'[]');
+  savedMovements=movementsFromSavedNbaSnapshots(saved).filter(m=>
+   (!player||m.playerLabel.toLowerCase().includes(player))&&(!market||m.market===market)&&(!book||m.provider.toLowerCase().includes(book)));
+ }catch{savedMovements=[];}
+ const movements=savedMovements.length?savedMovements:historicalNbaPriceMovements(matches);
  const movementRows=document.getElementById('nbaMovementRows');movementRows.replaceChildren();
  document.getElementById('nbaMovementStatus').textContent=movements.length
- ? movements.length+' historical movement series recorded. Not live, not sharp-money evidence.'
+ ? movements.length+' historical movement series recorded ('+(savedMovements.length?'saved device captures':'loaded snapshot')+'). Not live, not sharp-money evidence.'
  : 'No valid historical price-movement series in the loaded snapshot. Two distinct timestamps for the exact same market are required.';
  for(const m of movements.slice(0,15)){
   const card=document.createElement('div');card.className='stat';
@@ -876,5 +883,6 @@ window.addEventListener('evsports:nba-snapshot-unavailable',()=>{
  status.dataset.researchQuoteCount='0';showRows();
 });
 for(const id of ['player','market','book'])input(id).addEventListener('input',showRows);
+for(const id of ['saveLocalSnapshot','clearLocalSnapshots'])input(id).addEventListener('click',()=>queueMicrotask(showRows));
 showRows();
 </script></body></html>
