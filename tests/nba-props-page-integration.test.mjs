@@ -185,3 +185,13 @@ test('NBA freshness computation uses constant memory for market timestamps', () 
   assert.match(freshness, /Number\.isFinite\(t\)&&t>latestUpdate/);
   assert.ok(!freshness.includes('Math.max(...updates)'));
 });
+
+test('historical odds comparisons require explicit canonical UTC timestamps', () => {
+  const start = page.indexOf('function validateQuoteTimestamp(updated,capture){');
+  const end = page.indexOf('function localArchive(record)', start);
+  const validator = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(validator, /const parseUtc=value=>/);
+  assert.match(validator, /new Date\(time\)\.toISOString\(\)\.slice\(0,19\)/);
+  assert.match(validator, /Missing or invalid explicit UTC market\/capture timestamp/);
+});
