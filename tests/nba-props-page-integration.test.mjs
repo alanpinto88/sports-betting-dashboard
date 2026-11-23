@@ -91,3 +91,11 @@ test('snapshot refresh clears stale quote displays and export metadata before fe
   assert.match(refresh, /byId\("exportQuoteArchive"\)\.disabled=true/);
   assert.match(refresh, /evsports:nba-snapshot-unavailable/);
 });
+
+test('snapshot timestamp is canonical and not future dated before enabling exports', () => {
+  const validation = page.indexOf('if (!canonicalSnapshotTime || parsedSnapshotTime > Date.now() + 30_000)');
+  const exportEnabled = page.indexOf('byId("saveLocalSnapshot").disabled=false;', validation);
+  assert.ok(validation >= 0 && exportEnabled > validation);
+  assert.match(page, /Invalid snapshot capture time\. No quotes verified\./);
+  assert.match(page, /const parsedSnapshotTime = typeof snapshotCapturedAt === 'string'/);
+});
