@@ -518,3 +518,37 @@ test('NBA local snapshot saving validates UTC timestamps and quote integrity bef
   assert.ok(source.indexOf('localArchive({capture,events:loadedSnapshot.events})') <
     source.indexOf('localStorage.setItem(historyKey,'));
 });
+
+test('NBA local snapshot save executes fail-closed checks and writes only valid unique captures', () => {
+  const start = page.indexOf('function saveLocalHistory(){');
+  const end = page.indexOf('function clearLocalHistory(){', start);
+  assert.ok(start >= 0 && end > start);
+  const writes = [], messages = [];
+  const capture = '2026-11-20T21:14:27Z';
+  const storage = { setItem: (key, value) => writes.push([key, JSON.parse(value)]) };
+  const state = {
+    loadedSnapshot: null, localStorage: storage, historyKey: 'nba-history',
+    showLocalHistory: msg => messages.push(msg), localHistory: () => [],
+    validateQuoteTimestamp: (value) => {
+      if (value !== capture) throw Error('Invalid UTC capture');
+    },
+    localArchive: ({ events }) => {
+      if (!events.length) throw Error('Invalid player quotes');
+    },
+    Date, String, JSON, Error
+  };
+  const save = runInNewContext(page.slice(start, end) + '\nsaveLocalHistory', state);
+  state.loadedSnapshot = { captured_at: 'invalid', events: [{}] };
+  save();
+  state.loadedSnapshot = { captured_at: capture, events: [] };
+  save();
+  assert.equal(writes.length, 0);
+  assert.match(messages[0], /Invalid UTC capture/);
+  assert.match(messages[1], /Invalid player quotes/);
+  state.loadedSnapshot = { captured_at: capture, source: 'test', events: [{}] };
+  save();
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0][0], 'nba-history');
+  assert.equal(writes[0][1][0].capture, capture);
+  assert.equal(writes[0][1][0].events.length, 1);
+});
