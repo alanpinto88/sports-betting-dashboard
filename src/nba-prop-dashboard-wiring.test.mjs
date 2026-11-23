@@ -46,3 +46,8 @@ test('NBA research cards warn about conflicting same-side prices',()=>{
  assert.match(html,/group\.sameTimestampPriceConflict\?' · conflicting prices at identical timestamp'/);
  assert.match(html,/group\.conflictingSameSidePrices\?' · same-side prices differ across records; review timestamps'/);
 });
+
+test('NBA comparison cards disclose missing or invalid source timestamps',()=>{
+ assert.match(html,/group\.missingOrInvalidQuoteTimestamps\?' · '/);
+ assert.match(html,/quote\(s\) missing valid UTC time/);
+});
