@@ -316,3 +316,12 @@ test('NBA archive CSV parser strips a UTF-8 BOM before reading the header', () =
   const parse = runInNewContext(parser + '\nparseCsv');
   assert.deepEqual(Array.from(parse('\uFEFFcapture_utc,market\n2026-11-20T21:14:27Z,player_points')[0]), ['capture_utc', 'market']);
 });
+
+test('NBA CSV parser rejects bare carriage returns but permits CRLF and quoted multiline fields', () => {
+  const start = page.indexOf('function parseCsv(text){');
+  const end = page.indexOf('function archiveRows(csv){', start);
+  const parser = runInNewContext(page.slice(start, end) + '\nparseCsv');
+  assert.throws(() => parser('capture_utc,market\r2026-11-20,player_points'), /Bare carriage return/);
+  assert.equal(parser('capture_utc,market\r\n2026-11-20,player_points').length, 2);
+  assert.equal(parser('capture_utc,market\n"2026-11-20\rinside",player_points')[1][0], '2026-11-20\rinside');
+});
