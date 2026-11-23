@@ -856,7 +856,10 @@ function showRows(){
   savedMovements=movementsFromSavedNbaSnapshots(saved).filter(m=>
    (!player||m.playerLabel.toLowerCase().includes(player))&&(!market||m.market===market)&&(!book||m.provider.toLowerCase().includes(book)));
  }catch{savedMovements=[];}
- const currentMovements=historicalNbaPriceMovements(matches);
+ // A quote cannot establish historical movement if its timestamp is unverified,
+ // future-dated, or later than the containing published snapshot.
+ const timeValidRows=matches.filter(q=>researchQuoteTimeStatus(q.capturedAt,snapshotCapturedAt).status==='HISTORICAL_RESEARCH');
+ const currentMovements=historicalNbaPriceMovements(timeValidRows);
  const movements=[
   ...savedMovements.map(m=>({...m,historySource:'Saved device captures'})),
   ...currentMovements.map(m=>({...m,historySource:'Current loaded snapshot'}))
