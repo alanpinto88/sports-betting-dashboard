@@ -38,7 +38,8 @@ test('historical movement cards explicitly disclose the betting period',()=>{
 
 test('NBA comparison cards show market period and same-book sides',()=>{
  assert.match(html,/group\.playerLabel\+' · '\+group\.market\+' · '\+group\.period/);
- assert.match(html,/group\.sameBookTwoSided\?'both sides at same sportsbook'/);
+ assert.match(html,/group\.sameTimestampTwoSided\?'both sides share a recorded timestamp \(unverified\)'/);
+ assert.match(html,/group\.sameBookTwoSided\?'both sides at same sportsbook; timing unconfirmed'/);
 });
 
 test('NBA research cards warn about conflicting same-side prices',()=>{
