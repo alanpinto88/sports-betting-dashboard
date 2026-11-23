@@ -209,3 +209,13 @@ test('historical UTC validation executes correctly for real capture and invalid 
   assert.throws(() => validate('2026-02-30T21:14:27Z', capture), /explicit UTC/);
   assert.throws(() => validate('2026-11-20T21:16:27Z', capture), /later than its capture/);
 });
+
+test('archive CSV validates capture timestamps even when selection side is skipped', () => {
+  const start = page.indexOf('function archiveRows(csv){');
+  const end = page.indexOf('const implied=', start);
+  const importer = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  const captureCheck = importer.indexOf('validateQuoteTimestamp(capture,capture)');
+  const sideSkip = importer.indexOf('if(!["over","under"].includes(side))continue');
+  assert.ok(captureCheck >= 0 && sideSkip > captureCheck);
+});
