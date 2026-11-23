@@ -141,3 +141,20 @@ test('CSV export guards absent snapshot and escapes whitespace-prefixed formulas
   assert.ok(exporter.includes(String.raw`/^\\s*[=+@-]/`) === false, 'must not use a literal-backslash whitespace class');
   assert.ok(exporter.includes(String.raw`/^\s*[=+@-]/`), 'must match actual leading whitespace');
 });
+
+test('identity review CSV escapes leading-whitespace formulas', () => {
+  const start = page.indexOf('function exportReviewCsv(){');
+  const end = page.indexOf('async function checkSourceRosters()', start);
+  const exporter = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.ok(exporter.includes(String.raw`/^\s*[=+@-]/`));
+  assert.ok(!exporter.includes(String.raw`/^[=+@\\-\\t\\r]/`));
+});
+test('raw quote CSV includes an explicit source record ID column', () => {
+  const start = page.indexOf('function exportQuoteArchive(){');
+  const end = page.indexOf('function parseCsv(text)', start);
+  const exporter = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(exporter, /"source_record_id","verification_status"/);
+  assert.match(exporter, /outcome\.source_record_id\|\|""/);
+});
