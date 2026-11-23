@@ -99,3 +99,27 @@ test('three conflicting captures at one timestamp fail closed without throwing',
  const later=record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120);
  assert.deepEqual(movementsFromSavedNbaSnapshots([a,b,c,later],now),[]);
 });
+
+test('cyclic saved snapshot does not crash or fabricate price movement',()=>{
+ const cyclic=record('2026-11-22T19:10:00Z','2026-11-22T19:09:00Z',-130);
+ cyclic.events[0].cycle=cyclic.events[0];
+ assert.doesNotThrow(()=>movementsFromSavedNbaSnapshots([
+  record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110),
+  cyclic,
+  record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120)
+ ],now));
+ const result=movementsFromSavedNbaSnapshots([
+  record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110),
+  cyclic,
+  record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120)
+ ],now);
+ assert.equal(result.length,1);
+ assert.equal(result[0].openingRecordedOdds,-110);
+ assert.equal(result[0].latestRecordedOdds,-120);
+});
+test('negative analysis clock cannot validate saved NBA captures',()=>{
+ assert.deepEqual(movementsFromSavedNbaSnapshots([
+  record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110),
+  record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120)
+ ],-1),[]);
+});
