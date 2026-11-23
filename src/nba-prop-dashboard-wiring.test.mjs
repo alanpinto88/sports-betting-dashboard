@@ -35,3 +35,8 @@ test('every inline dashboard script parses as JavaScript',()=>{
 test('historical movement cards explicitly disclose the betting period',()=>{
  assert.match(html,/Period: '\+m\.period/);
 });
+
+test('NBA comparison cards show market period and same-book sides',()=>{
+ assert.match(html,/group\.playerLabel\+' · '\+group\.market\+' · '\+group\.period/);
+ assert.match(html,/group\.sameBookTwoSided\?'both sides at same sportsbook'/);
+});
