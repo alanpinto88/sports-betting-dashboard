@@ -489,7 +489,7 @@ if(Object.values(cols).some(i=>i<0))throw Error("CSV missing required archive co
 const quotes=new Map(),captures=new Set();
 for(const r of rows){
 if(r.length!==header.length)throw Error("Malformed CSV row");
-const capture=r[cols.capture_utc];if(!Number.isFinite(Date.parse(capture)))throw Error("Invalid capture timestamp");
+const capture=r[cols.capture_utc];validateQuoteTimestamp(capture,capture);
 captures.add(capture);
 const side=r[cols.side].toLowerCase();if(!["over","under"].includes(side))continue;
 const price=Number(r[cols.american_odds]),line=Number(r[cols.threshold]);
