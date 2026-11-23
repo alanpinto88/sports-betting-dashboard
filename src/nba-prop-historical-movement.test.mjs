@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {historicalNbaPriceMovements,historicalNbaMovementsFromSnapshot,americanImpliedProbability} from './nba-prop-historical-movement.mjs';
 const base={eventId:'e1',playerLabel:'Example Player',market:'player_points',period:'unverified',provider:'book-a',side:'over',line:24.5,americanOdds:-110,capturedAt:'2026-11-22T19:00:00Z',timestampSource:'market',status:'RESEARCH_ONLY',eligibleForEv:false};
-const q=(change={})=>({...base,...change});
+const q=(change={})=>{const row={...base,...change};return {sourceRecordId:'record-'+row.capturedAt,...row};};
 test('probability conversion handles positive and negative prices',()=>{assert.equal(americanImpliedProbability(100),.5);assert.equal(americanImpliedProbability(-100),.5);assert.equal(americanImpliedProbability(-90),null)});
 test('two ordered records produce historical change only',()=>{
  const result=historicalNbaPriceMovements([q({capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120}),q()]);
@@ -150,4 +150,16 @@ test('historical movement reports source ID coverage without implying verificati
  assert.equal(result[0].sourceRecordIdsPresent,1);
  assert.equal(result[0].eligibleForEv,false);
  assert.equal(result[0].sharpMoneyVerified,false);
+});
+
+test('historical movement rejects endpoints without independently traceable source IDs',()=>{
+ const first=q({sourceRecordId:null});
+ const second=q({capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120});
+ assert.deepEqual(historicalNbaPriceMovements([first,second]),[]);
+ assert.deepEqual(historicalNbaPriceMovements([q(),{...second,sourceRecordId:'  '}]),[]);
+});
+test('historical movement rejects reused endpoint IDs even if prices differ',()=>{
+ const first=q({sourceRecordId:'shared'});
+ const second=q({sourceRecordId:'shared',capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120});
+ assert.deepEqual(historicalNbaPriceMovements([first,second]),[]);
 });
