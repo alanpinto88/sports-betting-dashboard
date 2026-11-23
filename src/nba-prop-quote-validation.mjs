@@ -7,8 +7,8 @@ export function validatePropQuote(q, now = Date.now(), maxAgeMs = 5 * 60_000) {
     if (typeof q[k] !== 'string' || !q[k].trim()) errors.push('missing_' + k);
   if (!['over','under'].includes(q.side)) errors.push('invalid_side');
   if (typeof q.line !== 'number' || !Number.isFinite(q.line) || q.line < 0) errors.push('invalid_line');
-  if (!Number.isInteger(q.americanOdds) || (q.americanOdds > -100 && q.americanOdds < 100)) errors.push('invalid_odds');
-  const captured = Date.parse(q.capturedAt);
+  if (!Number.isInteger(q.americanOdds) || Math.abs(q.americanOdds) < 100) errors.push('invalid_odds');
+  const captured = typeof q.capturedAt === 'string' && /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/.test(q.capturedAt) ? Date.parse(q.capturedAt) : NaN;
   if (!Number.isFinite(captured)) errors.push('invalid_timestamp');
   else if (captured > now + 30_000 || now - captured > maxAgeMs) errors.push('stale_or_future_quote');
   if (q.providerVerified !== true) errors.push('provider_unverified');
