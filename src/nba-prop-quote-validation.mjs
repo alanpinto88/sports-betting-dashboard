@@ -43,6 +43,7 @@ export function validateTwoWayPropMarket(over, under, now = Date.now()) {
   if (over && under && typeof over === 'object' && typeof under === 'object') {
     if (over.side !== 'over') errors.push('invalid_over_side');
     if (under.side !== 'under') errors.push('invalid_under_side');
+    if (typeof over.sourceRecordId === 'string' && over.sourceRecordId.trim() && over.sourceRecordId === under.sourceRecordId) errors.push('duplicate_source_record_id');
     for (const key of ['playerId', 'eventId', 'market', 'period', 'line', 'provider']) {
       if (over[key] !== under[key]) errors.push('mismatch_' + key);
     }
