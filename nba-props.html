@@ -840,10 +840,10 @@ function showRows(){
   card.append(title,info);
   const unique=new Set();
   for(const q of group.quotes){
-   const signature=JSON.stringify([q.provider,q.side,q.line,q.americanOdds]);
+   const signature=JSON.stringify([q.provider,q.side,q.line,q.americanOdds,q.capturedAt,q.timestampSource]);
    if(unique.has(signature))continue;unique.add(signature);
    const line=document.createElement('p');line.style.margin='5px 0';
-   line.textContent=q.provider+' · '+q.side.toUpperCase()+' '+q.line+' · '+(q.americanOdds>0?'+':'')+q.americanOdds+' · '+researchQuoteTimeStatus(q.capturedAt,snapshotCapturedAt).status;
+   line.textContent=q.provider+' · '+q.side.toUpperCase()+' '+q.line+' · '+(q.americanOdds>0?'+':'')+q.americanOdds+' · '+researchQuoteTimeStatus(q.capturedAt,snapshotCapturedAt).status+' · '+(q.timestampSource==='market'?'market timestamp':q.timestampSource==='bookmaker'?'sportsbook timestamp':'timestamp source missing')+' · '+(q.capturedAt||'no UTC time');
    card.append(line);
   }
   container.append(card);
