@@ -33,10 +33,12 @@ export function groupNbaResearchQuotes(rows) {
       const timestamp=Date.parse(q.capturedAt);
       if(!Number.isFinite(timestamp)||![new Date(timestamp).toISOString(),new Date(timestamp).toISOString().replace(/\.000Z$/,'Z')].includes(q.capturedAt))continue;
       const key=JSON.stringify([q.provider.trim(),timestamp]);
-      if(!timedBookSides.has(key))timedBookSides.set(key,new Set());
-      timedBookSides.get(key).add(q.side);
+      if(!timedBookSides.has(key))timedBookSides.set(key,{prices:new Map(),conflict:false});
+      const pair=timedBookSides.get(key);
+      if(pair.prices.has(q.side)&&pair.prices.get(q.side)!==q.americanOdds)pair.conflict=true;
+      else if(!pair.prices.has(q.side))pair.prices.set(q.side,q.americanOdds);
     }
-    const sameTimestampTwoSided=[...timedBookSides.values()].some(s=>s.has('over')&&s.has('under'));
+    const sameTimestampTwoSided=[...timedBookSides.values()].some(pair=>!pair.conflict&&pair.prices.has('over')&&pair.prices.has('under'));
     // Multiple prices for the same provider/side in one research group need
     // chronology checks; never silently treat them as one authoritative quote.
     const seenPrices=new Map();
