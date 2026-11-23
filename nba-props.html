@@ -484,6 +484,7 @@ continue;
 if(c===","){pushCell();continue}
 if(c==="\n"){pushRow();continue}
 if(c==="\r"&&text[i+1]==="\n"){pushRow();i++;continue}
+if(c==="\r")throw Error("Bare carriage return in CSV row");
 if(state==="afterQuote"){throw Error("Unexpected characters after closing CSV quote")}
 if(c==='"'){
 if(state!=="start")throw Error("Unexpected quote in unquoted CSV field");
