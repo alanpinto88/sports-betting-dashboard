@@ -115,3 +115,30 @@ test('valid underscore-separated player market key remains research-only',()=>{
  assert.equal(rows[0].market,'player_threes_made');
  assert.equal(rows[0].eligibleForEv,false);
 });
+
+test('missing market timestamp uses the bookmaker timestamp without verification',()=>{
+ const [row]=normalizeNbaPropOutcomes(snapshot);
+ assert.equal(row.capturedAt,'2026-11-22T20:00:00Z');
+ assert.equal(row.eligibleForEv,false);
+});
+test('explicit malformed market timestamp cannot fall back to a valid bookmaker time',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].bookmakers[0].markets[0].last_update='not-a-date';
+ const [row]=normalizeNbaPropOutcomes(altered);
+ assert.equal(row.capturedAt,'not-a-date');
+ assert.equal(row.eligibleForEv,false);
+});
+test('blank or non-string market timestamp stays missing rather than borrowing bookmaker time',()=>{
+ for(const value of ['', '   ', {time:'2026-11-22T20:00:00Z'}]){
+  const altered=structuredClone(snapshot);
+  altered.events[0].bookmakers[0].markets[0].last_update=value;
+  const [row]=normalizeNbaPropOutcomes(altered);
+  assert.equal(row.capturedAt,null);
+ }
+});
+test('market timestamp whitespace is trimmed without altering its source',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].bookmakers[0].markets[0].last_update=' 2026-11-22T20:01:00Z ';
+ const [row]=normalizeNbaPropOutcomes(altered);
+ assert.equal(row.capturedAt,'2026-11-22T20:01:00Z');
+});
