@@ -676,10 +676,13 @@ window.addEventListener('evsports:nba-snapshot-loaded', event => {
     : '';
   const captureValue = info.snapshotCapturedAt;
   const captureTime = typeof captureValue === 'string' &&
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(captureValue)
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(captureValue)
     ? Date.parse(captureValue) : NaN;
+  const canonicalCaptureTime = Number.isFinite(captureTime) &&
+    (new Date(captureTime).toISOString() === captureValue ||
+      new Date(captureTime).toISOString().replace(/\.000Z$/, 'Z') === captureValue);
   const events = Array.isArray(info.events) ? info.events : [];
-  let missingPlayerLabels = 0, invalidPrices = 0, missingMarketTimestamps = 0, postCaptureTimestamps = 0;
+  let missingPlayerLabels = 0, invalidPrices = 0, missingMarketTimestamps = 0, postCaptureTimestamps = 0, missingSourceRecordIds = 0;
   for (const game of events) {
     for (const book of (Array.isArray(game.bookmakers) ? game.bookmakers : [])) {
       for (const market of (Array.isArray(book.markets) ? book.markets : [])) {
@@ -687,17 +690,18 @@ window.addEventListener('evsports:nba-snapshot-loaded', event => {
         const timestamp = market.last_update || book.last_update;
         for (const outcome of (Array.isArray(market.outcomes) ? market.outcomes : [])) {
           if (!String(outcome.description || outcome.player || '').trim()) missingPlayerLabels++;
+          if (typeof outcome.source_record_id !== 'string' || !outcome.source_record_id.trim()) missingSourceRecordIds++;
           if (!Number.isInteger(outcome.price) || Math.abs(outcome.price) < 100) invalidPrices++;
           const updatedAt = Date.parse(timestamp || '');
           if (!Number.isFinite(updatedAt)) missingMarketTimestamps++;
-          else if (Number.isFinite(captureTime) && updatedAt > captureTime) postCaptureTimestamps++;
+          else if (canonicalCaptureTime && updatedAt > captureTime) postCaptureTimestamps++;
         }
       }
     }
   }
   detail.textContent = count + ' raw quote(s) observed. ' + ageText + ageWarning +
-    (!Number.isFinite(captureTime) ? 'Invalid or missing UTC capture timestamp. ' : '') +
-    'Raw diagnostics: ' + missingPlayerLabels + ' missing player labels, ' + invalidPrices +
+    (!canonicalCaptureTime ? 'Invalid or missing UTC capture timestamp. ' : '') +
+    'Raw diagnostics: ' + missingPlayerLabels + ' missing player labels, ' + missingSourceRecordIds + ' missing explicit source record IDs, ' + invalidPrices +
     ' invalid prices, ' + missingMarketTimestamps + ' missing market timestamps, ' + postCaptureTimestamps + ' timestamps after snapshot capture. ' +
     'Provider authentication, per-quote freshness, and player-event identity remain unverified. No picks or EV predictions.';
 });
