@@ -285,3 +285,14 @@ test('NBA local-history selection filters ambiguous or impossible capture timest
   assert.match(source, /validateQuoteTimestamp\(item\.capture,item\.capture\)/);
   assert.match(source, /catch\{return false\}/);
 });
+
+test('NBA audit discloses player-quote source record ID coverage without implying verification', () => {
+  const start = page.indexOf('function auditSnapshot(events, capturedAt){');
+  const end = page.indexOf('async function readJson(url){', start);
+  const audit = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(audit, /withSourceRecordId=0/);
+  assert.match(audit, /outcome\.source_record_id\.trim\(\)/);
+  assert.match(audit, /Source record IDs present:/);
+  assert.match(audit, /0 independently verified player-to-event assignments/);
+});
