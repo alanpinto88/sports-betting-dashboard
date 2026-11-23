@@ -59,3 +59,10 @@ test('research cards preserve distinct quote times and disclose timestamp proven
  assert.match(html,/q\.timestampSource==='bookmaker'\?'sportsbook timestamp'/);
  assert.match(html,/q\.capturedAt\|\|'no UTC time'/);
 });
+
+test('NBA research cards cap visible quotes without silently hiding diagnostic volume',()=>{
+ assert.match(html,/const maxVisibleQuotesPerGroup=30;/);
+ assert.match(html,/if\(unique\.size>maxVisibleQuotesPerGroup\)\{hiddenQuotes\+\+;continue;\}/);
+ assert.match(html,/additional distinct research quote\(s\) hidden for display performance/);
+ assert.match(html,/group\.quotes\.length\+' research quote\(s\)'/);
+});
