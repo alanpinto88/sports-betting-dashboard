@@ -34,3 +34,17 @@ test('two sides from the same sportsbook are identified separately',()=>{
 test('invalid odds never enter research groups',()=>{
  assert.deepEqual(groupNbaResearchQuotes([q({americanOdds:-90}),q({americanOdds:NaN})]),[]);
 });
+
+test('different prices on same sportsbook and side require chronology review',()=>{
+ const [g]=groupNbaResearchQuotes([q({americanOdds:-110}),q({americanOdds:-120})]);
+ assert.equal(g.conflictingSameSidePrices,true);
+ assert.equal(g.eligibleForEv,false);
+});
+test('duplicate identical same-side prices do not trigger conflict',()=>{
+ const [g]=groupNbaResearchQuotes([q(),q()]);
+ assert.equal(g.conflictingSameSidePrices,false);
+});
+test('different sportsbook prices are not same-side conflicts',()=>{
+ const [g]=groupNbaResearchQuotes([q(),q({provider:'book-b',americanOdds:-120})]);
+ assert.equal(g.conflictingSameSidePrices,false);
+});
