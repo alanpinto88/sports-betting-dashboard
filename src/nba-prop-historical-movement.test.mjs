@@ -90,4 +90,8 @@ test('historical movement matches whitespace-normalized source identifiers',()=>
  assert.equal(result[0].openingRecordedOdds,-110);
  assert.equal(result[0].latestRecordedOdds,-120);
  assert.equal(result[0].eligibleForEv,false);
+ assert.equal(result[0].eventId,'e1');
+ assert.equal(result[0].market,'player_points');
+ assert.equal(result[0].period,'unverified');
+ assert.equal(result[0].provider,'book-a');
 });
