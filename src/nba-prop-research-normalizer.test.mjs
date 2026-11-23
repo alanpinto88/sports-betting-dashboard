@@ -99,3 +99,19 @@ test('non-player markets stay excluded after whitespace normalization',()=>{
  altered.events[0].bookmakers[0].markets[0].key='  totals  ';
  assert.deepEqual(normalizeNbaPropOutcomes(altered),[]);
 });
+
+test('incomplete and malformed player market keys are excluded',()=>{
+ for(const key of ['player_','player_ ','player_points extra','player_points/other','player_🏀']){
+  const altered=structuredClone(snapshot);
+  altered.events[0].bookmakers[0].markets[0].key=key;
+  assert.deepEqual(normalizeNbaPropOutcomes(altered),[],key);
+ }
+});
+test('valid underscore-separated player market key remains research-only',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].bookmakers[0].markets[0].key=' player_threes_made ';
+ const rows=normalizeNbaPropOutcomes(altered);
+ assert.equal(rows.length,2);
+ assert.equal(rows[0].market,'player_threes_made');
+ assert.equal(rows[0].eligibleForEv,false);
+});
