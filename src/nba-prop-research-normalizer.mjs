@@ -11,7 +11,8 @@ export function normalizeNbaPropOutcomes(snapshot) {
         if (!market || typeof market.key!=='string' || !/^player_/.test(market.key)) continue;
         for (const outcome of Array.isArray(market.outcomes)?market.outcomes:[]) {
           if (!outcome || typeof outcome !== 'object') continue;
-          const side=String(outcome.name||'').toLowerCase();
+          if(typeof outcome.name!=='string')continue;
+          const side=outcome.name.trim().toLowerCase();
           if (!['over','under'].includes(side)) continue;
           const line=outcome.point, price=outcome.price;
           if (typeof line!=='number' || !Number.isFinite(line) || line<0 ||
@@ -25,7 +26,7 @@ export function normalizeNbaPropOutcomes(snapshot) {
             eventId:String(event.id), playerLabel, playerId:null,
             market:String(market.key),period:'unverified',
             side,line,americanOdds:price,provider:String(book.key),
-            capturedAt,sourceRecordId:typeof outcome.source_record_id==='string'?outcome.source_record_id:null,
+            capturedAt,sourceRecordId:typeof outcome.source_record_id==='string'&&outcome.source_record_id.trim()?outcome.source_record_id.trim():null,
             providerVerified:false,identityVerified:false,
             status:'RESEARCH_ONLY',eligibleForEv:false
           }));
