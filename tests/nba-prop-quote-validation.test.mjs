@@ -112,3 +112,10 @@ test('noncanonical fractional UTC timestamp fails closed', () => {
 test('canonical UTC timestamp without milliseconds remains accepted', () => {
   assert.equal(validatePropQuote(quote({ capturedAt: '2026-11-22T19:59:00Z' }), NOW).valid, true);
 });
+
+test('valid nonzero three-digit milliseconds pass timestamp validation', () => {
+  assert.equal(validatePropQuote(quote({ capturedAt: '2026-11-22T19:59:00.123Z' }), NOW).valid, true);
+});
+test('two-digit fractional seconds are rejected consistently', () => {
+  assert.ok(validatePropQuote(quote({ capturedAt: '2026-11-22T19:59:00.12Z' }), NOW).errors.includes('invalid_timestamp'));
+});
