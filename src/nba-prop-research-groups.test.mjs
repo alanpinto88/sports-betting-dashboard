@@ -132,3 +132,18 @@ test('duplicate identical prices still allow a research timestamp-aligned pair',
  assert.equal(g.sameTimestampTwoSided,true);
  assert.equal(g.conflictingSameSidePrices,false);
 });
+
+test('same-instant price conflict is distinguished from historical repricing',()=>{
+ const at='2026-11-22T19:00:00Z';
+ const [conflict]=groupNbaResearchQuotes([
+  q({americanOdds:-110,capturedAt:at}),
+  q({americanOdds:-120,capturedAt:at})
+ ]);
+ assert.equal(conflict.sameTimestampPriceConflict,true);
+ const [movement]=groupNbaResearchQuotes([
+  q({americanOdds:-110,capturedAt:at}),
+  q({americanOdds:-120,capturedAt:'2026-11-22T19:05:00Z'})
+ ]);
+ assert.equal(movement.conflictingSameSidePrices,true);
+ assert.equal(movement.sameTimestampPriceConflict,false);
+});
