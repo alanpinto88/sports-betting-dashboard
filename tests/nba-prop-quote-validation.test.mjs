@@ -37,3 +37,17 @@ for (const field of ['playerId', 'eventId', 'market', 'period', 'line', 'side'])
 test('missing quote cannot be compared', () => {
   assert.equal(comparePropQuotes(null, quote(), NOW).comparable, false);
 });
+
+test('unverified quotes still expose market mismatches for diagnosis', () => {
+  const result = comparePropQuotes(
+    quote({ providerVerified: false }),
+    quote({ providerVerified: false, line: 25.5 }),
+    NOW
+  );
+  assert.equal(result.comparable, false);
+  assert.ok(result.errors.includes('mismatch_line'));
+  assert.ok(result.errors.includes('left_provider_unverified'));
+});
+test('invalid validation clock fails closed', () => {
+  assert.ok(validatePropQuote(quote(), Number.NaN).errors.includes('invalid_validation_clock'));
+});
