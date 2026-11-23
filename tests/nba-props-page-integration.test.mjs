@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 
 const page = readFileSync(new URL('../nba-props.html', import.meta.url), 'utf8');
 
@@ -194,4 +195,17 @@ test('historical odds comparisons require explicit canonical UTC timestamps', ()
   assert.match(validator, /const parseUtc=value=>/);
   assert.match(validator, /new Date\(time\)\.toISOString\(\)\.slice\(0,19\)/);
   assert.match(validator, /Missing or invalid explicit UTC market\/capture timestamp/);
+});
+
+test('historical UTC validation executes correctly for real capture and invalid timestamps', () => {
+  const start = page.indexOf('function validateQuoteTimestamp(updated,capture){');
+  const end = page.indexOf('function localArchive(record)', start);
+  assert.ok(start >= 0 && end > start);
+  const validate = runInNewContext(page.slice(start, end) + '\nvalidateQuoteTimestamp', {}, { timeout: 1000 });
+  const capture = '2026-11-20T21:14:27.090695+00:00';
+  assert.equal(validate(capture, capture), Date.parse(capture));
+  assert.equal(validate('2026-11-20T21:14:27Z', capture), Date.parse('2026-11-20T21:14:27Z'));
+  assert.throws(() => validate('2026-11-20T21:14:27', capture), /explicit UTC/);
+  assert.throws(() => validate('2026-02-30T21:14:27Z', capture), /explicit UTC/);
+  assert.throws(() => validate('2026-11-20T21:16:27Z', capture), /later than its capture/);
 });
