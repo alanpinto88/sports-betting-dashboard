@@ -152,14 +152,20 @@ test('historical movement reports source ID coverage without implying verificati
  assert.equal(result[0].sharpMoneyVerified,false);
 });
 
-test('historical movement rejects endpoints without independently traceable source IDs',()=>{
+
+test('historical movement labels untraceable endpoints without claiming verification',()=>{
  const first=q({sourceRecordId:null});
  const second=q({capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120});
- assert.deepEqual(historicalNbaPriceMovements([first,second]),[]);
- assert.deepEqual(historicalNbaPriceMovements([q(),{...second,sourceRecordId:'  '}]),[]);
+ const [movement]=historicalNbaPriceMovements([first,second]);
+ assert.equal(movement.traceableEndpoints,false);
+ assert.equal(movement.sourceRecordIdsDistinct,false);
+ assert.equal(movement.eligibleForEv,false);
 });
-test('historical movement rejects reused endpoint IDs even if prices differ',()=>{
- const first=q({sourceRecordId:'shared'});
- const second=q({sourceRecordId:'shared',capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120});
- assert.deepEqual(historicalNbaPriceMovements([first,second]),[]);
+test('historical movement reports distinct traceable endpoint IDs',()=>{
+ const [movement]=historicalNbaPriceMovements([
+  q({sourceRecordId:'id-1'}),
+  q({sourceRecordId:'id-2',capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})
+ ]);
+ assert.equal(movement.traceableEndpoints,true);
+ assert.equal(movement.sourceRecordIdsDistinct,true);
 });
