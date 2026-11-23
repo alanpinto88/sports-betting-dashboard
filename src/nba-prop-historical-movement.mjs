@@ -21,6 +21,18 @@ export function historicalNbaPriceMovements(rows) {
  }
  const results=[];
  for(const entries of buckets.values()){
+  // A provider record ID must not represent multiple distinct observations.
+  // Otherwise an apparent price movement may be a conflicting source record.
+  const sourceIds=new Map();
+  let sourceIdConflict=false;
+  for(const {q,t} of entries){
+   if(typeof q.sourceRecordId!=='string'||!q.sourceRecordId.trim())continue;
+   const id=q.sourceRecordId.trim();
+   const signature=JSON.stringify([t,q.americanOdds]);
+   if(sourceIds.has(id)&&sourceIds.get(id)!==signature){sourceIdConflict=true;break;}
+   sourceIds.set(id,signature);
+  }
+  if(sourceIdConflict)continue;
   entries.sort((a,b)=>a.t-b.t);
   const dedup=[];
   for(const entry of entries){
