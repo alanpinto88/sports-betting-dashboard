@@ -62,7 +62,7 @@ test('raw NBA audit reports missing explicit source record IDs', () => {
 });
 test('snapshot capture check uses canonical UTC timestamps', () => {
   assert.match(page, /canonicalCaptureTime/);
-  assert.match(page, /new Date\(captureTime\)\.toISOString\(\)/);
+  assert.match(page, /new Date\(captureTime\)\.toISOString\(\)\.slice\(0, 19\)/);
 });
 
 test('raw snapshot audit tolerates null games, books, markets, and outcomes', () => {
@@ -97,7 +97,7 @@ test('snapshot timestamp is canonical and not future dated before enabling expor
   const exportEnabled = page.indexOf('byId("saveLocalSnapshot").disabled=false;', validation);
   assert.ok(validation >= 0 && exportEnabled > validation);
   assert.match(page, /Invalid snapshot capture time\. No quotes verified\./);
-  assert.match(page, /const parsedSnapshotTime = typeof snapshotCapturedAt === 'string'/);
+  assert.match(page, /const parsedSnapshotTime = snapshotMatch \? Date\.parse\(snapshotCapturedAt\) : NaN/);
 });
 
 test('invalid NBA snapshot formats and capture times notify verification panels', () => {
