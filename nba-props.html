@@ -380,7 +380,7 @@ status.textContent=(ageMinutes>15||ageMinutes<0?"HISTORICAL / NOT LIVE — ":"RE
 const historyKey="evsports-nba-local-history-v1";
 let loadedSnapshot=null;
 function localHistory(){
-try{const data=JSON.parse(localStorage.getItem(historyKey)||"[]");if(!Array.isArray(data))return [];const captures=new Set();return data.filter(item=>{if(!item||typeof item.capture!=="string"||!Array.isArray(item.events))return false;try{validateQuoteTimestamp(item.capture,item.capture);if(captures.has(item.capture))return false;captures.add(item.capture);return true}catch{return false}}).sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture)).slice(-8)}catch(error){return []}
+try{const data=JSON.parse(localStorage.getItem(historyKey)||"[]");if(!Array.isArray(data))return [];const captures=new Set();return data.filter(item=>{if(!item||typeof item.capture!=="string"||!Array.isArray(item.events))return false;try{validateQuoteTimestamp(item.capture,item.capture);const captureMs=Date.parse(item.capture);if(captures.has(captureMs))return false;captures.add(captureMs);return true}catch{return false}}).sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture)).slice(-8)}catch(error){return []}
 }
 function updateLocalSelections(){
 const records=localHistory();
@@ -444,7 +444,7 @@ try{
 validateQuoteTimestamp(capture,capture);
 localArchive({capture,events:loadedSnapshot.events});
 const records=localHistory();
-if(records.some(r=>r.capture===capture)){showLocalHistory("This capture is already saved.");return}
+if(records.some(r=>Date.parse(r.capture)===Date.parse(capture))){showLocalHistory("This capture is already saved.");return}
 const slim={capture,source:loadedSnapshot.source,events:loadedSnapshot.events};
 records.push(slim);records.sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture));
 localStorage.setItem(historyKey,JSON.stringify(records.slice(-8)));
