@@ -5,9 +5,8 @@ import {spawnSync} from 'node:child_process';
 
 const html=readFileSync(new URL('../nba-props.html',import.meta.url),'utf8');
 
-test('NBA dashboard gates loaded snapshot movement on quote chronology',()=>{
- assert.match(html,/timeValidRows=matches\.filter\(q=>researchQuoteTimeStatus\(q\.capturedAt,snapshotCapturedAt\)\.status==='HISTORICAL_RESEARCH'\)/);
- assert.match(html,/historicalNbaPriceMovements\(timeValidRows\)/);
+test('NBA dashboard uses tested snapshot chronology gate',()=>{
+ assert.match(html,/historicalNbaMovementsFromSnapshot\(matches,snapshotCapturedAt\)/);
  assert.doesNotMatch(html,/historicalNbaPriceMovements\(matches\)/);
 });
 test('NBA dashboard distinguishes saved and loaded movement provenance',()=>{
