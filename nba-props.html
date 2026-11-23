@@ -562,14 +562,15 @@ if(visible.length>30){const p=document.createElement("p");p.className="muted";p.
 }
 function auditSnapshot(events, capturedAt){
 const names=new Set(),groups=new Map();
-let missingNames=0,missingEvents=0,invalidPrices=0,outcomes=0,future=0,withSourceRecordId=0;
+let missingNames=0,missingEvents=0,invalidPrices=0,outcomes=0,future=0,withSourceRecordId=0,missingMarketTimestamps=0;
 const captureMs=Date.parse(capturedAt||"");
 for(const game of events){
 if(!game.id)missingEvents++;
 for(const book of game.bookmakers||[])for(const market of book.markets||[]){
 if(!String(market.key||"").startsWith("player_"))continue;
-const updateMs=Date.parse(market.last_update||"");
-if(Number.isFinite(captureMs)&&Number.isFinite(updateMs)&&updateMs>captureMs)future+=(market.outcomes||[]).length;
+const updateMs=Date.parse(market.last_update||book.last_update||"");
+if(!Number.isFinite(updateMs))missingMarketTimestamps+=(market.outcomes||[]).length;
+if(Number.isFinite(captureMs)&&Number.isFinite(updateMs)&&updateMs>captureMs+60000)future+=(market.outcomes||[]).length;
 for(const outcome of market.outcomes||[]){
 outcomes++;
 if(typeof outcome.source_record_id==="string"&&outcome.source_record_id.trim())withSourceRecordId++;
@@ -599,7 +600,7 @@ byId("auditInvalidPrices").textContent=String(invalidPrices);
 byId("auditUnpaired").textContent=String(unpaired);
 byId("auditConflicts").textContent=String(conflicts);
 byId("auditFuture").textContent=String(future);
-byId("auditNote").textContent="Inspected "+outcomes+" player-market outcomes and "+groups.size+" distinct player/book/market/line groups in "+events.length+" published event records. Source record IDs present: "+withSourceRecordId+"/"+outcomes+" ("+(outcomes?(100*withSourceRecordId/outcomes).toFixed(1):"0.0")+"%). Counts are structural diagnostics, not proof of roster or event validity. 0 independently verified player-to-event assignments; all quotes remain research-only.";
+byId("auditNote").textContent="Inspected "+outcomes+" player-market outcomes and "+groups.size+" distinct player/book/market/line groups in "+events.length+" published event records. Missing market timestamps: "+missingMarketTimestamps+". Source record IDs present: "+withSourceRecordId+"/"+outcomes+" ("+(outcomes?(100*withSourceRecordId/outcomes).toFixed(1):"0.0")+"%). Counts are structural diagnostics, not proof of roster or event validity. 0 independently verified player-to-event assignments; all quotes remain research-only.";
 }
 async function readJson(url){
 const controller=new AbortController();
