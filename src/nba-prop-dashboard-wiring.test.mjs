@@ -31,3 +31,7 @@ test('every inline dashboard script parses as JavaScript',()=>{
   assert.equal(result.status,0,'script '+index+' syntax error: '+result.stderr);
  }
 });
+
+test('historical movement cards explicitly disclose the betting period',()=>{
+ assert.match(html,/Period: '\+m\.period/);
+});
