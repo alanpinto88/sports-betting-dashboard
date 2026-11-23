@@ -684,11 +684,12 @@ window.addEventListener('evsports:nba-snapshot-loaded', event => {
   const events = Array.isArray(info.events) ? info.events : [];
   let missingPlayerLabels = 0, invalidPrices = 0, missingMarketTimestamps = 0, postCaptureTimestamps = 0, missingSourceRecordIds = 0;
   for (const game of events) {
-    for (const book of (Array.isArray(game.bookmakers) ? game.bookmakers : [])) {
-      for (const market of (Array.isArray(book.markets) ? book.markets : [])) {
-        if (!String(market.key || '').startsWith('player_')) continue;
-        const timestamp = market.last_update || book.last_update;
-        for (const outcome of (Array.isArray(market.outcomes) ? market.outcomes : [])) {
+    for (const book of (Array.isArray(game?.bookmakers) ? game.bookmakers : [])) {
+      for (const market of (Array.isArray(book?.markets) ? book.markets : [])) {
+        if (!String(market?.key || '').startsWith('player_')) continue;
+        const timestamp = market.last_update || book?.last_update;
+        for (const rawOutcome of (Array.isArray(market.outcomes) ? market.outcomes : [])) {
+          const outcome = rawOutcome && typeof rawOutcome === 'object' ? rawOutcome : {};
           if (!String(outcome.description || outcome.player || '').trim()) missingPlayerLabels++;
           if (typeof outcome.source_record_id !== 'string' || !outcome.source_record_id.trim()) missingSourceRecordIds++;
           if (!Number.isInteger(outcome.price) || Math.abs(outcome.price) < 100) invalidPrices++;
