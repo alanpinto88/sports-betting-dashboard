@@ -380,7 +380,7 @@ status.textContent=(ageMinutes>15||ageMinutes<0?"HISTORICAL / NOT LIVE — ":"RE
 const historyKey="evsports-nba-local-history-v1";
 let loadedSnapshot=null;
 function localHistory(){
-try{const data=JSON.parse(localStorage.getItem(historyKey)||"[]");return Array.isArray(data)?data.filter(item=>{if(!item||typeof item.capture!=="string"||!Array.isArray(item.events))return false;try{validateQuoteTimestamp(item.capture,item.capture);return true}catch{return false}}).sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture)).slice(-8):[]}catch(error){return []}
+try{const data=JSON.parse(localStorage.getItem(historyKey)||"[]");if(!Array.isArray(data))return [];const captures=new Set();return data.filter(item=>{if(!item||typeof item.capture!=="string"||!Array.isArray(item.events))return false;try{validateQuoteTimestamp(item.capture,item.capture);if(captures.has(item.capture))return false;captures.add(item.capture);return true}catch{return false}}).sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture)).slice(-8)}catch(error){return []}
 }
 function updateLocalSelections(){
 const records=localHistory();
