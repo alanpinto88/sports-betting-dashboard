@@ -10,8 +10,13 @@ export function movementsFromSavedNbaSnapshots(records, now=Date.now()) {
  const seenCaptures=new Set();
  // Choose the eight most recent valid captures by timestamp, independent of input order.
  // Invalid records must not displace valid historical captures.
- const ordered=records.filter(record=>record&&Array.isArray(record.events)&&validUtc(record.capture)&&Date.parse(record.capture)<=now)
-  .sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture));
+ const distinct=new Map();
+ for(const record of records){
+  if(!record||!Array.isArray(record.events)||!validUtc(record.capture)||Date.parse(record.capture)>now)continue;
+  const timestamp=Date.parse(record.capture);
+  if(!distinct.has(timestamp))distinct.set(timestamp,record);
+ }
+ const ordered=[...distinct.values()].sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture));
  for(const record of ordered.slice(-8)){
   if(!record||!Array.isArray(record.events)||typeof record.capture!=='string')continue;
  
