@@ -876,7 +876,7 @@ function showRows(){
 
 
 }
-window.addEventListener('evsports:nba-snapshot-loaded',event=>{
+function onResearchSnapshotLoaded(event){
  snapshotCapturedAt=event.detail?.snapshotCapturedAt||null;
  rows=normalizeNbaPropOutcomes({events:event.detail?.events});
  const players=new Set(rows.map(q=>q.playerLabel));
@@ -884,13 +884,14 @@ window.addEventListener('evsports:nba-snapshot-loaded',event=>{
  status.textContent=rows.length+' normalized research-only quote(s) · '+players.size+' player label(s) · '+books.size+' sportsbook(s). 0 identities independently verified; EV predictions disabled.';
  status.dataset.researchQuoteCount=String(rows.length);
  showRows();
-});
+}
+window.addEventListener('evsports:nba-snapshot-loaded',onResearchSnapshotLoaded);
 window.addEventListener('evsports:nba-snapshot-unavailable',()=>{
  rows=[];snapshotCapturedAt=null;status.textContent='Snapshot unavailable. No research quotes normalized. EV predictions disabled.';
  status.dataset.researchQuoteCount='0';showRows();
 });
 for(const id of ['player','market','book'])input(id).addEventListener('input',showRows);
 for(const id of ['saveLocalSnapshot','clearLocalSnapshots'])input(id).addEventListener('click',()=>queueMicrotask(showRows));
-if(window.__evsportsResearchSnapshot){const detail=window.__evsportsResearchSnapshot;window.dispatchEvent(new CustomEvent('evsports:nba-snapshot-loaded',{detail}));}
+if(window.__evsportsResearchSnapshot){onResearchSnapshotLoaded({detail:window.__evsportsResearchSnapshot});}
 else showRows();
 </script></body></html>
