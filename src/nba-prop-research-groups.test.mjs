@@ -20,3 +20,17 @@ test('different betting periods never merge',()=>{
 test('missing betting period cannot enter comparison group',()=>{
  assert.deepEqual(groupNbaResearchQuotes([q({period:null})]),[]);
 });
+
+test('over and under from different sportsbooks do not imply a two-sided book',()=>{
+ const [g]=groupNbaResearchQuotes([q({provider:'book-a',side:'over'}),q({provider:'book-b',side:'under'})]);
+ assert.equal(g.hasBothSides,true);
+ assert.equal(g.sameBookTwoSided,false);
+});
+test('two sides from the same sportsbook are identified separately',()=>{
+ const [g]=groupNbaResearchQuotes([q({side:'over'}),q({side:'under'})]);
+ assert.equal(g.bookCount,1);
+ assert.equal(g.sameBookTwoSided,true);
+});
+test('invalid odds never enter research groups',()=>{
+ assert.deepEqual(groupNbaResearchQuotes([q({americanOdds:-90}),q({americanOdds:NaN})]),[]);
+});
