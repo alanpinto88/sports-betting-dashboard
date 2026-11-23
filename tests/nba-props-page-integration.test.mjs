@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 const page = readFileSync(new URL('../nba-props.html', import.meta.url), 'utf8');
 
 test('NBA player props imports the validation module', () => {
-  assert.match(page, /import\s*\{\s*validatePropQuote,\s*comparePropQuotes\s*\}\s*from\s*['"]\.\/src\/nba-prop-quote-validation\.mjs['"]/);
+  assert.match(page, /import\s*\{\s*validatePropQuote,\s*comparePropQuotes,\s*validateTwoWayPropMarket\s*\}\s*from\s*['"]\.\/src\/nba-prop-quote-validation\.mjs['"]/);
 });
 test('NBA props validation panel is accessible', () => {
   assert.match(page, /id="nbaValidationGate"[^>]*role="status"/);
@@ -22,4 +22,8 @@ test('snapshot failure is emitted and handled', () => {
 test('raw quotes never become verified automatically', () => {
   assert.match(page, /0 provider-verified NBA props · EV recommendations disabled/);
   assert.match(page, /raw quote\(s\) observed/);
+});
+
+test('two-way validation is exposed only for diagnostics', () => {
+  assert.match(page, /Object\.freeze\(\{ validatePropQuote, comparePropQuotes, validateTwoWayPropMarket \}\)/);
 });
