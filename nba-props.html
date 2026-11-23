@@ -847,11 +847,11 @@ function showRows(){
   const maxVisibleQuotesPerGroup=30;
   let hiddenQuotes=0;
   for(const q of group.quotes){
-   const signature=JSON.stringify([q.provider,q.side,q.line,q.americanOdds,q.capturedAt,q.timestampSource]);
+   const signature=JSON.stringify([q.provider,q.side,q.line,q.americanOdds,q.capturedAt,q.timestampSource,q.sourceRecordId]);
    if(unique.has(signature))continue;unique.add(signature);
    if(unique.size>maxVisibleQuotesPerGroup){hiddenQuotes++;continue;}
    const line=document.createElement('p');line.style.margin='5px 0';
-   line.textContent=q.provider+' · '+q.side.toUpperCase()+' '+q.line+' · '+(q.americanOdds>0?'+':'')+q.americanOdds+' · '+researchQuoteTimeStatus(q.capturedAt,snapshotCapturedAt).status+' · '+(q.timestampSource==='market'?'market timestamp':q.timestampSource==='bookmaker'?'sportsbook timestamp':'timestamp source missing')+' · '+(q.capturedAt||'no UTC time');
+   line.textContent=q.provider+' · '+q.side.toUpperCase()+' '+q.line+' · '+(q.americanOdds>0?'+':'')+q.americanOdds+' · '+researchQuoteTimeStatus(q.capturedAt,snapshotCapturedAt).status+' · '+(q.timestampSource==='market'?'market timestamp':q.timestampSource==='bookmaker'?'sportsbook timestamp':'timestamp source missing')+' · '+(q.capturedAt||'no UTC time')+' · '+(q.sourceRecordId?'record ID: '+q.sourceRecordId:'source record ID missing');
    card.append(line);
   }
   if(hiddenQuotes){
