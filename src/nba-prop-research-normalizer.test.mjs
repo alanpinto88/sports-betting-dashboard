@@ -44,3 +44,23 @@ test('rejects non-string event, sportsbook and market identifiers',()=>{
   assert.deepEqual(normalizeNbaPropOutcomes(altered),[],field);
  }
 });
+
+test('accepts trimmed case-insensitive over and under labels',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].bookmakers[0].markets[0].outcomes[0].name=' OVER ';
+ altered.events[0].bookmakers[0].markets[0].outcomes[1].name=' under ';
+ assert.deepEqual(normalizeNbaPropOutcomes(altered).map(q=>q.side),['over','under']);
+});
+test('rejects non-string betting side labels',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].bookmakers[0].markets[0].outcomes[0].name=['Over'];
+ altered.events[0].bookmakers[0].markets[0].outcomes[1].name={value:'Under'};
+ assert.deepEqual(normalizeNbaPropOutcomes(altered),[]);
+});
+test('blank source record identifiers are not treated as verified IDs',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].bookmakers[0].markets[0].outcomes[0].source_record_id='   ';
+ const rows=normalizeNbaPropOutcomes(altered);
+ assert.equal(rows[0].sourceRecordId,null);
+ assert.equal(rows[0].providerVerified,false);
+});
