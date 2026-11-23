@@ -44,3 +44,28 @@ test('snapshot chronology gate rejects future source updates',()=>{
  const rows=[q(),q({capturedAt:'2026-11-22T20:01:00Z',americanOdds:-120})];
  assert.deepEqual(historicalNbaMovementsFromSnapshot(rows,'2026-11-22T20:02:00Z',Date.parse('2026-11-22T20:00:00Z')),[]);
 });
+
+test('historical price movement reports signed implied probability points',()=>{
+ const result=historicalNbaPriceMovements([
+  q({americanOdds:-110,capturedAt:'2026-11-22T19:00:00Z'}),
+  q({americanOdds:-120,capturedAt:'2026-11-22T19:05:00Z'})
+ ]);
+ assert.equal(result.length,1);
+ assert.equal(result[0].impliedProbabilityChangePoints,2.16);
+ assert.equal(result[0].firstCapturedAt,'2026-11-22T19:00:00Z');
+ assert.equal(result[0].lastCapturedAt,'2026-11-22T19:05:00Z');
+});
+test('reverse price movement retains negative sign',()=>{
+ const result=historicalNbaPriceMovements([
+  q({americanOdds:-120,capturedAt:'2026-11-22T19:00:00Z'}),
+  q({americanOdds:-110,capturedAt:'2026-11-22T19:05:00Z'})
+ ]);
+ assert.equal(result[0].impliedProbabilityChangePoints,-2.16);
+});
+test('invalid quote dates cannot create historical movement',()=>{
+ const result=historicalNbaPriceMovements([
+  q(),
+  q({capturedAt:'2026-11-31T19:05:00Z',americanOdds:-120})
+ ]);
+ assert.deepEqual(result,[]);
+});
