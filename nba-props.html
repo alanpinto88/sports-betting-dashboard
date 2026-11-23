@@ -469,6 +469,7 @@ document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.re
 byId("quoteArchiveStatus").textContent="Export prepared: "+(rows.length-1)+" raw outcomes. All event/player labels and odds remain unverified; no live odds were requested.";
 }
 function parseCsv(text){
+if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
 const rows=[],row=[];let value="",state="start";
 const pushCell=()=>{row.push(value);value="";state="start"};
 const pushRow=()=>{pushCell();rows.push(row.splice(0))};
