@@ -83,3 +83,11 @@ test('duplicate captures cannot displace distinct older captures',()=>{
  assert.equal(result[0].openingRecordedOdds,-110);
  assert.equal(result[0].latestRecordedOdds,-120);
 });
+
+test('conflicting snapshots at the same capture timestamp are excluded regardless of input order',()=>{
+ const first=record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110);
+ const conflict=record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-130);
+ const later=record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120);
+ assert.deepEqual(movementsFromSavedNbaSnapshots([first,conflict,later],now),[]);
+ assert.deepEqual(movementsFromSavedNbaSnapshots([conflict,first,later],now),[]);
+});
