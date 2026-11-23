@@ -43,5 +43,6 @@ test('NBA comparison cards show market period and same-book sides',()=>{
 });
 
 test('NBA research cards warn about conflicting same-side prices',()=>{
- assert.match(html,/group\.conflictingSameSidePrices\?' · conflicting same-side prices; review timestamps'/);
+ assert.match(html,/group\.sameTimestampPriceConflict\?' · conflicting prices at identical timestamp'/);
+ assert.match(html,/group\.conflictingSameSidePrices\?' · same-side prices differ across records; review timestamps'/);
 });
