@@ -67,3 +67,16 @@ test('different lines cannot form one two-way market', () => {
 test('unverified quote blocks two-way market validation', () => {
   assert.ok(validateTwoWayPropMarket(quote({ providerVerified: false }), quote({ side: 'under' }), NOW).errors.includes('over_provider_unverified'));
 });
+
+test('ambiguous date-only quote timestamps fail closed', () => {
+  assert.ok(validatePropQuote(quote({ capturedAt: '2026-11-22' }), NOW).errors.includes('invalid_timestamp'));
+});
+test('timestamps without timezone fail closed', () => {
+  assert.ok(validatePropQuote(quote({ capturedAt: '2026-11-22T19:59:00' }), NOW).errors.includes('invalid_timestamp'));
+});
+test('UTC ISO timestamps with milliseconds remain valid', () => {
+  assert.equal(validatePropQuote(quote(), NOW).valid, true);
+});
+test('American odds minus 99 are rejected', () => {
+  assert.ok(validatePropQuote(quote({ americanOdds: -99 }), NOW).errors.includes('invalid_odds'));
+});
