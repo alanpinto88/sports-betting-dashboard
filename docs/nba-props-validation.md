@@ -20,6 +20,10 @@ These tests make **no paid provider API calls** and do not need secrets.
 - Two-way market validation checks opposite sides at the same book and threshold; it does not establish a predictive edge.
 - The NBA browser page currently keeps EV recommendations disabled for raw and unverified quotes.
 
+## Automated checks
+
+The existing `.github/workflows/nba-prop-validation.yml` now watches `src/nba-prop-quote-validation.mjs`, `nba-props.html`, and both related test files on pushes and pull requests. Its Node.js 22 test command includes both newer suites alongside the existing NBA validation, odds movement, adapter, and dashboard smoke tests. Confirm the workflow run is green in GitHub Actions before release; editing the workflow does not itself prove it passed.
+
 ## Release checklist
 
 1. Run the test command and resolve failures.
