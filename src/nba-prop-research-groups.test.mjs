@@ -182,3 +182,24 @@ test('missing timestamps elsewhere in group prevent a group-wide alignment claim
  assert.equal(g.sameTimestampTwoSided,false);
  assert.equal(g.eligibleForEv,false);
 });
+
+test('market-level paired timestamps are distinct from bookmaker fallback times',()=>{
+ const at='2026-11-22T19:00:00Z';
+ const market=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:at,timestampSource:'market'}),
+  q({side:'under',capturedAt:at,timestampSource:'market'})
+ ])[0];
+ assert.equal(market.marketTimestampAlignedTwoSided,true);
+ assert.equal(market.eligibleForEv,false);
+ const fallback=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:at,timestampSource:'bookmaker'}),
+  q({side:'under',capturedAt:at,timestampSource:'bookmaker'})
+ ])[0];
+ assert.equal(fallback.sameTimestampTwoSided,true);
+ assert.equal(fallback.marketTimestampAlignedTwoSided,false);
+ const mixed=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:at,timestampSource:'market'}),
+  q({side:'under',capturedAt:at,timestampSource:'bookmaker'})
+ ])[0];
+ assert.equal(mixed.marketTimestampAlignedTwoSided,false);
+});
