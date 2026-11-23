@@ -541,7 +541,9 @@ compareArchiveData(a,b);
 }
 function compareArchiveData(a,b){
 const status=byId("archiveCompareStatus"),root=byId("archiveCompareResults");root.replaceChildren();
-if(!a||!b)throw Error("Select two valid captures");
+if(!a||!b||!(a.quotes instanceof Map)||!(b.quotes instanceof Map))throw Error("Select two valid captures");
+validateQuoteTimestamp(a.capture,a.capture);
+validateQuoteTimestamp(b.capture,b.capture);
 if(Date.parse(a.capture)>=Date.parse(b.capture))throw Error("The earlier file must have an older capture timestamp than the later file");
 if(Date.parse(b.capture)>Date.now()+300000)throw Error("Later archive capture is future-dated; check source clock");
 if(Date.parse(a.capture)>Date.now()+300000)throw Error("Earlier archive capture is future-dated; check source clock");
