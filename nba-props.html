@@ -369,11 +369,11 @@ const status=byId("freshnessStatus"),capture=Date.parse(data.captured_at||"");
 if(!Number.isFinite(capture)){status.textContent="WARNING: Missing or invalid capture timestamp. All quotes remain historical and unverified.";return}
 const ageMinutes=Math.round((Date.now()-capture)/60000);
 const age=ageMinutes<0?"future-dated capture — check source clock":ageMinutes<60?ageMinutes+" minutes old":ageMinutes<1440?Math.floor(ageMinutes/60)+" hours old":Math.floor(ageMinutes/1440)+" days old";
-const updates=[];
+let latestUpdate=-Infinity;
 for(const game of data.events||[])for(const book of game.bookmakers||[])for(const market of book.markets||[]){
-const t=Date.parse(market.last_update||book.last_update||"");if(Number.isFinite(t))updates.push(t)
+const t=Date.parse(market.last_update||book.last_update||"");if(Number.isFinite(t)&&t>latestUpdate)latestUpdate=t
 }
-const latest=updates.length?new Date(Math.max(...updates)).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"medium",timeStyle:"short"})+" ET":"not supplied";
+const latest=Number.isFinite(latestUpdate)?new Date(latestUpdate).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"medium",timeStyle:"short"})+" ET":"not supplied";
 status.textContent=(ageMinutes>15||ageMinutes<0?"HISTORICAL / NOT LIVE — ":"RECENT CAPTURE / STILL UNVERIFIED — ")+
 "Captured "+new Date(capture).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"medium",timeStyle:"short"})+" ET ("+age+"). Source: "+String(data.source||"unspecified")+". Most recent quoted market update: "+latest+". Events: "+(data.events||[]).length+". No independent sportsbook quote or event-ID verification; no picks or EV.";
 }
