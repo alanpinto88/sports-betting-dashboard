@@ -51,3 +51,26 @@ test('conflicting prices at the same bookmaker update timestamp are rejected',()
  record('2026-11-22T19:15:00Z','2026-11-22T19:04:00Z',-120),
  record('2026-11-22T19:25:00Z','2026-11-22T19:24:00Z',-125)
 ],now),[]));
+
+test('unsorted history chooses the latest eight valid captures',()=>{
+ const captures=Array.from({length:9},(_,i)=>{
+  const minute=String(i+1).padStart(2,'0');
+  return record('2026-11-22T19:'+minute+':00Z','2026-11-22T19:'+minute+':00Z',i===0?-150:i===8?-120:-110);
+ });
+ const result=movementsFromSavedNbaSnapshots(captures.reverse(),now);
+ assert.equal(result.length,1);
+ assert.equal(result[0].openingRecordedOdds,-110);
+ assert.equal(result[0].latestRecordedOdds,-120);
+ assert.equal(result[0].observations,8);
+});
+test('malformed late captures cannot displace valid history',()=>{
+ const captures=[
+  record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110),
+  record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120),
+  ...Array.from({length:9},(_,i)=>record('not-a-date-'+i,'2026-11-22T19:14:00Z',-130))
+ ];
+ const result=movementsFromSavedNbaSnapshots(captures,now);
+ assert.equal(result.length,1);
+ assert.equal(result[0].openingRecordedOdds,-110);
+ assert.equal(result[0].latestRecordedOdds,-120);
+});
