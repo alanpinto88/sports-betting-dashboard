@@ -76,3 +76,7 @@ test('NBA cards disclose missing market-level timing evidence',()=>{
  assert.match(html,/if\(group\.timestampEvidenceWarning\)/);
  assert.match(html,/Timing evidence warning: '\+group\.timestampEvidenceWarning/);
 });
+
+test('NBA research cards disclose missing source record identifiers',()=>{
+ assert.match(html,/group\.missingSourceRecordIds\+' missing source record ID\(s\)'/);
+});
