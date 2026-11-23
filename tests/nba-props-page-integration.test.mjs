@@ -401,3 +401,14 @@ test('NBA audit reports missing market timestamps and uses 60-second future tole
   assert.match(audit, /updateMs>captureMs\+60000/);
   assert.match(audit, /Missing market timestamps:/);
 });
+
+test('NBA archive comparison normalizes source identity whitespace before matching', () => {
+  const start = page.indexOf('function archiveRows(csv){');
+  const end = page.indexOf('const implied=', start);
+  const importer = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(importer, /eventId=r\[cols\.source_event_id\]\.trim\(\)/);
+  assert.match(importer, /bookKey=r\[cols\.sportsbook_key\]\.trim\(\)/);
+  assert.match(importer, /marketKey=r\[cols\.market\]\.trim\(\)/);
+  assert.match(importer, /player=r\[cols\.player_label_unverified\]\.trim\(\)/);
+});
