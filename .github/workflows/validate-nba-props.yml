@@ -6,6 +6,8 @@ on:
       - 'lib/validate-prop-comparison.test.mjs'
       - 'src/nba-prop-quote-validation.mjs'
       - 'src/nba-prop-quote-validation.test.mjs'
+      - 'src/nba-prop-research-normalizer.mjs'
+      - 'src/nba-prop-research-normalizer.test.mjs'
       - '.github/workflows/validate-nba-props.yml'
   pull_request:
     paths:
@@ -13,6 +15,8 @@ on:
       - 'lib/validate-prop-comparison.test.mjs'
       - 'src/nba-prop-quote-validation.mjs'
       - 'src/nba-prop-quote-validation.test.mjs'
+      - 'src/nba-prop-research-normalizer.mjs'
+      - 'src/nba-prop-research-normalizer.test.mjs'
       - '.github/workflows/validate-nba-props.yml'
 permissions:
   contents: read
@@ -26,4 +30,4 @@ jobs:
         with:
           node-version: '22'
       - name: Test fail-closed quote matching
-        run: node --test lib/validate-prop-comparison.test.mjs src/nba-prop-quote-validation.test.mjs
+        run: node --test lib/validate-prop-comparison.test.mjs src/nba-prop-quote-validation.test.mjs src/nba-prop-research-normalizer.test.mjs
