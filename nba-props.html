@@ -888,7 +888,7 @@ function showRows(){
   const title=document.createElement('strong');title.style.fontSize='15px';
   title.textContent=m.playerLabel+' · '+m.market+' · '+m.side.toUpperCase()+' '+m.line;
   const desc=document.createElement('p');desc.className='muted';
-  desc.textContent=m.historySource+' · '+m.provider+' · Period: '+m.period+' · '+m.openingRecordedOdds+' to '+m.latestRecordedOdds+' · '+(m.impliedProbabilityChangePoints>0?'+':'')+m.impliedProbabilityChangePoints+' percentage points · '+m.observations+' records · '+m.firstCapturedAt+' → '+m.lastCapturedAt+' · historical only, not a sharp-money signal';
+  desc.textContent=m.historySource+' · '+m.provider+' · Period: '+m.period+' · '+m.openingRecordedOdds+' to '+m.latestRecordedOdds+' · '+(m.impliedProbabilityChangePoints>0?'+':'')+m.impliedProbabilityChangePoints+' percentage points · '+m.observations+' records · '+m.sourceRecordIdsPresent+'/'+m.observations+' source IDs present · '+m.firstCapturedAt+' → '+m.lastCapturedAt+' · historical only, not a sharp-money signal';
   card.append(title,desc);movementRows.append(card);
  }
 
