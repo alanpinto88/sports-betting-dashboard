@@ -544,15 +544,15 @@ if(!a||!b)throw Error("Select two valid captures");
 if(Date.parse(a.capture)>=Date.parse(b.capture))throw Error("The earlier file must have an older capture timestamp than the later file");
 if(Date.parse(b.capture)>Date.now()+300000)throw Error("Later archive capture is future-dated; check source clock");
 if(Date.parse(a.capture)>Date.now()+300000)throw Error("Earlier archive capture is future-dated; check source clock");
-let matched=0,changed=0;const moves=[];
+let matched=0,changed=0,stale=0;const moves=[];
 for(const [key,prev] of a.quotes){const next=b.quotes.get(key);if(!next)continue;matched++;
-if(!Number.isFinite(Date.parse(prev.updated))||!Number.isFinite(Date.parse(next.updated))||Date.parse(next.updated)<=Date.parse(prev.updated))continue;
+if(!Number.isFinite(Date.parse(prev.updated))||!Number.isFinite(Date.parse(next.updated))||Date.parse(next.updated)<=Date.parse(prev.updated)){stale++;continue;}
 if(next.price===prev.price)continue;changed++;
 moves.push({name:next.player,book:next.book,market:next.market,side:next.side,line:next.line,from:prev.price,to:next.price,delta:100*(implied(next.price)-implied(prev.price))});
 }
 moves.sort((x,y)=>Math.abs(y.delta)-Math.abs(x.delta));
 const minimum=Math.max(0,Number(byId("threshold").value)||0),visible=moves.filter(m=>Math.abs(m.delta)>=minimum);
-status.textContent="Historical comparison only: "+matched+" matching selections; "+changed+" price changes with strictly newer market timestamps; "+visible.length+" meet the "+minimum+" percentage-point research threshold. Captures "+a.capture+" → "+b.capture+". Unmatched lines are excluded. No event/player identity verification, live alerts, sharp-money claims or EV recommendations.";
+status.textContent="Historical comparison only: "+matched+" matching selections; "+stale+" skipped for non-newer or invalid market timestamps; "+changed+" price changes with strictly newer market timestamps; "+visible.length+" meet the "+minimum+" percentage-point research threshold. Captures "+a.capture+" → "+b.capture+". Unmatched lines are excluded. No event/player identity verification, live alerts, sharp-money claims or EV recommendations.";
 if(!visible.length){const p=document.createElement("p");p.className="muted";p.textContent="No qualifying price movement meets the selected threshold.";root.append(p);return}
 for(const move of visible.slice(0,30)){
 const p=document.createElement("p");p.className="prop-card";
