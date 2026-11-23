@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {historicalNbaPriceMovements,americanImpliedProbability} from './nba-prop-historical-movement.mjs';
+import {historicalNbaPriceMovements,historicalNbaMovementsFromSnapshot,americanImpliedProbability} from './nba-prop-historical-movement.mjs';
 const base={eventId:'e1',playerLabel:'Example Player',market:'player_points',period:'unverified',provider:'book-a',side:'over',line:24.5,americanOdds:-110,capturedAt:'2026-11-22T19:00:00Z',status:'RESEARCH_ONLY',eligibleForEv:false};
 const q=(change={})=>({...base,...change});
 test('probability conversion handles positive and negative prices',()=>{assert.equal(americanImpliedProbability(100),.5);assert.equal(americanImpliedProbability(-100),.5);assert.equal(americanImpliedProbability(-90),null)});
@@ -21,4 +21,26 @@ test('unchanged recorded odds are not reported as price movement',()=>{
 });
 test('round-trip price returning to original is not an endpoint movement',()=>{
  assert.deepEqual(historicalNbaPriceMovements([q(),q({capturedAt:'2026-11-22T19:03:00Z',americanOdds:-120}),q({capturedAt:'2026-11-22T19:05:00Z'})]),[]);
+});
+
+test('snapshot chronology gate accepts valid historical quotes only',()=>{
+ const rows=[q(),q({capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})];
+ const result=historicalNbaMovementsFromSnapshot(rows,'2026-11-22T19:06:00Z',Date.parse('2026-11-22T20:00:00Z'));
+ assert.equal(result.length,1);
+ assert.equal(result[0].latestRecordedOdds,-120);
+ assert.equal(result[0].eligibleForEv,false);
+});
+test('snapshot chronology gate rejects missing or future snapshot time',()=>{
+ const rows=[q(),q({capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})];
+ const now=Date.parse('2026-11-22T20:00:00Z');
+ assert.deepEqual(historicalNbaMovementsFromSnapshot(rows,null,now),[]);
+ assert.deepEqual(historicalNbaMovementsFromSnapshot(rows,'2026-11-22T20:01:00Z',now),[]);
+});
+test('snapshot chronology gate rejects quotes updated after snapshot capture',()=>{
+ const rows=[q(),q({capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})];
+ assert.deepEqual(historicalNbaMovementsFromSnapshot(rows,'2026-11-22T19:02:00Z',Date.parse('2026-11-22T20:00:00Z')),[]);
+});
+test('snapshot chronology gate rejects future source updates',()=>{
+ const rows=[q(),q({capturedAt:'2026-11-22T20:01:00Z',americanOdds:-120})];
+ assert.deepEqual(historicalNbaMovementsFromSnapshot(rows,'2026-11-22T20:02:00Z',Date.parse('2026-11-22T20:00:00Z')),[]);
 });
