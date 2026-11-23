@@ -4,6 +4,8 @@ on:
     paths:
       - 'lib/validate-prop-comparison.mjs'
       - 'lib/validate-prop-comparison.test.mjs'
+      - 'src/nba-prop-quote-validation.mjs'
+      - 'src/nba-prop-quote-validation.test.mjs'
       - '.github/workflows/validate-nba-props.yml'
   pull_request:
     paths:
@@ -22,4 +24,4 @@ jobs:
         with:
           node-version: '22'
       - name: Test fail-closed quote matching
-        run: node --test lib/validate-prop-comparison.test.mjs
+        run: node --test lib/validate-prop-comparison.test.mjs src/nba-prop-quote-validation.test.mjs
