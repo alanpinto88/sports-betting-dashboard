@@ -443,3 +443,38 @@ test('NBA movement comparison reports stale and non-newer market timestamps', ()
   assert.match(comparison, /stale\+\+;continue/);
   assert.match(comparison, /skipped for non-newer or invalid market timestamps/);
 });
+
+test('NBA historical comparison executes stale exclusion and renders only newer quote movements', () => {
+  const start = page.indexOf('function compareArchiveData(a,b){');
+  const end = page.indexOf('function auditSnapshot(events, capturedAt){', start);
+  assert.ok(start >= 0 && end > start);
+  const elements = new Map();
+  const byId = id => {
+    if (!elements.has(id)) elements.set(id, {
+      value: '0', textContent: '', children: [],
+      replaceChildren() { this.children = []; },
+      append(node) { this.children.push(node); }
+    });
+    return elements.get(id);
+  };
+  const document = { createElement: () => ({ className: '', textContent: '' }) };
+  const implied = price => price < 0 ? -price / (-price + 100) : 100 / (price + 100);
+  const context = { byId, document, implied, Date, Number, Math, Map, Error };
+  const compare = runInNewContext(page.slice(start, end) + '\ncompareArchiveData', context);
+  const old = '2026-11-19T19:00:00Z', newer = '2026-11-20T19:00:00Z';
+  const quote = (updated, price) => ({
+    updated, price, player: 'Test Player', book: 'Test Book',
+    market: 'player_points', side: 'over', line: 10.5
+  });
+  const a = { capture: '2026-11-19T20:00:00Z', quotes: new Map([
+    ['stale', quote(old, -110)], ['fresh', quote(old, -110)]
+  ]) };
+  const b = { capture: '2026-11-20T20:00:00Z', quotes: new Map([
+    ['stale', quote(old, -120)], ['fresh', quote(newer, -120)]
+  ]) };
+  compare(a, b);
+  assert.match(byId('archiveCompareStatus').textContent, /2 matching selections; 1 skipped/);
+  assert.match(byId('archiveCompareStatus').textContent, /1 price changes/);
+  assert.equal(byId('archiveCompareResults').children.length, 1);
+  assert.match(byId('archiveCompareResults').children[0].textContent, /Test Player/);
+});
