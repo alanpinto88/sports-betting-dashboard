@@ -12,3 +12,13 @@ for(const [name,quote,snapshot,expected] of [
  ['future snapshot','2026-11-22T19:59:00Z','2026-11-22T20:01:00Z','FUTURE_SNAPSHOT_TIME']
 ])test(name,()=>assert.equal(researchQuoteTimeStatus(quote,snapshot,now).status,expected));
 test('invalid clock rejected',()=>assert.equal(researchQuoteTimeStatus(snap,snap,NaN).status,'INVALID_CLOCK'));
+
+test('impossible calendar date is not accepted as quote time',()=>{
+ assert.equal(researchQuoteTimeStatus('2026-11-31T19:59:00Z',snap,now).status,'MISSING_OR_INVALID_TIME');
+});
+test('impossible snapshot date is not accepted as capture time',()=>{
+ assert.equal(researchQuoteTimeStatus('2026-11-22T19:59:00Z','2026-11-31T19:59:30Z',now).status,'SNAPSHOT_TIME_UNVERIFIED');
+});
+test('millisecond UTC quote time is accepted',()=>{
+ assert.equal(researchQuoteTimeStatus('2026-11-22T19:59:00.000Z',snap,now).status,'HISTORICAL_RESEARCH');
+});
