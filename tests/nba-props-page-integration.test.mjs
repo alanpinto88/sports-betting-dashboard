@@ -353,3 +353,13 @@ test('saved NBA player quotes require decimal thresholds and integer American od
   assert.match(source, /priceText=String\(o\.price\?\?""\)\.trim\(\)/);
   assert.match(source, /price===0\|\|Math\.abs\(price\)<100/);
 });
+
+test('NBA CSV and saved history comparisons reject negative player-stat thresholds', () => {
+  const csvStart = page.indexOf('function archiveRows(csv){');
+  const csvEnd = page.indexOf('const implied=', csvStart);
+  const localStart = page.indexOf('function localArchive(record){');
+  const localEnd = page.indexOf('function compareLocalHistory(){', localStart);
+  assert.ok(csvStart >= 0 && csvEnd > csvStart && localStart >= 0 && localEnd > localStart);
+  assert.match(page.slice(csvStart, csvEnd), /line<0/);
+  assert.match(page.slice(localStart, localEnd), /line<0/);
+});
