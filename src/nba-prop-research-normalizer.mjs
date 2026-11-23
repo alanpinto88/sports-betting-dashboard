@@ -8,7 +8,7 @@ export function normalizeNbaPropOutcomes(snapshot) {
     for (const book of Array.isArray(event.bookmakers)?event.bookmakers:[]) {
       if (!book || typeof book.key!=='string' || !book.key.trim()) continue;
       for (const market of Array.isArray(book.markets)?book.markets:[]) {
-        if (!market || typeof market.key!=='string' || !/^player_/.test(market.key)) continue;
+        if (!market || typeof market.key!=='string' || !/^player_/.test(market.key.trim())) continue;
         for (const outcome of Array.isArray(market.outcomes)?market.outcomes:[]) {
           if (!outcome || typeof outcome !== 'object') continue;
           if(typeof outcome.name!=='string')continue;
