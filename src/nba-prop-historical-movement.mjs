@@ -15,7 +15,7 @@ export function historicalNbaPriceMovements(rows) {
      typeof q.capturedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(q.capturedAt))continue;
   const t=Date.parse(q.capturedAt);
   if(!Number.isFinite(t)||new Date(t).toISOString()!==q.capturedAt&&new Date(t).toISOString().replace(/\.000Z$/,'Z')!==q.capturedAt)continue;
-  const key=JSON.stringify([q.eventId,q.playerLabel.trim().toLowerCase(),q.market,q.period,q.provider,q.side,q.line]);
+  const key=JSON.stringify([q.eventId.trim(),q.playerLabel.trim().toLowerCase(),q.market.trim(),q.period.trim(),q.provider.trim(),q.side,q.line]);
   if(!buckets.has(key))buckets.set(key,[]);
   buckets.get(key).push({q,t});
  }
