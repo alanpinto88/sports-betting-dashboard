@@ -27,3 +27,13 @@ test('raw quotes never become verified automatically', () => {
 test('two-way validation is exposed only for diagnostics', () => {
   assert.match(page, /Object\.freeze\(\{ validatePropQuote, comparePropQuotes, validateTwoWayPropMarket \}\)/);
 });
+
+test('snapshot event carries local records for raw quote quality audit', () => {
+  assert.match(page, /eventCount:propEvents\.length,events:propEvents/);
+});
+test('validation gate reports raw missing labels, odds and timestamps', () => {
+  assert.match(page, /missingPlayerLabels/);
+  assert.match(page, /invalidPrices/);
+  assert.match(page, /missingMarketTimestamps/);
+  assert.match(page, /No picks or EV predictions/);
+});
