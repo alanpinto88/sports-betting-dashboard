@@ -606,7 +606,7 @@ renderFreshness(data);
 const rawQuoteCount=propEvents.reduce((total,game)=>total+(game.bookmakers||[]).reduce((sum,book)=>sum+(book.markets||[]).reduce((n,market)=>n+(String(market.key||'').startsWith('player_')?(market.outcomes||[]).length:0),0),0),0);
 const snapshotTime=Date.parse(data.captured_at||'');
 const snapshotAgeMinutes=Number.isFinite(snapshotTime)?(Date.now()-snapshotTime)/60000:NaN;
-window.dispatchEvent(new CustomEvent('evsports:nba-snapshot-loaded',{detail:{rawQuoteCount,snapshotAgeMinutes,eventCount:propEvents.length,events:propEvents}}));
+window.dispatchEvent(new CustomEvent('evsports:nba-snapshot-loaded',{detail:{rawQuoteCount,snapshotAgeMinutes,snapshotCapturedAt:data.captured_at,eventCount:propEvents.length,events:propEvents}}));
 auditSnapshot(propEvents,data.captured_at);
 renderIdentityReviewQueue(propEvents);
 byId("exportReview").disabled=false;
@@ -674,6 +674,7 @@ window.addEventListener('evsports:nba-snapshot-loaded', event => {
   const ageWarning = validAge && age > 5
     ? 'Historical snapshot — not current odds. '
     : '';
+  const captureTime = typeof info.snapshotCapturedAt === 'string' ? Date.parse(info.snapshotCapturedAt) : NaN;
   const events = Array.isArray(info.events) ? info.events : [];
   let missingPlayerLabels = 0, invalidPrices = 0, missingMarketTimestamps = 0, postCaptureTimestamps = 0;
   for (const game of events) {
@@ -686,7 +687,7 @@ window.addEventListener('evsports:nba-snapshot-loaded', event => {
           if (!Number.isInteger(outcome.price) || Math.abs(outcome.price) < 100) invalidPrices++;
           const updatedAt = Date.parse(timestamp || '');
           if (!Number.isFinite(updatedAt)) missingMarketTimestamps++;
-          else if (validAge && updatedAt > Date.now() - age * 60000 + 30000) postCaptureTimestamps++;
+          else if (Number.isFinite(captureTime) && updatedAt > captureTime) postCaptureTimestamps++;
         }
       }
     }
