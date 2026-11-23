@@ -430,8 +430,9 @@ test('NBA local history filters duplicate capture timestamps', () => {
   const source = page.slice(start, end);
   assert.ok(start >= 0 && end > start);
   assert.match(source, /const captures=new Set\(\)/);
-  assert.match(source, /captures\.has\(item\.capture\)/);
-  assert.match(source, /captures\.add\(item\.capture\)/);
+  assert.match(source, /const captureMs=Date\.parse\(item\.capture\)/);
+  assert.match(source, /captures\.has\(captureMs\)/);
+  assert.match(source, /captures\.add\(captureMs\)/);
 });
 
 test('NBA movement comparison reports stale and non-newer market timestamps', () => {
@@ -579,4 +580,23 @@ test('NBA comparison rejects invalid capture timestamps before computing movemen
   assert.throws(() => compare(
     { capture: '2026-11-19T21:14:27+01:00', quotes: new Map() }, good
   ), /UTC/);
+});
+
+test('NBA local history deduplicates equivalent UTC timestamp spellings', () => {
+  const timestampStart = page.indexOf('function validateQuoteTimestamp(updated,capture){');
+  const timestampEnd = page.indexOf('function localArchive(record){', timestampStart);
+  const start = page.indexOf('function localHistory(){');
+  const end = page.indexOf('function updateLocalSelections(){', start);
+  assert.ok(timestampStart >= 0 && timestampEnd > timestampStart && start >= 0 && end > start);
+  const data = [
+    { capture: '2026-11-20T21:14:27Z', events: [] },
+    { capture: '2026-11-20T21:14:27.000+00:00', events: [] },
+    { capture: '2026-11-21T21:14:27Z', events: [] }
+  ];
+  const localHistory = runInNewContext(
+    page.slice(timestampStart, timestampEnd) + '\n' + page.slice(start, end) + '\nlocalHistory',
+    { localStorage: { getItem: () => JSON.stringify(data) }, historyKey: 'test', Date, JSON, Set, Number, Error }
+  );
+  assert.equal(localHistory().length, 2);
+  assert.equal(localHistory()[0].capture, data[0].capture);
 });
