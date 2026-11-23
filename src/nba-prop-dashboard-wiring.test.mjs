@@ -89,3 +89,8 @@ test('NBA research cards expose source record IDs without merging distinct recor
 test('NBA research cards disclose contradictory source record ID reuse',()=>{
  assert.match(html,/group\.conflictingSourceRecordIds\+' conflicting source record ID\(s\)'/);
 });
+
+test('NBA research cards explain suppressed paired timing after source ID collisions',()=>{
+ assert.match(html,/if\(group\.conflictingSourceRecordIds\)/);
+ assert.match(html,/Timestamp-aligned pair indicators suppressed; research only/);
+});
