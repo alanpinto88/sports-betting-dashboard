@@ -257,3 +257,13 @@ test('NBA archive CSV rejects blank thresholds and scientific-notation numbers',
   assert.match(importer, /const priceText=r\[cols\.american_odds\]\.trim\(\),lineText=r\[cols\.threshold\]\.trim\(\)/);
   assert.match(importer, /Number\(priceText\),line=Number\(lineText\)/);
 });
+
+test('saved NBA archive rejects malformed timestamps and incomplete quote values', () => {
+  const start = page.indexOf('function localArchive(record){');
+  const end = page.indexOf('function compareLocalHistory(){', start);
+  const importer = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(importer, /validateQuoteTimestamp\(record\.capture,record\.capture\)/);
+  assert.match(importer, /Saved player quote has invalid odds or threshold/);
+  assert.match(importer, /Saved player quote is missing player label/);
+});
