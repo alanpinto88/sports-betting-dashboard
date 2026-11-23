@@ -125,3 +125,9 @@ test('hidden raw quotes are not described as absent, and empty searches have gui
   assert.match(page, /else if\(grouped\.size===0\)/);
   assert.match(page, /No raw player props match the current filters/);
 });
+
+test('raw NBA research display explains its 1000-outcome limit', () => {
+  assert.match(page, /if\(count>=1000\)\{truncated=true;continue\}/);
+  assert.match(page, /Raw research display limited to the first 1,000 matching outcomes/);
+  assert.match(page, /if\(showRaw&&truncated\)/);
+});
