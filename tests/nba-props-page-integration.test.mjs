@@ -71,3 +71,11 @@ test('raw snapshot audit tolerates null games, books, markets, and outcomes', ()
   assert.match(page, /String\(market\?\.key \|\| ''\)/);
   assert.match(page, /rawOutcome && typeof rawOutcome === 'object'/);
 });
+
+test('malformed snapshot is rejected before publishing records to UI', () => {
+  assert.match(page, /const validSnapshotShape = data\.events\.every/);
+  assert.match(page, /market\.outcomes\.every\(outcome => outcome && typeof outcome === 'object'\)/);
+  assert.match(page, /if \(!validSnapshotShape\)/);
+  assert.match(page, /Malformed snapshot rejected\. No quotes or picks verified\./);
+  assert.ok(page.indexOf('if (!validSnapshotShape)') < page.indexOf('propEvents=data.events;'));
+});
