@@ -66,3 +66,8 @@ test('NBA research cards cap visible quotes without silently hiding diagnostic v
  assert.match(html,/additional distinct research quote\(s\) hidden for display performance/);
  assert.match(html,/group\.quotes\.length\+' research quote\(s\)'/);
 });
+
+test('NBA group cards disclose market-level and sportsbook-level timestamp counts',()=>{
+ assert.match(html,/group\.marketTimestampQuotes\+' valid market timestamp\(s\)'/);
+ assert.match(html,/group\.bookmakerTimestampQuotes\+' valid sportsbook timestamp\(s\)'/);
+});
