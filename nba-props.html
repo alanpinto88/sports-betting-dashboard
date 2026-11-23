@@ -407,14 +407,15 @@ return marketTime;
 }
 function localArchive(record){
 if(!record||!Array.isArray(record.events))throw Error("Saved snapshot is invalid");
-if(!Number.isFinite(Date.parse(record.capture)))throw Error("Saved capture timestamp is invalid");
+validateQuoteTimestamp(record.capture,record.capture);
 const quotes=new Map();
 for(const game of record.events)for(const book of game.bookmakers||[])for(const market of book.markets||[]){
 if(!String(market.key||"").startsWith("player_"))continue;
 for(const o of market.outcomes||[]){
 const side=String(o.name||"").toLowerCase(),line=Number(o.point),price=Number(o.price);
-if(!["over","under"].includes(side)||!Number.isFinite(line)||!Number.isInteger(price)||Math.abs(price)<100)continue;
-const player=String(o.description||o.player||"").trim();if(!player)continue;
+if(!["over","under"].includes(side))continue;
+if(o.point===null||o.point===undefined||String(o.point).trim()===""||o.price===null||o.price===undefined||String(o.price).trim()===""||!Number.isFinite(line)||!Number.isInteger(price)||Math.abs(price)<100)throw Error("Saved player quote has invalid odds or threshold");
+const player=String(o.description||o.player||"").trim();if(!player)throw Error("Saved player quote is missing player label");
 validateQuoteTimestamp(market.last_update||book.last_update,record.capture);
 if(!String(game.id||"").trim()||!String(book.key||"").trim()||!String(market.key||"").trim())throw Error("Saved quote is missing source identity fields");
 const key=JSON.stringify([game.id,book.key,market.key,player.toLowerCase(),side,line]);
