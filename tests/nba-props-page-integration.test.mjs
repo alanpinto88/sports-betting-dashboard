@@ -239,3 +239,12 @@ test('NBA CSV parser executes strict quote handling with valid multiline fields'
   assert.throws(() => parse('"a"junk,c'), /Unexpected characters/);
   assert.throws(() => parse('"unclosed,c'), /Unclosed CSV quote/);
 });
+
+test('NBA archive importer rejects invalid odds and thresholds rather than silently dropping selections', () => {
+  const start = page.indexOf('function archiveRows(csv){');
+  const end = page.indexOf('const implied=', start);
+  const importer = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(importer, /throw Error\("Invalid player quote odds or threshold in archive"\)/);
+  assert.ok(!importer.includes('Math.abs(price)<100||!Number.isFinite(line))continue'));
+});
