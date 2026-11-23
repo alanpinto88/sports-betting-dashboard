@@ -29,6 +29,8 @@ export function groupNbaResearchQuotes(rows) {
     // Only mark timestamp alignment when both sides share an explicit timestamp.
     const timedBookSides=new Map();
     let missingOrInvalidQuoteTimestamps=0;
+    let marketTimestampQuotes=0;
+    let bookmakerTimestampQuotes=0;
     for(const q of g.quotes){
       if(typeof q.capturedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(q.capturedAt)){
         missingOrInvalidQuoteTimestamps++;
@@ -39,6 +41,8 @@ export function groupNbaResearchQuotes(rows) {
         missingOrInvalidQuoteTimestamps++;
         continue;
       }
+      if(q.timestampSource==='market')marketTimestampQuotes++;
+      else if(q.timestampSource==='bookmaker')bookmakerTimestampQuotes++;
       const key=JSON.stringify([q.provider.trim(),timestamp]);
       if(!timedBookSides.has(key))timedBookSides.set(key,{prices:new Map(),marketSides:new Set(),conflict:false});
       const pair=timedBookSides.get(key);
@@ -61,7 +65,7 @@ export function groupNbaResearchQuotes(rows) {
       else if(!seenPrices.has(key))seenPrices.set(key,q.americanOdds);
     }
     return Object.freeze({...g,quotes:Object.freeze(g.quotes.slice()),bookCount:books.size,
-      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,sameTimestampTwoSided,marketTimestampAlignedTwoSided,sameTimestampPriceConflict,missingOrInvalidQuoteTimestamps,conflictingSameSidePrices,
+      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,sameTimestampTwoSided,marketTimestampAlignedTwoSided,sameTimestampPriceConflict,missingOrInvalidQuoteTimestamps,marketTimestampQuotes,bookmakerTimestampQuotes,conflictingSameSidePrices,
       warning:'Player-event identity, provider authenticity, and price validity unverified; not an EV comparison.'});
   }).sort((a,b)=>b.bookCount-a.bookCount||a.playerLabel.localeCompare(b.playerLabel));
 }
