@@ -12,12 +12,14 @@ export function validatePropQuote(q, now = Date.now(), maxAgeMs = 5 * 60_000) {
   if (!Number.isFinite(captured)) errors.push('invalid_timestamp');
   else if (captured > now + 30_000 || now - captured > maxAgeMs) errors.push('stale_or_future_quote');
   if (q.providerVerified !== true) errors.push('provider_unverified');
+  // Provider verification is an upstream trust assertion; this function cannot authenticate it.
+  if (!Number.isFinite(now) || !Number.isFinite(maxAgeMs) || maxAgeMs <= 0) errors.push('invalid_validation_clock');
   return { valid: errors.length === 0, errors };
 }
 export function comparePropQuotes(a, b, now = Date.now()) {
   const left = validatePropQuote(a, now), right = validatePropQuote(b, now);
   const errors = [...left.errors.map(x => 'left_' + x), ...right.errors.map(x => 'right_' + x)];
-  if (left.valid && right.valid) {
+  if (a && b && typeof a === 'object' && typeof b === 'object') {
     for (const k of ['playerId','eventId','market','period','line','side'])
       if (a[k] !== b[k]) errors.push('mismatch_' + k);
   }
