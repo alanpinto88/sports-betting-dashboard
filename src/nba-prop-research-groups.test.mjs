@@ -61,3 +61,25 @@ test('whitespace in identifiers cannot create fake additional sportsbooks or mar
 test('whitespace-only sportsbook identifiers are rejected',()=>{
  assert.deepEqual(groupNbaResearchQuotes([q({provider:'  '})]),[]);
 });
+
+test('two sides at one book without timestamps are not timestamp aligned',()=>{
+ const [g]=groupNbaResearchQuotes([q({side:'over'}),q({side:'under'})]);
+ assert.equal(g.sameBookTwoSided,true);
+ assert.equal(g.sameTimestampTwoSided,false);
+});
+test('same sportsbook and matching explicit timestamps identify research pair',()=>{
+ const [g]=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:'2026-11-22T19:00:00Z'}),
+  q({side:'under',capturedAt:'2026-11-22T19:00:00Z'})
+ ]);
+ assert.equal(g.sameTimestampTwoSided,true);
+ assert.equal(g.eligibleForEv,false);
+});
+test('different timestamps never imply simultaneous two-sided quotes',()=>{
+ const [g]=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:'2026-11-22T19:00:00Z'}),
+  q({side:'under',capturedAt:'2026-11-22T19:05:00Z'})
+ ]);
+ assert.equal(g.sameBookTwoSided,true);
+ assert.equal(g.sameTimestampTwoSided,false);
+});
