@@ -23,9 +23,9 @@ export function normalizeNbaPropOutcomes(snapshot) {
           if (!playerLabel) continue;
           const capturedAt=market.last_update||book.last_update||null;
           rows.push(Object.freeze({
-            eventId:String(event.id), playerLabel, playerId:null,
-            market:String(market.key),period:'unverified',
-            side,line,americanOdds:price,provider:String(book.key),
+            eventId:event.id.trim(), playerLabel, playerId:null,
+            market:market.key.trim(),period:'unverified',
+            side,line,americanOdds:price,provider:book.key.trim(),
             capturedAt,sourceRecordId:typeof outcome.source_record_id==='string'&&outcome.source_record_id.trim()?outcome.source_record_id.trim():null,
             providerVerified:false,identityVerified:false,
             status:'RESEARCH_ONLY',eligibleForEv:false
