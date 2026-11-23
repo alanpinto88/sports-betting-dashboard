@@ -839,12 +839,20 @@ function showRows(){
   info.textContent=group.bookCount+' sportsbook(s) · '+group.quotes.length+' research quote(s) · '+(group.marketTimestampAlignedTwoSided?'both sides share a market-level timestamp (unverified)':group.sameTimestampTwoSided?'both sides share a recorded timestamp; market timing unconfirmed':group.sameBookTwoSided?'both sides at same sportsbook; timing unconfirmed':group.hasBothSides?'both sides across different sportsbooks':'one side only')+(group.sameTimestampPriceConflict?' · conflicting prices at identical timestamp':group.conflictingSameSidePrices?' · same-side prices differ across records; review timestamps':'')+(group.missingOrInvalidQuoteTimestamps?' · '+group.missingOrInvalidQuoteTimestamps+' quote(s) missing valid UTC time':'')+' · identity unverified';
   card.append(title,info);
   const unique=new Set();
+  const maxVisibleQuotesPerGroup=30;
+  let hiddenQuotes=0;
   for(const q of group.quotes){
    const signature=JSON.stringify([q.provider,q.side,q.line,q.americanOdds,q.capturedAt,q.timestampSource]);
    if(unique.has(signature))continue;unique.add(signature);
+   if(unique.size>maxVisibleQuotesPerGroup){hiddenQuotes++;continue;}
    const line=document.createElement('p');line.style.margin='5px 0';
    line.textContent=q.provider+' · '+q.side.toUpperCase()+' '+q.line+' · '+(q.americanOdds>0?'+':'')+q.americanOdds+' · '+researchQuoteTimeStatus(q.capturedAt,snapshotCapturedAt).status+' · '+(q.timestampSource==='market'?'market timestamp':q.timestampSource==='bookmaker'?'sportsbook timestamp':'timestamp source missing')+' · '+(q.capturedAt||'no UTC time');
    card.append(line);
+  }
+  if(hiddenQuotes){
+   const note=document.createElement('p');note.className='muted';
+   note.textContent=hiddenQuotes+' additional distinct research quote(s) hidden for display performance; all quotes remain counted in group diagnostics.';
+   card.append(note);
   }
   container.append(card);
  }
