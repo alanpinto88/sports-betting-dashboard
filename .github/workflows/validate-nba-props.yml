@@ -1,5 +1,6 @@
 name: Validate NBA prop comparisons
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'lib/validate-prop-comparison.mjs'
