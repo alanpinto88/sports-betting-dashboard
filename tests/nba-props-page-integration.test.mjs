@@ -37,3 +37,11 @@ test('validation gate reports raw missing labels, odds and timestamps', () => {
   assert.match(page, /missingMarketTimestamps/);
   assert.match(page, /No picks or EV predictions/);
 });
+
+test('snapshot age requires a finite nonnegative numeric value', () => {
+  assert.match(page, /typeof age === 'number' && Number\.isFinite\(age\) && age >= 0/);
+});
+test('validation gate flags quotes updated after snapshot capture', () => {
+  assert.match(page, /postCaptureTimestamps/);
+  assert.match(page, /timestamps after snapshot capture/);
+});
