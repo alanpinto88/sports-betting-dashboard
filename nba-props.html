@@ -595,6 +595,23 @@ try{data=await readJson("./data/nba-player-props-latest.json")}
 catch(error){try{data=await readJson("https://raw.githubusercontent.com/alanpinto88/sports-betting-dashboard/main/data/nba-player-props-latest.json")}catch(fallbackError){if(revision!==snapshotRevision)return;show("NBA player props unavailable. Both published and GitHub fallback sources failed. First source: "+error.message+"; fallback: "+fallbackError.message+". Please retry later.",false);byId("auditNote").textContent="Snapshot unavailable; no player audit can run.";byId("reviewQueue").textContent="Snapshot unavailable; verification queue cannot load.";byId("identityAnomaly").textContent="Snapshot unavailable; grouping cannot be checked.";byId("rosterCheckStatus").textContent="Roster research requires a loaded snapshot.";byId("results").replaceChildren();row(["Snapshot unavailable; try Refresh published data.","","","","","","",""]);return}}
 if(revision!==snapshotRevision)return;
 if(data?.source!=="The Odds API"||!Array.isArray(data.events)){show("Published NBA player-prop snapshot has an unexpected format.",false);byId("auditNote").textContent="Snapshot format invalid.";byId("reviewQueue").textContent="Snapshot format invalid.";return}
+const validSnapshotShape = data.events.every(game =>
+  game && typeof game === 'object' && Array.isArray(game.bookmakers) &&
+  game.bookmakers.every(book =>
+    book && typeof book === 'object' && Array.isArray(book.markets) &&
+    book.markets.every(market =>
+      market && typeof market === 'object' && Array.isArray(market.outcomes) &&
+      market.outcomes.every(outcome => outcome && typeof outcome === 'object')
+    )
+  )
+);
+if (!validSnapshotShape) {
+  show("Published NBA snapshot contains malformed game, sportsbook, market, or outcome records.", false);
+  byId("auditNote").textContent="Malformed snapshot rejected. No quotes or picks verified.";
+  byId("reviewQueue").textContent="Malformed snapshot rejected.";
+  window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));
+  return;
+}
 propEvents=data.events;
 loadedSnapshot=data;
 byId("saveLocalSnapshot").disabled=false;
