@@ -412,8 +412,8 @@ const quotes=new Map();
 for(const game of record.events)for(const book of game.bookmakers||[])for(const market of book.markets||[]){
 if(!String(market.key||"").startsWith("player_"))continue;
 for(const o of market.outcomes||[]){
-const side=String(o.name||"").toLowerCase(),line=Number(o.point),price=Number(o.price);
-if(!["over","under"].includes(side))continue;
+const side=String(o.name||"").trim().toLowerCase(),line=Number(o.point),price=Number(o.price);
+if(!["over","under"].includes(side))throw Error("Saved player quote has unsupported side");
 if(o.point===null||o.point===undefined||String(o.point).trim()===""||o.price===null||o.price===undefined||String(o.price).trim()===""||!Number.isFinite(line)||!Number.isInteger(price)||Math.abs(price)<100)throw Error("Saved player quote has invalid odds or threshold");
 const player=String(o.description||o.player||"").trim();if(!player)throw Error("Saved player quote is missing player label");
 validateQuoteTimestamp(market.last_update||book.last_update,record.capture);
