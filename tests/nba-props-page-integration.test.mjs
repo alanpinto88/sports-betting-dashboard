@@ -131,3 +131,13 @@ test('raw NBA research display explains its 1000-outcome limit', () => {
   assert.match(page, /Raw research display limited to the first 1,000 matching outcomes/);
   assert.match(page, /if\(showRaw&&truncated\)/);
 });
+
+test('CSV export guards absent snapshot and escapes whitespace-prefixed formulas', () => {
+  const start = page.indexOf('function exportQuoteArchive(){');
+  const end = page.indexOf('function parseCsv(text)', start);
+  const exporter = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(exporter, /if\(!loadedSnapshot \|\| !quoteArchiveCapture\)/);
+  assert.ok(exporter.includes(String.raw`/^\\s*[=+@-]/`) === false, 'must not use a literal-backslash whitespace class');
+  assert.ok(exporter.includes(String.raw`/^\s*[=+@-]/`), 'must match actual leading whitespace');
+});
