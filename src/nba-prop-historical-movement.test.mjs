@@ -139,3 +139,15 @@ test('historical movement accepts distinct source IDs and identical duplicate re
  assert.equal(result[0].observations,2);
  assert.equal(result[0].eligibleForEv,false);
 });
+
+test('historical movement reports source ID coverage without implying verification',()=>{
+ const result=historicalNbaPriceMovements([
+  q({sourceRecordId:'id-1'}),
+  q({sourceRecordId:null,capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})
+ ]);
+ assert.equal(result.length,1);
+ assert.equal(result[0].observations,2);
+ assert.equal(result[0].sourceRecordIdsPresent,1);
+ assert.equal(result[0].eligibleForEv,false);
+ assert.equal(result[0].sharpMoneyVerified,false);
+});
