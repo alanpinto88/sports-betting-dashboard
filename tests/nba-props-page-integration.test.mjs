@@ -158,3 +158,20 @@ test('raw quote CSV includes an explicit source record ID column', () => {
   assert.match(exporter, /"source_record_id","verification_status"/);
   assert.match(exporter, /outcome\.source_record_id\|\|""/);
 });
+
+test('NBA identity export fails closed when no validated snapshot exists', () => {
+  const start = page.indexOf('function exportReviewCsv(){');
+  const end = page.indexOf('async function checkSourceRosters()', start);
+  const exporter = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(exporter, /if\(!loadedSnapshot\)/);
+  assert.match(exporter, /Identity review export unavailable/);
+});
+test('NBA quote archive CSV decimal detection uses a real decimal-point regex', () => {
+  const start = page.indexOf('function exportQuoteArchive(){');
+  const end = page.indexOf('function parseCsv(text)', start);
+  const exporter = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.ok(exporter.includes(String.raw`(?:\.[0-9]+)?`));
+  assert.ok(!exporter.includes(String.raw`(?:\\.[0-9]+)?`));
+});
