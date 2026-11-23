@@ -363,3 +363,12 @@ test('NBA CSV and saved history comparisons reject negative player-stat threshol
   assert.match(page.slice(csvStart, csvEnd), /line<0/);
   assert.match(page.slice(localStart, localEnd), /line<0/);
 });
+
+test('NBA CSV archive importer rejects non-player betting markets', () => {
+  const start = page.indexOf('function archiveRows(csv){');
+  const end = page.indexOf('const implied=', start);
+  const importer = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(importer, /Archive contains a non-player market/);
+  assert.match(importer, /r\[cols\.market\]\.trim\(\)\.startsWith\("player_"\)/);
+});
