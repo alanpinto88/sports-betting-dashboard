@@ -91,3 +91,11 @@ test('conflicting snapshots at the same capture timestamp are excluded regardles
  assert.deepEqual(movementsFromSavedNbaSnapshots([first,conflict,later],now),[]);
  assert.deepEqual(movementsFromSavedNbaSnapshots([conflict,first,later],now),[]);
 });
+
+test('three conflicting captures at one timestamp fail closed without throwing',()=>{
+ const a=record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110);
+ const b=record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-130);
+ const c=record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-140);
+ const later=record('2026-11-22T19:15:00Z','2026-11-22T19:14:00Z',-120);
+ assert.deepEqual(movementsFromSavedNbaSnapshots([a,b,c,later],now),[]);
+});
