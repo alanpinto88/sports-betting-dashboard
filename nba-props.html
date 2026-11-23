@@ -572,7 +572,7 @@ const name=String(outcome.description||outcome.player||"").trim();
 if(name)names.add(name.toLowerCase());else missingNames++;
 if(!Number.isInteger(outcome.price)||Math.abs(outcome.price)<100)invalidPrices++;
 const side=String(outcome.name||"").toLowerCase();
-const point=Number(outcome.point);
+const point=outcome.point===null||outcome.point===undefined||String(outcome.point).trim()===""?NaN:Number(outcome.point);
 if(!name||!Number.isFinite(point)||(side!=="over"&&side!=="under"))continue;
 const key=JSON.stringify([game.id||"",book.key||"",market.key||"",name.toLowerCase(),point]);
 if(!groups.has(key))groups.set(key,{over:[],under:[]});
