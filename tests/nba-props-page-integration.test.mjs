@@ -372,3 +372,12 @@ test('NBA CSV archive importer rejects non-player betting markets', () => {
   assert.match(importer, /Archive contains a non-player market/);
   assert.match(importer, /r\[cols\.market\]\.trim\(\)\.startsWith\("player_"\)/);
 });
+
+test('NBA audit excludes invalid prices and negative thresholds from pairing groups', () => {
+  const start = page.indexOf('function auditSnapshot(events, capturedAt){');
+  const end = page.indexOf('async function readJson(url){', start);
+  const audit = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(audit, /const validPrice=Number\.isInteger\(outcome\.price\)/);
+  assert.match(audit, /!validPrice\|\|!Number\.isFinite\(point\)\|\|point<0/);
+});
