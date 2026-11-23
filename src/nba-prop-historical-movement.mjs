@@ -52,6 +52,7 @@ import {researchQuoteTimeStatus} from './nba-prop-research-freshness.mjs';
 export function historicalNbaMovementsFromSnapshot(rows,snapshotCapturedAt,now=Date.now()) {
  if(!Array.isArray(rows))return [];
  return historicalNbaPriceMovements(rows.filter(q=>
-  researchQuoteTimeStatus(q?.capturedAt,snapshotCapturedAt,now).status==='HISTORICAL_RESEARCH'
+  q?.timestampSource==='market'&&
+  researchQuoteTimeStatus(q.capturedAt,snapshotCapturedAt,now).status==='HISTORICAL_RESEARCH'
  ));
 }
