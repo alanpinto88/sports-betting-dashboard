@@ -29,7 +29,9 @@ export function groupNbaResearchQuotes(rows) {
     // Only mark timestamp alignment when both sides share an explicit timestamp.
     const timedBookSides=new Map();
     for(const q of g.quotes){
-      if(typeof q.capturedAt!=='string'||!q.capturedAt.trim())continue;
+      if(typeof q.capturedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(q.capturedAt))continue;
+      const timestamp=Date.parse(q.capturedAt);
+      if(!Number.isFinite(timestamp)||![new Date(timestamp).toISOString(),new Date(timestamp).toISOString().replace(/\.000Z$/,'Z')].includes(q.capturedAt))continue;
       const key=JSON.stringify([q.provider.trim(),q.capturedAt]);
       if(!timedBookSides.has(key))timedBookSides.set(key,new Set());
       timedBookSides.get(key).add(q.side);
