@@ -119,3 +119,9 @@ test('raw quote audit accepts the same Python UTC capture format as snapshot ing
   assert.match(page, /const captureTime = captureMatch \? Date\.parse\(captureValue\) : NaN/);
   assert.match(page, /captureMatch\[2\]/);
 });
+
+test('hidden raw quotes are not described as absent, and empty searches have guidance', () => {
+  assert.match(page, /Raw quote research view is off\. This does not mean the snapshot has no player props/);
+  assert.match(page, /else if\(grouped\.size===0\)/);
+  assert.match(page, /No raw player props match the current filters/);
+});
