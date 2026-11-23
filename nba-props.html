@@ -93,7 +93,8 @@ row([name||"Unknown","Unverified event label (NOT a player matchup): "+matchup,b
 }
 byId("quotes").textContent="0 verified";
 const price=x=>Number.isFinite(x)?(x>0?"+":"")+x:"Not offered";
-if(!showRaw){row(["Unverified quotes quarantined; enable research view to inspect.","","","","","","",""]);const p=document.createElement("p");p.textContent="No matching player props in this snapshot.";mobile.append(p)}
+if(!showRaw){row(["Unverified quotes quarantined; enable research view to inspect.","","","","","","",""]);const p=document.createElement("p");p.textContent="Raw quote research view is off. This does not mean the snapshot has no player props.";mobile.append(p)}
+else if(grouped.size===0){row(["No raw player props match the current filters.","","","","","","",""]);const p=document.createElement("p");p.textContent="No raw player props match the current filters. Try clearing the player, market, or sportsbook filter.";mobile.append(p)}
 for(const item of Array.from(grouped.values()).slice(0,150)){
 const card=document.createElement("article");card.className="prop-card";
 const top=document.createElement("div");top.className="prop-top";
