@@ -27,3 +27,10 @@ test('does not mutate source snapshot',()=>{
  normalizeNbaPropOutcomes(snapshot);
  assert.equal(JSON.stringify(snapshot),original);
 });
+
+test('rejects object-valued player identity instead of inventing object string',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].bookmakers[0].markets[0].outcomes[0].description={name:'Example Player'};
+ altered.events[0].bookmakers[0].markets[0].outcomes[1].description=['Example Player'];
+ assert.deepEqual(normalizeNbaPropOutcomes(altered),[]);
+});
