@@ -106,3 +106,10 @@ test('invalid NBA snapshot formats and capture times notify verification panels'
   assert.match(invalidFormat, /evsports:nba-snapshot-unavailable/);
   assert.match(invalidCapture, /evsports:nba-snapshot-unavailable/);
 });
+
+test('published Python UTC timestamps with six-digit fractions are supported', () => {
+  assert.match(page, /const snapshotUtcPattern =/);
+  assert.match(page, /snapshotCapturedAt\.match\(snapshotUtcPattern\)/);
+  assert.match(page, /snapshotMatch\[2\]/);
+  assert.match(page, /new Date\(parsedSnapshotTime\)\.toISOString\(\)\.slice\(0, 19\)/);
+});
