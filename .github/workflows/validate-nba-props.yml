@@ -17,6 +17,8 @@ on:
       - 'src/nba-prop-saved-movement.mjs'
       - 'src/nba-prop-saved-movement.test.mjs'
       - '.github/workflows/validate-nba-props.yml'
+      - 'nba-props.html'
+      - 'src/nba-prop-dashboard-wiring.test.mjs'
   pull_request:
     paths:
       - 'lib/validate-prop-comparison.mjs'
@@ -34,6 +36,8 @@ on:
       - 'src/nba-prop-saved-movement.mjs'
       - 'src/nba-prop-saved-movement.test.mjs'
       - '.github/workflows/validate-nba-props.yml'
+      - 'nba-props.html'
+      - 'src/nba-prop-dashboard-wiring.test.mjs'
 permissions:
   contents: read
 jobs:
@@ -46,4 +50,4 @@ jobs:
         with:
           node-version: '22'
       - name: Test fail-closed quote matching
-        run: node --test lib/validate-prop-comparison.test.mjs src/nba-prop-quote-validation.test.mjs src/nba-prop-research-normalizer.test.mjs src/nba-prop-research-groups.test.mjs src/nba-prop-research-freshness.test.mjs src/nba-prop-historical-movement.test.mjs src/nba-prop-saved-movement.test.mjs
+        run: node --test lib/validate-prop-comparison.test.mjs src/nba-prop-quote-validation.test.mjs src/nba-prop-research-normalizer.test.mjs src/nba-prop-research-groups.test.mjs src/nba-prop-research-freshness.test.mjs src/nba-prop-historical-movement.test.mjs src/nba-prop-saved-movement.test.mjs src/nba-prop-dashboard-wiring.test.mjs
