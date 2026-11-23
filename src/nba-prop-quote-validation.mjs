@@ -25,3 +25,24 @@ export function comparePropQuotes(a, b, now = Date.now()) {
   }
   return { comparable: errors.length === 0, errors };
 }
+
+/**
+ * Check whether two opposite-side quotes describe the same player prop.
+ * This is a prerequisite for no-vig modeling, not proof of provider authenticity.
+ */
+export function validateTwoWayPropMarket(over, under, now = Date.now()) {
+  const left = validatePropQuote(over, now);
+  const right = validatePropQuote(under, now);
+  const errors = [
+    ...left.errors.map(error => 'over_' + error),
+    ...right.errors.map(error => 'under_' + error)
+  ];
+  if (over && under && typeof over === 'object' && typeof under === 'object') {
+    if (over.side !== 'over') errors.push('invalid_over_side');
+    if (under.side !== 'under') errors.push('invalid_under_side');
+    for (const key of ['playerId', 'eventId', 'market', 'period', 'line', 'provider']) {
+      if (over[key] !== under[key]) errors.push('mismatch_' + key);
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
