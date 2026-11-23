@@ -245,3 +245,18 @@ test('research groups count absent source record identifiers without promoting v
  assert.equal(g.eligibleForEv,false);
  assert.equal(g.status,'RESEARCH_ONLY');
 });
+
+test('contradictory source ID reuse is flagged within a sportsbook',()=>{
+ const [g]=groupNbaResearchQuotes([
+  q({sourceRecordId:'id-1',americanOdds:-110,capturedAt:'2026-11-22T19:00:00Z'}),
+  q({sourceRecordId:'id-1',americanOdds:-120,capturedAt:'2026-11-22T19:05:00Z'}),
+  q({provider:'book-b',sourceRecordId:'id-1',americanOdds:-110,capturedAt:'2026-11-22T19:00:00Z'})
+ ]);
+ assert.equal(g.conflictingSourceRecordIds,1);
+ assert.equal(g.eligibleForEv,false);
+});
+test('identical source record duplicates do not create a source ID conflict',()=>{
+ const quote=q({sourceRecordId:'id-2',capturedAt:'2026-11-22T19:00:00Z'});
+ const [g]=groupNbaResearchQuotes([quote,{...quote}]);
+ assert.equal(g.conflictingSourceRecordIds,0);
+});
