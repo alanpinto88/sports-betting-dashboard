@@ -856,17 +856,21 @@ function showRows(){
   savedMovements=movementsFromSavedNbaSnapshots(saved).filter(m=>
    (!player||m.playerLabel.toLowerCase().includes(player))&&(!market||m.market===market)&&(!book||m.provider.toLowerCase().includes(book)));
  }catch{savedMovements=[];}
- const movements=savedMovements.length?savedMovements:historicalNbaPriceMovements(matches);
+ const currentMovements=historicalNbaPriceMovements(matches);
+ const movements=[
+  ...savedMovements.map(m=>({...m,historySource:'Saved device captures'})),
+  ...currentMovements.map(m=>({...m,historySource:'Current loaded snapshot'}))
+ ].sort((a,b)=>Math.abs(b.impliedProbabilityChangePoints)-Math.abs(a.impliedProbabilityChangePoints));
  const movementRows=document.getElementById('nbaMovementRows');movementRows.replaceChildren();
  document.getElementById('nbaMovementStatus').textContent=movements.length
- ? movements.length+' historical movement series recorded ('+(savedMovements.length?'saved device captures':'loaded snapshot')+'). Not live, not sharp-money evidence.'
- : 'No valid historical price-movement series in the loaded snapshot. Two distinct timestamps for the exact same market are required.';
+ ? movements.length+' historical movement series: '+savedMovements.length+' from saved device captures, '+currentMovements.length+' from the loaded snapshot. These are separate sources; not live, not sharp-money evidence.'
+ : 'No valid historical price-movement series in saved captures or the loaded snapshot. Two distinct source update timestamps for the exact same market are required.';
  for(const m of movements.slice(0,15)){
   const card=document.createElement('div');card.className='stat';
   const title=document.createElement('strong');title.style.fontSize='15px';
   title.textContent=m.playerLabel+' · '+m.market+' · '+m.side.toUpperCase()+' '+m.line;
   const desc=document.createElement('p');desc.className='muted';
-  desc.textContent=m.provider+' · '+m.openingRecordedOdds+' to '+m.latestRecordedOdds+' · '+(m.impliedProbabilityChangePoints>0?'+':'')+m.impliedProbabilityChangePoints+' percentage points · '+m.observations+' records · '+m.firstCapturedAt+' → '+m.lastCapturedAt+' · historical only, not a sharp-money signal';
+  desc.textContent=m.historySource+' · '+m.provider+' · '+m.openingRecordedOdds+' to '+m.latestRecordedOdds+' · '+(m.impliedProbabilityChangePoints>0?'+':'')+m.impliedProbabilityChangePoints+' percentage points · '+m.observations+' records · '+m.firstCapturedAt+' → '+m.lastCapturedAt+' · historical only, not a sharp-money signal';
   card.append(title,desc);movementRows.append(card);
  }
 
