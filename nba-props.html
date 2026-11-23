@@ -601,12 +601,14 @@ catch(error){try{data=await readJson("https://raw.githubusercontent.com/alanpint
 if(revision!==snapshotRevision)return;
 if(data?.source!=="The Odds API"||!Array.isArray(data.events)){show("Published NBA player-prop snapshot has an unexpected format.",false);byId("auditNote").textContent="Snapshot format invalid.";byId("reviewQueue").textContent="Snapshot format invalid.";window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));return}
 const snapshotCapturedAt = data.captured_at;
-const parsedSnapshotTime = typeof snapshotCapturedAt === 'string' &&
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(snapshotCapturedAt)
-  ? Date.parse(snapshotCapturedAt) : NaN;
+// The published snapshot uses Python ISO UTC (six fractional digits and +00:00).
+// Accept only explicit UTC, then round-trip the date/time to reject impossible dates.
+const snapshotUtcPattern = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,6}))?(Z|\+00:00)$/;
+const snapshotMatch = typeof snapshotCapturedAt === 'string' ? snapshotCapturedAt.match(snapshotUtcPattern) : null;
+const parsedSnapshotTime = snapshotMatch ? Date.parse(snapshotCapturedAt) : NaN;
 const canonicalSnapshotTime = Number.isFinite(parsedSnapshotTime) &&
-  (new Date(parsedSnapshotTime).toISOString() === snapshotCapturedAt ||
-   new Date(parsedSnapshotTime).toISOString().replace(/\.000Z$/, 'Z') === snapshotCapturedAt);
+  new Date(parsedSnapshotTime).toISOString().slice(0, 19) === snapshotMatch[1] &&
+  new Date(parsedSnapshotTime).getUTCMilliseconds() === Number((snapshotMatch[2] || '').padEnd(3, '0').slice(0, 3));
 if (!canonicalSnapshotTime || parsedSnapshotTime > Date.now() + 30_000) {
   window.dispatchEvent(new Event('evsports:nba-snapshot-unavailable'));
   show("NBA snapshot rejected: missing, invalid, or future-dated UTC capture time.", false);
