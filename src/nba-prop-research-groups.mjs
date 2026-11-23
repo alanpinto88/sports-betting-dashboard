@@ -18,6 +18,19 @@ export function groupNbaResearchQuotes(rows) {
   }
   return [...groups.values()].map(g=>{
     const missingSourceRecordIds=g.quotes.filter(q=>typeof q.sourceRecordId!=='string'||!q.sourceRecordId.trim()).length;
+    // Reused source IDs with contradictory payloads are not trustworthy
+    // provenance. Scope IDs to a provider, since providers may reuse strings.
+    const sourceRecords=new Map();
+    let conflictingSourceRecordIds=0;
+    for(const q of g.quotes){
+      if(typeof q.sourceRecordId!=='string'||!q.sourceRecordId.trim())continue;
+      const key=JSON.stringify([q.provider.trim(),q.sourceRecordId.trim()]);
+      const signature=JSON.stringify([q.side,q.line,q.americanOdds,q.capturedAt]);
+      if(!sourceRecords.has(key))sourceRecords.set(key,new Set());
+      sourceRecords.get(key).add(signature);
+    }
+    for(const versions of sourceRecords.values())if(versions.size>1)conflictingSourceRecordIds++;
+
     const books=new Set(g.quotes.map(q=>q.provider.trim()));
     const sides=new Set(g.quotes.map(q=>q.side));
     const bookSides=new Map();
@@ -68,7 +81,7 @@ export function groupNbaResearchQuotes(rows) {
       else if(!seenPrices.has(key))seenPrices.set(key,q.americanOdds);
     }
     return Object.freeze({...g,quotes:Object.freeze(g.quotes.slice()),bookCount:books.size,
-      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,sameTimestampTwoSided,marketTimestampAlignedTwoSided,sameTimestampPriceConflict,missingOrInvalidQuoteTimestamps,marketTimestampQuotes,bookmakerTimestampQuotes,missingSourceRecordIds,hasMarketTimestampEvidence,timestampEvidenceWarning,conflictingSameSidePrices,
+      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,sameTimestampTwoSided,marketTimestampAlignedTwoSided,sameTimestampPriceConflict,missingOrInvalidQuoteTimestamps,marketTimestampQuotes,bookmakerTimestampQuotes,missingSourceRecordIds,conflictingSourceRecordIds,hasMarketTimestampEvidence,timestampEvidenceWarning,conflictingSameSidePrices,
       warning:'Player-event identity, provider authenticity, and price validity unverified; not an EV comparison.'});
   }).sort((a,b)=>b.bookCount-a.bookCount||a.playerLabel.localeCompare(b.playerLabel));
 }
