@@ -459,7 +459,10 @@ test('NBA historical comparison executes stale exclusion and renders only newer 
   };
   const document = { createElement: () => ({ className: '', textContent: '' }) };
   const implied = price => price < 0 ? -price / (-price + 100) : 100 / (price + 100);
-  const context = { byId, document, implied, Date, Number, Math, Map, Error };
+  const context = { byId, document, implied, Date, Number, Math, Map, Error,
+    validateQuoteTimestamp: (updated, capture) => {
+      if (!Number.isFinite(Date.parse(updated)) || !Number.isFinite(Date.parse(capture))) throw Error("Invalid UTC");
+    } };
   const compare = runInNewContext(page.slice(start, end) + '\ncompareArchiveData', context);
   const old = '2026-11-19T19:00:00Z', newer = '2026-11-20T19:00:00Z';
   const quote = (updated, price) => ({
