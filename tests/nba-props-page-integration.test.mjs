@@ -99,3 +99,10 @@ test('snapshot timestamp is canonical and not future dated before enabling expor
   assert.match(page, /Invalid snapshot capture time\. No quotes verified\./);
   assert.match(page, /const parsedSnapshotTime = typeof snapshotCapturedAt === 'string'/);
 });
+
+test('invalid NBA snapshot formats and capture times notify verification panels', () => {
+  const invalidFormat = page.slice(page.indexOf('if(data?.source!=="The Odds API"'), page.indexOf('const snapshotCapturedAt = data.captured_at;'));
+  const invalidCapture = page.slice(page.indexOf('if (!canonicalSnapshotTime ||'), page.indexOf('const validSnapshotShape ='));
+  assert.match(invalidFormat, /evsports:nba-snapshot-unavailable/);
+  assert.match(invalidCapture, /evsports:nba-snapshot-unavailable/);
+});
