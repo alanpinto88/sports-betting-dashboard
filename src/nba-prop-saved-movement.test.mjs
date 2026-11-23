@@ -74,3 +74,12 @@ test('malformed late captures cannot displace valid history',()=>{
  assert.equal(result[0].openingRecordedOdds,-110);
  assert.equal(result[0].latestRecordedOdds,-120);
 });
+
+test('duplicate captures cannot displace distinct older captures',()=>{
+ const original=record('2026-11-22T19:01:00Z','2026-11-22T19:01:00Z',-110);
+ const duplicates=Array.from({length:9},()=>record('2026-11-22T19:02:00Z','2026-11-22T19:02:00Z',-120));
+ const result=movementsFromSavedNbaSnapshots([original,...duplicates],now);
+ assert.equal(result.length,1);
+ assert.equal(result[0].openingRecordedOdds,-110);
+ assert.equal(result[0].latestRecordedOdds,-120);
+});
