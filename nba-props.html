@@ -468,17 +468,29 @@ document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.re
 byId("quoteArchiveStatus").textContent="Export prepared: "+(rows.length-1)+" raw outcomes. All event/player labels and odds remain unverified; no live odds were requested.";
 }
 function parseCsv(text){
-const rows=[],row=[];let value="",quoted=false;
+const rows=[],row=[];let value="",state="start";
+const pushCell=()=>{row.push(value);value="";state="start"};
+const pushRow=()=>{pushCell();rows.push(row.splice(0))};
 for(let i=0;i<text.length;i++){
 const c=text[i];
-if(quoted){if(c==='"'&&text[i+1]==='"'){value+='"';i++}else if(c==='"')quoted=false;else value+=c}
-else if(c==='"')quoted=true;
-else if(c===","){row.push(value);value=""}
-else if(c==="\n"){row.push(value.replace(/\r$/,""));rows.push(row.splice(0));value=""}
+if(state==="quoted"){
+if(c==='"'&&text[i+1]==='"'){value+='"';i++}
+else if(c==='"')state="afterQuote";
 else value+=c;
+continue;
 }
-if(quoted)throw Error("Unclosed CSV quote");
-if(value||row.length){row.push(value);rows.push(row)}
+if(c===","){pushCell();continue}
+if(c==="\n"){pushRow();continue}
+if(c==="\r"&&text[i+1]==="\n"){pushRow();i++;continue}
+if(state==="afterQuote"){throw Error("Unexpected characters after closing CSV quote")}
+if(c==='"'){
+if(state!=="start")throw Error("Unexpected quote in unquoted CSV field");
+state="quoted";continue;
+}
+value+=c;state="unquoted";
+}
+if(state==="quoted")throw Error("Unclosed CSV quote");
+if(value||row.length||state==="afterQuote")pushRow();
 return rows;
 }
 function archiveRows(csv){
