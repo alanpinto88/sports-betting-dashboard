@@ -41,3 +41,13 @@ test('rejects impossible calendar dates even if Date.parse normalizes them',()=>
  record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110),
  record('2026-11-31T19:15:00Z','2026-11-22T19:14:00Z',-120)
 ],Date.parse('2026-12-05T20:00:00Z')),[]));
+
+test('repeated snapshots of the same source quote do not fabricate movement',()=>assert.deepEqual(movementsFromSavedNbaSnapshots([
+ record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110),
+ record('2026-11-22T19:15:00Z','2026-11-22T19:04:00Z',-110)
+],now),[]));
+test('conflicting prices at the same bookmaker update timestamp are rejected',()=>assert.deepEqual(movementsFromSavedNbaSnapshots([
+ record('2026-11-22T19:05:00Z','2026-11-22T19:04:00Z',-110),
+ record('2026-11-22T19:15:00Z','2026-11-22T19:04:00Z',-120),
+ record('2026-11-22T19:25:00Z','2026-11-22T19:24:00Z',-125)
+],now),[]));
