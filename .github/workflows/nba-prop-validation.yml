@@ -3,6 +3,10 @@ on:
   push:
     paths:
       - 'lib/nba-prop-validation.mjs'
+      - 'src/nba-prop-quote-validation.mjs'
+      - 'tests/nba-prop-quote-validation.test.mjs'
+      - 'tests/nba-props-page-integration.test.mjs'
+      - 'nba-props.html'
       - 'lib/nba-published-adapter.mjs'
       - 'lib/nba-odds-movement.mjs'
       - 'tests/nba-odds-movement.test.mjs'
@@ -14,6 +18,10 @@ on:
   pull_request:
     paths:
       - 'lib/nba-prop-validation.mjs'
+      - 'src/nba-prop-quote-validation.mjs'
+      - 'tests/nba-prop-quote-validation.test.mjs'
+      - 'tests/nba-props-page-integration.test.mjs'
+      - 'nba-props.html'
       - 'lib/nba-published-adapter.mjs'
       - 'lib/nba-odds-movement.mjs'
       - 'tests/nba-odds-movement.test.mjs'
@@ -35,4 +43,4 @@ jobs:
         with:
           node-version: '22'
       - name: Run NBA prop validation regression tests
-        run: node --test tests/nba-prop-validation.test.mjs tests/nba-published-adapter.test.mjs tests/nba-odds-movement.test.mjs tests/nba-dashboard-smoke.test.mjs
+        run: node --test tests/nba-prop-validation.test.mjs tests/nba-published-adapter.test.mjs tests/nba-odds-movement.test.mjs tests/nba-dashboard-smoke.test.mjs tests/nba-prop-quote-validation.test.mjs tests/nba-props-page-integration.test.mjs
