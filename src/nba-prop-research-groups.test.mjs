@@ -234,3 +234,14 @@ test('missing market-level chronology is explicitly warned about',()=>{
  assert.equal(market.hasMarketTimestampEvidence,true);
  assert.equal(market.timestampEvidenceWarning,null);
 });
+
+test('research groups count absent source record identifiers without promoting verification',()=>{
+ const [g]=groupNbaResearchQuotes([
+  q({sourceRecordId:'quote-1'}),
+  q({side:'under',sourceRecordId:'  '}),
+  q({provider:'book-b',sourceRecordId:null})
+ ]);
+ assert.equal(g.missingSourceRecordIds,2);
+ assert.equal(g.eligibleForEv,false);
+ assert.equal(g.status,'RESEARCH_ONLY');
+});
