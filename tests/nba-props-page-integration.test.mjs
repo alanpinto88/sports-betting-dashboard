@@ -390,3 +390,14 @@ test('NBA audit groups only decimal-format player-stat thresholds', () => {
   assert.match(audit, /const pointText=String\(outcome\.point\?\?""\)\.trim\(\)/);
   assert.match(audit, /Number\(pointText\):NaN/);
 });
+
+test('NBA audit reports missing market timestamps and uses 60-second future tolerance', () => {
+  const start = page.indexOf('function auditSnapshot(events, capturedAt){');
+  const end = page.indexOf('async function readJson(url){', start);
+  const audit = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(audit, /missingMarketTimestamps/);
+  assert.match(audit, /market\.last_update\|\|book\.last_update/);
+  assert.match(audit, /updateMs>captureMs\+60000/);
+  assert.match(audit, /Missing market timestamps:/);
+});
