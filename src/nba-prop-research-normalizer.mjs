@@ -21,7 +21,10 @@ export function normalizeNbaPropOutcomes(snapshot) {
           if(typeof rawPlayer!=='string')continue;
           const playerLabel=rawPlayer.trim();
           if (!playerLabel) continue;
-          const capturedAt=market.last_update||book.last_update||null;
+          // An explicitly supplied market timestamp must not silently fall back to
+          // the bookmaker timestamp when malformed; that would invent provenance.
+          const sourceTime=market.last_update==null?book.last_update:market.last_update;
+          const capturedAt=typeof sourceTime==='string'&&sourceTime.trim()?sourceTime.trim():null;
           rows.push(Object.freeze({
             eventId:event.id.trim(), playerLabel, playerId:null,
             market:market.key.trim(),period:'unverified',
