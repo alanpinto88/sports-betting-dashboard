@@ -219,3 +219,12 @@ test('archive CSV validates capture timestamps even when selection side is skipp
   const sideSkip = importer.indexOf('if(!["over","under"].includes(side))continue');
   assert.ok(captureCheck >= 0 && sideSkip > captureCheck);
 });
+
+test('NBA archive CSV rejects duplicate column names before importing quotes', () => {
+  const start = page.indexOf('function archiveRows(csv){');
+  const end = page.indexOf('const implied=', start);
+  const importer = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(importer, /new Set\(header\)\.size!==header\.length/);
+  assert.match(importer, /CSV has duplicate archive column names/);
+});
