@@ -113,3 +113,9 @@ test('published Python UTC timestamps with six-digit fractions are supported', (
   assert.match(page, /snapshotMatch\[2\]/);
   assert.match(page, /new Date\(parsedSnapshotTime\)\.toISOString\(\)\.slice\(0, 19\)/);
 });
+
+test('raw quote audit accepts the same Python UTC capture format as snapshot ingestion', () => {
+  assert.match(page, /const captureMatch = typeof captureValue === 'string'/);
+  assert.match(page, /const captureTime = captureMatch \? Date\.parse\(captureValue\) : NaN/);
+  assert.match(page, /captureMatch\[2\]/);
+});
