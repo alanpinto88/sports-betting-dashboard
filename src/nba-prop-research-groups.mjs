@@ -55,6 +55,8 @@ export function groupNbaResearchQuotes(rows) {
     // indicator ambiguous, even when another timestamp has both sides.
     const sameTimestampTwoSided=missingOrInvalidQuoteTimestamps===0&&!sameTimestampPriceConflict&&[...timedBookSides.values()].some(pair=>pair.prices.has('over')&&pair.prices.has('under'));
     const marketTimestampAlignedTwoSided=sameTimestampTwoSided&&[...timedBookSides.values()].some(pair=>pair.marketSides.has('over')&&pair.marketSides.has('under'));
+    const hasMarketTimestampEvidence=marketTimestampQuotes>0;
+    const timestampEvidenceWarning=!hasMarketTimestampEvidence?'No valid market-level update timestamps; sportsbook-wide times do not establish prop-market update chronology.':null;
     // Multiple prices for the same provider/side in one research group need
     // chronology checks; never silently treat them as one authoritative quote.
     const seenPrices=new Map();
@@ -65,7 +67,7 @@ export function groupNbaResearchQuotes(rows) {
       else if(!seenPrices.has(key))seenPrices.set(key,q.americanOdds);
     }
     return Object.freeze({...g,quotes:Object.freeze(g.quotes.slice()),bookCount:books.size,
-      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,sameTimestampTwoSided,marketTimestampAlignedTwoSided,sameTimestampPriceConflict,missingOrInvalidQuoteTimestamps,marketTimestampQuotes,bookmakerTimestampQuotes,conflictingSameSidePrices,
+      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,sameTimestampTwoSided,marketTimestampAlignedTwoSided,sameTimestampPriceConflict,missingOrInvalidQuoteTimestamps,marketTimestampQuotes,bookmakerTimestampQuotes,hasMarketTimestampEvidence,timestampEvidenceWarning,conflictingSameSidePrices,
       warning:'Player-event identity, provider authenticity, and price validity unverified; not an EV comparison.'});
   }).sort((a,b)=>b.bookCount-a.bookCount||a.playerLabel.localeCompare(b.playerLabel));
 }
