@@ -85,3 +85,17 @@ test('normalizes whitespace around event, sportsbook and market identifiers',()=
  assert.equal(row.market,'player_points');
  assert.equal(row.eligibleForEv,false);
 });
+
+test('leading and trailing market whitespace is normalized before player market filtering',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].bookmakers[0].markets[0].key='  player_points  ';
+ const rows=normalizeNbaPropOutcomes(altered);
+ assert.equal(rows.length,2);
+ assert.equal(rows[0].market,'player_points');
+ assert.equal(rows[0].eligibleForEv,false);
+});
+test('non-player markets stay excluded after whitespace normalization',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].bookmakers[0].markets[0].key='  totals  ';
+ assert.deepEqual(normalizeNbaPropOutcomes(altered),[]);
+});
