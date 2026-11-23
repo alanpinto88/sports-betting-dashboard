@@ -28,4 +28,4 @@ These tests make **no paid provider API calls** and do not need secrets.
 4. Confirm failed or stale snapshots never enable recommendations.
 5. Do not enable live EV predictions until independent provider authentication, player identity, event mapping, and per-quote timestamps are available.
 
-The local regression run of the **20 unit tests** passed on 2026-11-22; the six HTML integration tests and live browser deployment have not yet been independently run.
+On 2026-11-22, **34 of 34 quote-validation unit tests passed** using Node.js 22.16.0 against locally reconstructed copies of the GitHub connector's current validator and unit-test content. This was not a full repository checkout. The **14 HTML integration tests** and the live GitHub Pages browser deployment remain unverified. Do not describe all 48 tests as passing until both test files run against a checked-out repository.
