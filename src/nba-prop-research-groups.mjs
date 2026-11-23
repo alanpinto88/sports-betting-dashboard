@@ -67,7 +67,7 @@ export function groupNbaResearchQuotes(rows) {
     const sameTimestampPriceConflict=[...timedBookSides.values()].some(pair=>pair.conflict);
     // Any contradictory same-instant price in this group makes its paired-price
     // indicator ambiguous, even when another timestamp has both sides.
-    const sameTimestampTwoSided=missingOrInvalidQuoteTimestamps===0&&!sameTimestampPriceConflict&&[...timedBookSides.values()].some(pair=>pair.prices.has('over')&&pair.prices.has('under'));
+    const sameTimestampTwoSided=missingOrInvalidQuoteTimestamps===0&&!sameTimestampPriceConflict&&conflictingSourceRecordIds===0&&[...timedBookSides.values()].some(pair=>pair.prices.has('over')&&pair.prices.has('under'));
     const marketTimestampAlignedTwoSided=sameTimestampTwoSided&&conflictingSourceRecordIds===0&&[...timedBookSides.values()].some(pair=>pair.marketSides.has('over')&&pair.marketSides.has('under'));
     const hasMarketTimestampEvidence=marketTimestampQuotes>0;
     const timestampEvidenceWarning=!hasMarketTimestampEvidence?'No valid market-level update timestamps; sportsbook-wide times do not establish prop-market update chronology.':null;
