@@ -69,7 +69,7 @@ function row(values){const tr=document.createElement("tr");for(const value of va
 function render(){
 const player=byId("player").value.trim().toLowerCase(),team=byId("team").value.trim().toLowerCase(),opponent=byId("opponent").value.trim().toLowerCase(),market=byId("market").value,book=byId("book").value.trim().toLowerCase();
 const tbody=byId("results"),mobile=byId("mobileProps");tbody.replaceChildren();mobile.replaceChildren();
-const grouped=new Map();let count=0;const showRaw=byId("rawQuotes").checked;
+const grouped=new Map();let count=0;let truncated=false;const showRaw=byId("rawQuotes").checked;
 for(const game of propEvents){
 const matchup=(game.away_team||"")+" @ "+(game.home_team||"");
 // Never infer a player team or opponent from an unverified snapshot event.
@@ -81,7 +81,7 @@ if(!String(m.key||"").startsWith("player_")||(market&&m.key!==market))continue;
 for(const outcome of m.outcomes||[]){
 const name=String(outcome.description||outcome.player||"");
 if(player&&!name.toLowerCase().includes(player))continue;
-if(count>=1000)break;count++;if(!showRaw)continue;
+if(count>=1000){truncated=true;continue}count++;if(!showRaw)continue;
 const line=outcome.point??"—",key=[game.id,bookmaker.key,m.key,name,line].join("|");
 if(!grouped.has(key))grouped.set(key,{name,matchup,book:bookmaker.title||bookmaker.key,market:m.key,line,updated:m.last_update||bookmaker.last_update,over:null,under:null});
 const item=grouped.get(key),side=String(outcome.name||"").toLowerCase();
@@ -92,6 +92,7 @@ row([name||"Unknown","Unverified event label (NOT a player matchup): "+matchup,b
 }
 }
 byId("quotes").textContent="0 verified";
+if(showRaw&&truncated){const p=document.createElement("p");p.className="muted";p.textContent="Raw research display limited to the first 1,000 matching outcomes. Narrow your filters to inspect more.";mobile.append(p)}
 const price=x=>Number.isFinite(x)?(x>0?"+":"")+x:"Not offered";
 if(!showRaw){row(["Unverified quotes quarantined; enable research view to inspect.","","","","","","",""]);const p=document.createElement("p");p.textContent="Raw quote research view is off. This does not mean the snapshot has no player props.";mobile.append(p)}
 else if(grouped.size===0){row(["No raw player props match the current filters.","","","","","","",""]);const p=document.createElement("p");p.textContent="No raw player props match the current filters. Try clearing the player, market, or sportsbook filter.";mobile.append(p)}
