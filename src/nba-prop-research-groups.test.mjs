@@ -94,3 +94,19 @@ test('malformed timestamps cannot establish a synchronized two-sided market',()=
   assert.equal(g.eligibleForEv,false);
  }
 });
+
+test('equivalent canonical UTC timestamps pair even with explicit milliseconds',()=>{
+ const [g]=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:'2026-11-22T19:00:00Z'}),
+  q({side:'under',capturedAt:'2026-11-22T19:00:00.000Z'})
+ ]);
+ assert.equal(g.sameTimestampTwoSided,true);
+ assert.equal(g.eligibleForEv,false);
+});
+test('different millisecond instants do not establish timestamp alignment',()=>{
+ const [g]=groupNbaResearchQuotes([
+  q({side:'over',capturedAt:'2026-11-22T19:00:00.001Z'}),
+  q({side:'under',capturedAt:'2026-11-22T19:00:00.002Z'})
+ ]);
+ assert.equal(g.sameTimestampTwoSided,false);
+});
