@@ -517,9 +517,10 @@ if(!Number.isInteger(price)||price===0||Math.abs(price)<100||!Number.isFinite(li
 validateQuoteTimestamp(r[cols.market_updated_utc],capture);
 if(!r[cols.source_event_id]?.trim()||!r[cols.sportsbook_key]?.trim()||!r[cols.market]?.trim()||!r[cols.player_label_unverified]?.trim())throw Error("CSV quote is missing source identity fields");
 if(!r[cols.market].trim().startsWith("player_"))throw Error("Archive contains a non-player market");
-const key=JSON.stringify([r[cols.source_event_id],r[cols.sportsbook_key],r[cols.market],r[cols.player_label_unverified].toLowerCase(),side,line]);
+const eventId=r[cols.source_event_id].trim(),bookKey=r[cols.sportsbook_key].trim(),marketKey=r[cols.market].trim(),player=r[cols.player_label_unverified].trim();
+const key=JSON.stringify([eventId,bookKey,marketKey,player.toLowerCase(),side,line]);
 if(quotes.has(key))throw Error("Duplicate selection in archive: "+key.slice(0,100));
-quotes.set(key,{price,updated:r[cols.market_updated_utc],player:r[cols.player_label_unverified],book:r[cols.sportsbook_key],market:r[cols.market],side,line});
+quotes.set(key,{price,updated:r[cols.market_updated_utc],player,book:bookKey,market:marketKey,side,line});
 }
 if(captures.size!==1)throw Error("Archive contains mixed capture times");
 if(!quotes.size)throw Error("Archive has no valid player quotes");
