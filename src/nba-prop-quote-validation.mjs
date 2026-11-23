@@ -12,6 +12,9 @@ export function validatePropQuote(q, now = Date.now(), maxAgeMs = 5 * 60_000) {
   if (!Number.isFinite(captured)) errors.push('invalid_timestamp');
   else if (captured > now + 30_000 || now - captured > maxAgeMs) errors.push('stale_or_future_quote');
   if (q.providerVerified !== true) errors.push('provider_unverified');
+  // A trusted ingestion pipeline must supply a stable source record ID.
+  // This field is necessary for traceability, but does not authenticate the provider.
+  if (typeof q.sourceRecordId !== 'string' || !q.sourceRecordId.trim()) errors.push('missing_source_record_id');
   // Provider verification is an upstream trust assertion; this function cannot authenticate it.
   if (!Number.isFinite(now) || !Number.isFinite(maxAgeMs) || maxAgeMs <= 0) errors.push('invalid_validation_clock');
   return { valid: errors.length === 0, errors };
