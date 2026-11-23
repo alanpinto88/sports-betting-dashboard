@@ -267,3 +267,12 @@ test('saved NBA archive rejects malformed timestamps and incomplete quote values
   assert.match(importer, /Saved player quote has invalid odds or threshold/);
   assert.match(importer, /Saved player quote is missing player label/);
 });
+
+test('locally stored NBA history ignores malformed records and caps retained selection list', () => {
+  const start = page.indexOf('function localHistory(){');
+  const end = page.indexOf('function updateLocalSelections(){', start);
+  const source = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(source, /Array\.isArray\(item\.events\)/);
+  assert.match(source, /\.sort\(\(a,b\)=>Date\.parse\(a\.capture\)-Date\.parse\(b\.capture\)\)\.slice\(-8\)/);
+});
