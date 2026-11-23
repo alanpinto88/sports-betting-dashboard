@@ -71,3 +71,8 @@ test('NBA group cards disclose market-level and sportsbook-level timestamp count
  assert.match(html,/group\.marketTimestampQuotes\+' valid market timestamp\(s\)'/);
  assert.match(html,/group\.bookmakerTimestampQuotes\+' valid sportsbook timestamp\(s\)'/);
 });
+
+test('NBA cards disclose missing market-level timing evidence',()=>{
+ assert.match(html,/if\(group\.timestampEvidenceWarning\)/);
+ assert.match(html,/Timing evidence warning: '\+group\.timestampEvidenceWarning/);
+});
