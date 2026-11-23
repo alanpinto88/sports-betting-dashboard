@@ -40,15 +40,17 @@ export function groupNbaResearchQuotes(rows) {
         continue;
       }
       const key=JSON.stringify([q.provider.trim(),timestamp]);
-      if(!timedBookSides.has(key))timedBookSides.set(key,{prices:new Map(),conflict:false});
+      if(!timedBookSides.has(key))timedBookSides.set(key,{prices:new Map(),marketSides:new Set(),conflict:false});
       const pair=timedBookSides.get(key);
       if(pair.prices.has(q.side)&&pair.prices.get(q.side)!==q.americanOdds)pair.conflict=true;
       else if(!pair.prices.has(q.side))pair.prices.set(q.side,q.americanOdds);
+      if(q.timestampSource==='market')pair.marketSides.add(q.side);
     }
     const sameTimestampPriceConflict=[...timedBookSides.values()].some(pair=>pair.conflict);
     // Any contradictory same-instant price in this group makes its paired-price
     // indicator ambiguous, even when another timestamp has both sides.
     const sameTimestampTwoSided=missingOrInvalidQuoteTimestamps===0&&!sameTimestampPriceConflict&&[...timedBookSides.values()].some(pair=>pair.prices.has('over')&&pair.prices.has('under'));
+    const marketTimestampAlignedTwoSided=sameTimestampTwoSided&&[...timedBookSides.values()].some(pair=>pair.marketSides.has('over')&&pair.marketSides.has('under'));
     // Multiple prices for the same provider/side in one research group need
     // chronology checks; never silently treat them as one authoritative quote.
     const seenPrices=new Map();
@@ -59,7 +61,7 @@ export function groupNbaResearchQuotes(rows) {
       else if(!seenPrices.has(key))seenPrices.set(key,q.americanOdds);
     }
     return Object.freeze({...g,quotes:Object.freeze(g.quotes.slice()),bookCount:books.size,
-      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,sameTimestampTwoSided,sameTimestampPriceConflict,missingOrInvalidQuoteTimestamps,conflictingSameSidePrices,
+      hasBothSides:sides.has('over')&&sides.has('under'),sameBookTwoSided,sameTimestampTwoSided,marketTimestampAlignedTwoSided,sameTimestampPriceConflict,missingOrInvalidQuoteTimestamps,conflictingSameSidePrices,
       warning:'Player-event identity, provider authenticity, and price validity unverified; not an EV comparison.'});
   }).sort((a,b)=>b.bookCount-a.bookCount||a.playerLabel.localeCompare(b.playerLabel));
 }
