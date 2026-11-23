@@ -34,3 +34,13 @@ test('rejects object-valued player identity instead of inventing object string',
  altered.events[0].bookmakers[0].markets[0].outcomes[1].description=['Example Player'];
  assert.deepEqual(normalizeNbaPropOutcomes(altered),[]);
 });
+
+test('rejects non-string event, sportsbook and market identifiers',()=>{
+ for(const field of ['event','book','market']){
+  const altered=structuredClone(snapshot);
+  if(field==='event')altered.events[0].id={id:'event-1'};
+  if(field==='book')altered.events[0].bookmakers[0].key=['book-a'];
+  if(field==='market')altered.events[0].bookmakers[0].markets[0].key={name:'player_points'};
+  assert.deepEqual(normalizeNbaPropOutcomes(altered),[],field);
+ }
+});
