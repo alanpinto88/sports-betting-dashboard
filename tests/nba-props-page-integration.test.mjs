@@ -296,3 +296,13 @@ test('NBA audit discloses player-quote source record ID coverage without implyin
   assert.match(audit, /Source record IDs present:/);
   assert.match(audit, /0 independently verified player-to-event assignments/);
 });
+
+test('NBA audit does not turn missing player prop thresholds into zero-point lines', () => {
+  const start = page.indexOf('function auditSnapshot(events, capturedAt){');
+  const end = page.indexOf('async function readJson(url){', start);
+  const audit = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(audit, /outcome\.point===null\|\|outcome\.point===undefined/);
+  assert.match(audit, /String\(outcome\.point\)\.trim\(\)===""/);
+  assert.match(audit, /\?NaN:Number\(outcome\.point\)/);
+});
