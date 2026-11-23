@@ -23,13 +23,14 @@ export function normalizeNbaPropOutcomes(snapshot) {
           if (!playerLabel) continue;
           // An explicitly supplied market timestamp must not silently fall back to
           // the bookmaker timestamp when malformed; that would invent provenance.
-          const sourceTime=market.last_update==null?book.last_update:market.last_update;
+          const timestampSource=market.last_update!=null?'market':book.last_update!=null?'bookmaker':'missing';
+          const sourceTime=timestampSource==='market'?market.last_update:book.last_update;
           const capturedAt=typeof sourceTime==='string'&&sourceTime.trim()?sourceTime.trim():null;
           rows.push(Object.freeze({
             eventId:event.id.trim(), playerLabel, playerId:null,
             market:market.key.trim(),period:'unverified',
             side,line,americanOdds:price,provider:book.key.trim(),
-            capturedAt,sourceRecordId:typeof outcome.source_record_id==='string'&&outcome.source_record_id.trim()?outcome.source_record_id.trim():null,
+            capturedAt,timestampSource,sourceRecordId:typeof outcome.source_record_id==='string'&&outcome.source_record_id.trim()?outcome.source_record_id.trim():null,
             providerVerified:false,identityVerified:false,
             status:'RESEARCH_ONLY',eligibleForEv:false
           }));
