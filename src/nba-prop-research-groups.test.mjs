@@ -147,3 +147,14 @@ test('same-instant price conflict is distinguished from historical repricing',()
  assert.equal(movement.conflictingSameSidePrices,true);
  assert.equal(movement.sameTimestampPriceConflict,false);
 });
+
+test('research groups disclose missing and invalid timestamps without promoting EV',()=>{
+ const [g]=groupNbaResearchQuotes([
+  q({side:'over'}),
+  q({side:'under',capturedAt:'2026-11-31T19:00:00Z'}),
+  q({side:'over',provider:'book-b',capturedAt:'2026-11-22T19:00:00Z'})
+ ]);
+ assert.equal(g.missingOrInvalidQuoteTimestamps,2);
+ assert.equal(g.sameTimestampTwoSided,false);
+ assert.equal(g.eligibleForEv,false);
+});
