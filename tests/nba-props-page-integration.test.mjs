@@ -79,3 +79,15 @@ test('malformed snapshot is rejected before publishing records to UI', () => {
   assert.match(page, /Malformed snapshot rejected\. No quotes or picks verified\./);
   assert.ok(page.indexOf('if (!validSnapshotShape)') < page.indexOf('propEvents=data.events;'));
 });
+
+test('snapshot refresh clears stale quote displays and export metadata before fetch', () => {
+  const start = page.indexOf('async function load(){');
+  const fetch = page.indexOf('await readJson("./data/nba-player-props-latest.json")', start);
+  const refresh = page.slice(start, fetch);
+  assert.ok(start >= 0 && fetch > start);
+  assert.match(refresh, /byId\("results"\)\.replaceChildren\(\)/);
+  assert.match(refresh, /byId\("mobileProps"\)\.replaceChildren\(\)/);
+  assert.match(refresh, /quoteArchiveCapture=''/);
+  assert.match(refresh, /byId\("exportQuoteArchive"\)\.disabled=true/);
+  assert.match(refresh, /evsports:nba-snapshot-unavailable/);
+});
