@@ -96,5 +96,7 @@ test('NBA research cards explain suppressed paired timing after source ID collis
 });
 
 test('historical NBA movement cards show source ID coverage',()=>{
- assert.ok(html.includes("m.sourceRecordIdsPresent+'/'+m.observations+' source IDs present"));
+ assert.match(html,/m\.traceableEndpoints/);
+ assert.match(html,/m\.sourceRecordIdsDistinct/);
+ assert.match(html,/endpoint source IDs incomplete/);
 });
