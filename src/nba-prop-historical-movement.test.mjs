@@ -110,3 +110,16 @@ test('loaded snapshot movement requires market provenance for both endpoints',()
  ];
  assert.deepEqual(historicalNbaMovementsFromSnapshot(rows,'2026-11-22T19:06:00Z',Date.parse('2026-11-22T20:00:00Z')),[]);
 });
+
+test('core historical calculator rejects bookmaker-wide timestamp provenance',()=>{
+ const rows=[q({timestampSource:'bookmaker'}),q({timestampSource:'bookmaker',capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})];
+ assert.deepEqual(historicalNbaPriceMovements(rows),[]);
+});
+test('core historical calculator cannot mix market and bookmaker timestamps into movement',()=>{
+ const rows=[q(),q({timestampSource:'bookmaker',capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})];
+ assert.deepEqual(historicalNbaPriceMovements(rows),[]);
+});
+test('core historical calculator rejects absent timestamp provenance',()=>{
+ const rows=[q({timestampSource:undefined}),q({timestampSource:undefined,capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120})];
+ assert.deepEqual(historicalNbaPriceMovements(rows),[]);
+});
