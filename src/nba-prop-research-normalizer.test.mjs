@@ -64,3 +64,12 @@ test('blank source record identifiers are not treated as verified IDs',()=>{
  assert.equal(rows[0].sourceRecordId,null);
  assert.equal(rows[0].providerVerified,false);
 });
+
+test('blank explicit player description cannot silently fall back to another identity',()=>{
+ const altered=structuredClone(snapshot);
+ altered.events[0].bookmakers[0].markets[0].outcomes[0].description=' ';
+ altered.events[0].bookmakers[0].markets[0].outcomes[0].player='Different Player';
+ const rows=normalizeNbaPropOutcomes(altered);
+ assert.equal(rows.length,1);
+ assert.equal(rows[0].side,'under');
+});
