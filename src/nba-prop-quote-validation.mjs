@@ -10,7 +10,7 @@ export function validatePropQuote(q, now = Date.now(), maxAgeMs = 5 * 60_000) {
   if (!Number.isInteger(q.americanOdds) || Math.abs(q.americanOdds) < 100) errors.push('invalid_odds');
   const captured = typeof q.capturedAt === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(q.capturedAt) ? Date.parse(q.capturedAt) : NaN;
   const canonicalTimestamp = Number.isFinite(captured) &&
-    new Date(captured).toISOString().replace(/\\.000Z$/, 'Z') === q.capturedAt.replace(/\\.0+Z$/, 'Z');
+    new Date(captured).toISOString().replace(/\.000Z$/, 'Z') === q.capturedAt.replace(/\.0+Z$/, 'Z');
   if (!canonicalTimestamp) errors.push('invalid_timestamp');
   else if (captured > now + 30_000 || now - captured > maxAgeMs) errors.push('stale_or_future_quote');
   if (q.providerVerified !== true) errors.push('provider_unverified');
