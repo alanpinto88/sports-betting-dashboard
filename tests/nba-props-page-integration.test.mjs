@@ -552,3 +552,28 @@ test('NBA local snapshot save executes fail-closed checks and writes only valid 
   assert.equal(writes[0][1][0].capture, capture);
   assert.equal(writes[0][1][0].events.length, 1);
 });
+
+test('NBA comparison rejects invalid capture timestamps before computing movement', () => {
+  const timestampStart = page.indexOf('function validateQuoteTimestamp(updated,capture){');
+  const timestampEnd = page.indexOf('function localArchive(record){', timestampStart);
+  const start = page.indexOf('function compareArchiveData(a,b){');
+  const end = page.indexOf('function auditSnapshot(events, capturedAt){', start);
+  assert.ok(timestampStart >= 0 && timestampEnd > timestampStart && start >= 0 && end > start);
+  const elements = new Map();
+  const byId = id => {
+    if (!elements.has(id)) elements.set(id, {
+      value: '0', textContent: '', replaceChildren() {}, append() {}
+    });
+    return elements.get(id);
+  };
+  const source = page.slice(timestampStart, timestampEnd) + '\n' + page.slice(start, end);
+  const compare = runInNewContext(source + '\ncompareArchiveData', {
+    byId, document: { createElement: () => ({}) }, Date, Number, Math, Map, Error
+  });
+  const good = { capture: '2026-11-20T21:14:27Z', quotes: new Map() };
+  assert.throws(() => compare({ capture: 'not-a-date', quotes: new Map() }, good), /UTC/);
+  assert.throws(() => compare(good, { capture: '2026-11-21T21:14:27Z', quotes: [] }), /valid captures/);
+  assert.throws(() => compare(
+    { capture: '2026-11-19T21:14:27+01:00', quotes: new Map() }, good
+  ), /UTC/);
+});
