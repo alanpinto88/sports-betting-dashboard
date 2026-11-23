@@ -16,7 +16,7 @@ export function validatePropQuote(q, now = Date.now(), maxAgeMs = 5 * 60_000) {
   // This field is necessary for traceability, but does not authenticate the provider.
   if (typeof q.sourceRecordId !== 'string' || !q.sourceRecordId.trim()) errors.push('missing_source_record_id');
   // Provider verification is an upstream trust assertion; this function cannot authenticate it.
-  if (!Number.isFinite(now) || !Number.isFinite(maxAgeMs) || maxAgeMs <= 0) errors.push('invalid_validation_clock');
+  if (!Number.isFinite(now) || now < 0 || !Number.isFinite(maxAgeMs) || maxAgeMs <= 0) errors.push('invalid_validation_clock');
   return { valid: errors.length === 0, errors };
 }
 export function comparePropQuotes(a, b, now = Date.now()) {
