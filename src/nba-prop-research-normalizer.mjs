@@ -16,7 +16,9 @@ export function normalizeNbaPropOutcomes(snapshot) {
           const line=outcome.point, price=outcome.price;
           if (typeof line!=='number' || !Number.isFinite(line) || line<0 ||
               !Number.isInteger(price) || Math.abs(price)<100) continue;
-          const playerLabel=String(outcome.description||outcome.player||'').trim();
+          const rawPlayer=outcome.description||outcome.player;
+          if(typeof rawPlayer!=='string')continue;
+          const playerLabel=rawPlayer.trim();
           if (!playerLabel) continue;
           const capturedAt=market.last_update||book.last_update||null;
           rows.push(Object.freeze({
