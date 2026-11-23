@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {historicalNbaPriceMovements,americanImpliedProbability} from './nba-prop-historical-movement.mjs';
+const base={eventId:'e1',playerLabel:'Example Player',market:'player_points',provider:'book-a',side:'over',line:24.5,americanOdds:-110,capturedAt:'2026-11-22T19:00:00Z',status:'RESEARCH_ONLY',eligibleForEv:false};
+const q=(change={})=>({...base,...change});
+test('probability conversion handles positive and negative prices',()=>{assert.equal(americanImpliedProbability(100),.5);assert.equal(americanImpliedProbability(-100),.5);assert.equal(americanImpliedProbability(-90),null)});
+test('two ordered records produce historical change only',()=>{
+ const result=historicalNbaPriceMovements([q({capturedAt:'2026-11-22T19:05:00Z',americanOdds:-120}),q()]);
+ assert.equal(result.length,1);assert.equal(result[0].openingRecordedOdds,-110);assert.equal(result[0].latestRecordedOdds,-120);
+ assert.equal(result[0].eligibleForEv,false);assert.equal(result[0].sharpMoneyVerified,false);
+});
+for(const [name,change] of [['line',{line:25.5}],['event',{eventId:'e2'}],['player',{playerLabel:'Other'}],['market',{market:'player_assists'}],['book',{provider:'book-b'}],['side',{side:'under'}]]){
+ test('never merges different '+name,()=>assert.deepEqual(historicalNbaPriceMovements([q(),q({...change,capturedAt:'2026-11-22T19:05:00Z'})]),[]));
+}
+test('same-time conflicting prices are excluded',()=>assert.deepEqual(historicalNbaPriceMovements([q(),q({americanOdds:-120}),q({capturedAt:'2026-11-22T19:05:00Z'})]),[]));
+test('rejects noncanonical time',()=>assert.deepEqual(historicalNbaPriceMovements([q(),q({capturedAt:'2026-11-22T19:05:00+00:00'})]),[]));
+test('rejects EV eligible quotes',()=>assert.deepEqual(historicalNbaPriceMovements([q(),q({capturedAt:'2026-11-22T19:05:00Z',eligibleForEv:true})]),[]));
