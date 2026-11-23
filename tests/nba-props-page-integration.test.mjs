@@ -334,3 +334,12 @@ test('NBA archive rejects unsupported player-quote sides instead of silently dro
   assert.match(importer, /Unsupported player quote side in archive/);
   assert.match(importer, /r\[cols\.side\]\.trim\(\)\.toLowerCase\(\)/);
 });
+
+test('locally saved NBA quotes reject unsupported sides rather than skipping them', () => {
+  const start = page.indexOf('function localArchive(record){');
+  const end = page.indexOf('function compareLocalHistory(){', start);
+  const source = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(source, /Saved player quote has unsupported side/);
+  assert.match(source, /String\(o\.name\|\|""\)\.trim\(\)\.toLowerCase\(\)/);
+});
