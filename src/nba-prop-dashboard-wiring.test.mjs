@@ -54,7 +54,7 @@ test('NBA comparison cards disclose missing or invalid source timestamps',()=>{
 });
 
 test('research cards preserve distinct quote times and disclose timestamp provenance',()=>{
- assert.match(html,/const signature=JSON\.stringify\(\[q\.provider,q\.side,q\.line,q\.americanOdds,q\.capturedAt,q\.timestampSource\]\)/);
+ assert.match(html,/const signature=JSON\.stringify\(\[q\.provider,q\.side,q\.line,q\.americanOdds,q\.capturedAt,q\.timestampSource,q\.sourceRecordId\]\)/);
  assert.match(html,/q\.timestampSource==='market'\?'market timestamp'/);
  assert.match(html,/q\.timestampSource==='bookmaker'\?'sportsbook timestamp'/);
  assert.match(html,/q\.capturedAt\|\|'no UTC time'/);
@@ -79,4 +79,9 @@ test('NBA cards disclose missing market-level timing evidence',()=>{
 
 test('NBA research cards disclose missing source record identifiers',()=>{
  assert.match(html,/group\.missingSourceRecordIds\+' missing source record ID\(s\)'/);
+});
+
+test('NBA research cards expose source record IDs without merging distinct records',()=>{
+ assert.match(html,/q\.sourceRecordId\?'record ID: '\+q\.sourceRecordId:'source record ID missing'/);
+ assert.match(html,/q\.capturedAt,q\.timestampSource,q\.sourceRecordId\]/);
 });
