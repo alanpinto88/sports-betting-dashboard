@@ -15,8 +15,9 @@ export function movementsFromSavedNbaSnapshots(records, now=Date.now()) {
   if(!record||!Array.isArray(record.events)||!validUtc(record.capture)||Date.parse(record.capture)>now)continue;
   const timestamp=Date.parse(record.capture);
   if(!distinct.has(timestamp))distinct.set(timestamp,record);
+  else if(JSON.stringify(distinct.get(timestamp).events)!==JSON.stringify(record.events))distinct.set(timestamp,null);
  }
- const ordered=[...distinct.values()].sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture));
+ const ordered=[...distinct.values()].filter(Boolean).sort((a,b)=>Date.parse(a.capture)-Date.parse(b.capture));
  for(const record of ordered.slice(-8)){
   if(!record||!Array.isArray(record.events)||typeof record.capture!=='string')continue;
  
