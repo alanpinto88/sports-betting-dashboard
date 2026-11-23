@@ -45,8 +45,10 @@ export function groupNbaResearchQuotes(rows) {
       if(pair.prices.has(q.side)&&pair.prices.get(q.side)!==q.americanOdds)pair.conflict=true;
       else if(!pair.prices.has(q.side))pair.prices.set(q.side,q.americanOdds);
     }
-    const sameTimestampTwoSided=[...timedBookSides.values()].some(pair=>!pair.conflict&&pair.prices.has('over')&&pair.prices.has('under'));
     const sameTimestampPriceConflict=[...timedBookSides.values()].some(pair=>pair.conflict);
+    // Any contradictory same-instant price in this group makes its paired-price
+    // indicator ambiguous, even when another timestamp has both sides.
+    const sameTimestampTwoSided=!sameTimestampPriceConflict&&[...timedBookSides.values()].some(pair=>pair.prices.has('over')&&pair.prices.has('under'));
     // Multiple prices for the same provider/side in one research group need
     // chronology checks; never silently treat them as one authoritative quote.
     const seenPrices=new Map();
