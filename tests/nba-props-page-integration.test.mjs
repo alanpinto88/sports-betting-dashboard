@@ -325,3 +325,12 @@ test('NBA CSV parser rejects bare carriage returns but permits CRLF and quoted m
   assert.equal(parser('capture_utc,market\r\n2026-11-20,player_points').length, 2);
   assert.equal(parser('capture_utc,market\n"2026-11-20\rinside",player_points')[1][0], '2026-11-20\rinside');
 });
+
+test('NBA archive rejects unsupported player-quote sides instead of silently dropping rows', () => {
+  const start = page.indexOf('function archiveRows(csv){');
+  const end = page.indexOf('const implied=', start);
+  const importer = page.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(importer, /Unsupported player quote side in archive/);
+  assert.match(importer, /r\[cols\.side\]\.trim\(\)\.toLowerCase\(\)/);
+});
