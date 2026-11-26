@@ -258,7 +258,10 @@ async function checkLastFive(){
  if(!propEvents.length){status.textContent='Load an NBA snapshot before historical research.';return}
  const starts=propEvents.map(e=>Date.parse(e.commence_time)).filter(Number.isFinite);
  if(!starts.length){status.textContent='No valid snapshot event dates; research unavailable.';return}
- const before=new Date(Math.min(...starts)).toISOString();
+ const capture=Date.parse(quoteArchiveCapture);
+ if(!Number.isFinite(capture)){status.textContent='No valid snapshot capture time; research unavailable.';return}
+ // Provider start times can differ. Exclude games starting after the snapshot was captured.
+ const before=new Date(Math.min(capture,...starts)).toISOString();
  clearHistoricalGames();
  const request=historyRequest;
  button.disabled=true;status.textContent='Collecting up to five completed historical player games from ESPN…';
@@ -284,7 +287,7 @@ async function checkLastFive(){
   status.textContent='ESPN historical research for '+r.playerName+' (team ID '+teamId+'), before '+before+
    ': '+r.games+'/5 completed player games; averages '+fmt(r.points)+' PTS, '+fmt(r.rebounds)+
    ' REB, '+fmt(r.assists)+' AST, '+fmt(r.minutes)+' MIN. '+
-   (r.complete?'Five-game sample found.':'Incomplete sample; do not interpret as a five-game average. ')+
+   (r.complete?'Five-game sample found. ':'Incomplete sample; do not interpret as a five-game average. ')+
    (r.gameDates?.length?'Included game dates: '+r.gameDates.map(x=>String(x).slice(0,10)).join(', ')+'. ':'')+
    (r.warnings.length?'Warnings: '+r.warnings.slice(0,5).join('; ')+'. ':'')+
    (playerId?'Historical box scores matched by ESPN player ID. ':'Manual identity lookup uses name and team. ')+
