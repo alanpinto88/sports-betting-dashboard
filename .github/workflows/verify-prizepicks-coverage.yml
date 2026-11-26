@@ -1,0 +1,56 @@
+name: Verify PrizePicks API coverage
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/verify-prizepicks-coverage.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check authenticated NBA coverage and quota metadata (zero-credit endpoint)
+        env:
+          PROVIDER_KEY: ${{ secrets.PRIZEPICKS_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import http.client
+          import json
+          import os
+          import sys
+
+          key = os.environ.get("PROVIDER_KEY")
+          if not key:
+              sys.exit("PrizePicks credential unavailable to GitHub Actions")
+          conn = http.client.HTTPSConnection("prizepicksapi.com", timeout=15)
+          try:
+              conn.request("GET", "/api/v1/coverage", headers={
+                  "Accept": "application/json",
+                  "Authorization": f"Bearer {key}",
+                  "X-User-Request": "Check NBA research dashboard coverage and account quota",
+              })
+              response = conn.getresponse()
+              print("Provider HTTP status:", response.status)
+              if response.status != 200:
+                  sys.exit("PrizePicks coverage request failed")
+              for header in ("X-Credits-Cost", "X-Credits-Remaining", "X-RateLimit-Remaining"):
+                  value = response.getheader(header, "")
+                  print(header + ":", int(value) if value.isascii() and value.isdecimal() else "not supplied")
+              payload = json.loads(response.read(2_000_001))
+          except (OSError, ValueError, http.client.HTTPException):
+              sys.exit("PrizePicks coverage connection or response format failed")
+          finally:
+              conn.close()
+
+          leagues = payload.get("data") if isinstance(payload, dict) else None
+          if not isinstance(leagues, list):
+              sys.exit("Invalid PrizePicks coverage envelope")
+          nba = [row for row in leagues if isinstance(row, dict) and row.get("league") == "NBA"]
+          if len(nba) != 1:
+              sys.exit("Unique NBA coverage entry unavailable")
+          print("NBA coverage entry found. No projections requested or published.")
+          PY
