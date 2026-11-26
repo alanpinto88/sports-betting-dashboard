@@ -37,8 +37,10 @@ jobs:
           if not upcoming:
               print("No upcoming NBA events; no player prop request made");sys.exit(0)
           remaining=headers.get("x-requests-remaining")
-          if remaining and remaining.isdigit() and int(remaining)<100:
-              sys.exit("Quota below safety floor; no odds request made")
+          if remaining is None or not remaining.isdigit():
+              sys.exit("Quota unavailable; no odds request made")
+          if int(remaining)<=100:
+              sys.exit("Quota at or below safety floor; no odds request made")
           event=upcoming[0]
           params=urllib.parse.urlencode({"apiKey":key,"regions":"us","markets":"player_points","oddsFormat":"american"})
           url="https://api.the-odds-api.com/v4/sports/basketball_nba/events/"+urllib.parse.quote(event["id"],safe="")+"/odds?"+params
