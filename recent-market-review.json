@@ -1,21 +1,35 @@
 {
-  "captured_at": "2026-11-25T23:58:13.282665+00:00",
+  "captured_at": "2026-11-26T14:28:22.274045+00:00",
   "diagnostics": {
-    "books_total": 9,
-    "evaluated_prices": 250,
-    "events_total": 14,
+    "books_total": 4,
+    "evaluated_prices": 56,
+    "events_total": 15,
     "minimum_reference_books": 3,
-    "quotes_total": 250,
-    "reason": "Eligible comparisons were evaluated, but none passed the 2% market-relative review threshold.",
+    "quotes_total": 104,
+    "reason": "Market-relative review flags passed the screening threshold; prices require independent verification.",
     "review_threshold_pct": 2.0,
     "sport_quote_counts": {
-      "icehockey_nhl": 250
+      "icehockey_nhl": 104
     }
   },
   "disclaimer": "Snapshot only; not live streaming odds, not verified profitable EV, and not betting advice.",
   "feed_version": 1,
   "kind": "recent_market_review",
-  "review_count": 0,
-  "signals": [],
+  "review_count": 1,
+  "signals": [
+    {
+      "american_price": 188,
+      "bookmaker": "betrivers",
+      "captured_at": "2026-11-26T14:28:22.274045Z",
+      "event_id": "6be85c97118cc429ba24770044f011cd",
+      "market": "h2h",
+      "market_proxy_ev_pct": 3.18,
+      "matchup": "Seattle Kraken @ Edmonton Oilers",
+      "reference_books": 3,
+      "reference_probability": 0.35825,
+      "selection": "Seattle Kraken",
+      "sport": "icehockey_nhl"
+    }
+  ],
   "source": "the-odds-api-v4"
 }
