@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '*.html'
+      - 'lib/**'
+      - 'src/**'
       - 'public-signals.json'
       - 'recent-market-review.json'
       - 'nba-player-props-review.json'
