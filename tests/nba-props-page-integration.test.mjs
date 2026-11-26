@@ -89,7 +89,7 @@ test('snapshot refresh clears stale quote displays and export metadata before fe
   assert.match(refresh, /byId\("results"\)\.replaceChildren\(\)/);
   assert.match(refresh, /byId\("mobileProps"\)\.replaceChildren\(\)/);
   assert.match(refresh, /quoteArchiveCapture=''/);
-  assert.match(refresh, /byId\("exportQuoteArchive"\)\.disabled=true/);
+  assert.match(refresh, /byId\(['"]exportQuoteArchive['"]\)\.disabled=true/);
   assert.match(refresh, /evsports:nba-snapshot-unavailable/);
 });
 
@@ -210,13 +210,13 @@ test('historical UTC validation executes correctly for real capture and invalid 
   assert.throws(() => validate('2026-11-20T21:16:27Z', capture), /later than its capture/);
 });
 
-test('archive CSV validates capture timestamps even when selection side is skipped', () => {
+test('archive CSV validates capture timestamps before rejecting unsupported selection sides', () => {
   const start = page.indexOf('function archiveRows(csv){');
   const end = page.indexOf('const implied=', start);
   const importer = page.slice(start, end);
   assert.ok(start >= 0 && end > start);
   const captureCheck = importer.indexOf('validateQuoteTimestamp(capture,capture)');
-  const sideSkip = importer.indexOf('if(!["over","under"].includes(side))continue');
+  const sideSkip = importer.indexOf('if(!["over","under"].includes(side))throw Error');
   assert.ok(captureCheck >= 0 && sideSkip > captureCheck);
 });
 
@@ -302,9 +302,9 @@ test('NBA audit does not turn missing player prop thresholds into zero-point lin
   const end = page.indexOf('async function readJson(url){', start);
   const audit = page.slice(start, end);
   assert.ok(start >= 0 && end > start);
-  assert.match(audit, /outcome\.point===null\|\|outcome\.point===undefined/);
-  assert.match(audit, /String\(outcome\.point\)\.trim\(\)===""/);
-  assert.match(audit, /\?NaN:Number\(outcome\.point\)/);
+  assert.match(audit, /const pointText=String\(outcome\.point\?\?""\)\.trim\(\)/);
+  assert.match(audit, /test\(pointText\)\?Number\(pointText\):NaN/);
+  assert.match(audit, /!Number\.isFinite\(point\)/);
 });
 
 test('NBA archive CSV parser strips a UTF-8 BOM before reading the header', () => {
