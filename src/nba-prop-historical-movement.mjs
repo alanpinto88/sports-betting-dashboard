@@ -53,6 +53,7 @@ export function historicalNbaPriceMovements(rows) {
    provider:first.provider.trim(),period:first.period.trim(),side:first.side,line:first.line,
    openingRecordedOdds:first.americanOdds,latestRecordedOdds:last.americanOdds,
    firstCapturedAt:first.capturedAt,lastCapturedAt:last.capturedAt,
+   traceableEndpoints,sourceRecordIdsDistinct,
    observations:dedup.length,sourceRecordIdsPresent:dedup.filter(x=>typeof x.q.sourceRecordId==='string'&&x.q.sourceRecordId.trim()).length,impliedProbabilityChangePoints:Number(((final-initial)*100).toFixed(2)),
    status:'HISTORICAL_RESEARCH',eligibleForEv:false,sharpMoneyVerified:false
   }));
