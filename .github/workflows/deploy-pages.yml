@@ -14,6 +14,10 @@ on:
       - 'data/nba-*.json'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Capture NBA player points (one event, quota-controlled)']
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
@@ -21,14 +25,19 @@ permissions:
   id-token: write
 
 concurrency:
-  group: github-pages
+  group: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success' && format('github-pages-skipped-{0}', github.run_id) || 'github-pages' }}
   cancel-in-progress: true
 
 jobs:
   build:
+    if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # A capture can push a newer commit than the one it started from.
+          ref: ${{ github.event_name == 'workflow_run' && 'refs/heads/main' || github.sha }}
+          persist-credentials: false
 
       - name: Validate public website files
         run: |
