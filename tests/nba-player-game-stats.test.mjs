@@ -50,3 +50,16 @@ test('unconfirmed games cannot enter last-five averages',()=>{
  const r=summarizeNbaLastFive([{...item,gameId:'pending',final:false,startTime:'2026-11-01T00:00:00Z'}]);
  assert.equal(r.games,0);assert.equal(r.points,null);
 });
+
+test('individual game rows match the eligible sample and exclude incomplete games',()=>{
+ const item=extractNbaPlayerGameStats(box,'Example Player');
+ const games=Array.from({length:7},(_,i)=>({...item,gameId:'g'+i,final:true,startTime:new Date(Date.UTC(2026,10,i+1)).toISOString(),stats:{...item.stats,points:10+i}}));
+ games[6].final=false;
+ games[5].stats={...games[5].stats,points:null};
+ const result=summarizeNbaLastFive(games);
+ assert.deepEqual(result.gameRows.map(g=>g.gameId),['g4','g3','g2','g1','g0']);
+ assert.deepEqual(result.gameRows.map(g=>g.points),[14,13,12,11,10]);
+ assert.equal(result.points,12);
+ assert.equal(result.gameRows.length,result.games);
+ assert.equal(result.evEligible,false);
+});
