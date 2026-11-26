@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {extractNbaPlayerGameStats,summarizeNbaLastFive} from '../lib/nba-player-game-stats.mjs';
+import {compareNbaHistoricalThreshold,extractNbaPlayerGameStats,summarizeNbaLastFive} from '../lib/nba-player-game-stats.mjs';
 const box={players:[{team:{displayName:'Atlanta Hawks'},statistics:[{
  labels:['MIN','PTS','REB','AST'],athletes:[{athlete:{displayName:'Example Player'},
  stats:['31:30','25','7','6'],didNotPlay:false}]
@@ -62,4 +62,26 @@ test('individual game rows match the eligible sample and exclude incomplete game
  assert.equal(result.points,12);
  assert.equal(result.gameRows.length,result.games);
  assert.equal(result.evEligible,false);
+});
+
+test('compares exact integer and half-point lines, preserves pushes and excludes missing values',()=>{
+ const rows=[{points:24},{points:25},{points:26},{points:null}];
+ assert.deepEqual(compareNbaHistoricalThreshold(rows,'points',25),
+  {over:1,under:1,push:1,excluded:1,games:3,decisions:2});
+ assert.deepEqual(compareNbaHistoricalThreshold(rows,'points',25.5),
+  {over:1,under:2,push:0,excluded:1,games:3,decisions:3});
+ assert.deepEqual(compareNbaHistoricalThreshold([{points:20,rebounds:5,assists:4}],'pra',29),
+  {over:0,under:0,push:1,excluded:0,games:1,decisions:0});
+ assert.throws(()=>compareNbaHistoricalThreshold(rows,'points',NaN));
+ assert.throws(()=>compareNbaHistoricalThreshold(rows,'first-quarter-points',25));
+});
+
+test('uses ESPN player ID to distinguish players with the same display name',()=>{
+ const duplicateNames=structuredClone(box);
+ const athletes=duplicateNames.players[0].statistics[0].athletes;
+ athletes[0].athlete.id='10';
+ athletes.push({...athletes[0],athlete:{...athletes[0].athlete,id:'20'},stats:['30','12','5','2']});
+ assert.equal(extractNbaPlayerGameStats(duplicateNames,'Example Player').status,'ambiguous_player');
+ assert.equal(extractNbaPlayerGameStats(duplicateNames,'Example Player',{playerId:'20'}).stats.points,12);
+ assert.equal(extractNbaPlayerGameStats(duplicateNames,'Example Player',{playerId:'30'}).status,'player_not_found');
 });
