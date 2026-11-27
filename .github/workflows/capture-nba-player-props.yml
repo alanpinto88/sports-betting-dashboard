@@ -46,7 +46,21 @@ jobs:
           url="https://api.the-odds-api.com/v4/sports/basketball_nba/events/"+urllib.parse.quote(event["id"],safe="")+"/odds?"+params
           try: result,h=get(url)
           except urllib.error.HTTPError as e: sys.exit("Player prop endpoint HTTP "+str(e.code)+"; no secret printed")
-          if not isinstance(result,dict) or not result.get("id"):sys.exit("Unexpected odds response")
+          if not isinstance(result,dict):
+              sys.exit("Unexpected odds response")
+          if result.get("sport_key")!="basketball_nba" or any(
+              result.get(field)!=event.get(field)
+              for field in ("id","home_team","away_team")
+          ):
+              sys.exit("Odds response does not match the requested NBA event; snapshot not published")
+          bookmakers=result.get("bookmakers")
+          if not isinstance(bookmakers,list) or not any(
+              isinstance(market,dict) and market.get("key")=="player_points"
+              and isinstance(market.get("outcomes"),list) and market["outcomes"]
+              for book in bookmakers if isinstance(book,dict) and isinstance(book.get("markets"),list)
+              for market in book["markets"]
+          ):
+              sys.exit("Odds response contains no NBA player points outcomes; snapshot not published")
           stamp=datetime.datetime.now(datetime.timezone.utc).isoformat()
           data={"source":"The Odds API","sport":"basketball_nba","captured_at":stamp,"markets_requested":["player_points"],"region":"us","events":[result],"quota_remaining_at_end":h.get("x-requests-remaining"),"last_request_cost":h.get("x-requests-last"),"refresh_mode":"manual one-event snapshot"}
           pathlib.Path("data").mkdir(exist_ok=True)
