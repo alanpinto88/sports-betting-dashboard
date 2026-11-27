@@ -296,24 +296,16 @@ async function checkLastFive(){
  }catch(error){if(revision===snapshotRevision&&request===historyRequest)status.textContent='ESPN history unavailable: '+error.message+'. No verification changed.'}
  finally{clearTimeout(timer);if(revision===snapshotRevision&&request===historyRequest)button.disabled=false}
 }
-async function checkHistoricalBoxscores(){
- const revision=snapshotRevision,button=byId('checkBoxscores'),status=byId('boxscoreStatus');
- button.disabled=true;
- status.textContent='Researching ESPN historical box scores for loaded games…';
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+async function researchHistoricalBoxscore(event,reconcileNbaBoxscore,extractNbaPlayerGameStats){
+ const matchup=String(event.away_team)+' @ '+String(event.home_team);
+ const signal=AbortSignal.timeout(12000);
  try{
-  if(!propEvents.length)throw Error('No loaded NBA events');
-  if(propEvents.length>3)throw Error('Manual box-score research limited to three games');
-  const {reconcileNbaBoxscore}=await import('./lib/nba-boxscore-reconciliation.mjs');
-  const {extractNbaPlayerGameStats}=await import('./lib/nba-player-game-stats.mjs');
-  const results=[];
-  for(const event of propEvents){
    const start=new Date(event.commence_time);
    if(!Number.isFinite(start.getTime()))throw Error('Invalid game start date');
    const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(start);
    const d=Object.fromEntries(parts.map(p=>[p.type,p.value]));
    const day=d.year+d.month+d.day;
-   const response=await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+day,{signal:controller.signal,cache:'no-store'});
+   const response=await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates='+day,{signal:signal,cache:'no-store'});
    if(!response.ok)throw Error('ESPN scoreboard HTTP '+response.status);
    const board=await response.json();
    const matches=(board.events||[]).filter(g=>{
@@ -323,14 +315,13 @@ async function checkHistoricalBoxscores(){
     return home===event.home_team&&away===event.away_team&&
      Number.isFinite(Date.parse(g.date))&&Math.abs(Date.parse(g.date)-start.getTime())<=90*60000;
    });
-   if(matches.length!==1){results.push(String(event.away_team)+' @ '+String(event.home_team)+': '+(matches.length?'ambiguous schedule':'schedule not matched'));continue}
+   if(matches.length!==1){return matchup+': '+(matches.length?'ambiguous schedule':'schedule not matched')}
    const competition=matches[0].competitions?.[0];
    const completed=matches[0].status?.type?.completed===true||competition?.status?.type?.completed===true;
    if(!completed){
-    results.push(String(event.away_team)+' @ '+String(event.home_team)+': game not confirmed final; historical player statistics unavailable');
-    continue;
+    return matchup+': game not confirmed final; historical player statistics unavailable';
    }
-   const summary=await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event='+encodeURIComponent(matches[0].id),{signal:controller.signal,cache:'no-store'});
+   const summary=await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event='+encodeURIComponent(matches[0].id),{signal:signal,cache:'no-store'});
    if(!summary.ok)throw Error('ESPN box score HTTP '+summary.status);
    const payload=await summary.json();
    const research=reconcileNbaBoxscore(event,payload.boxscore||{});
@@ -341,12 +332,25 @@ async function checkHistoricalBoxscores(){
     const v=item.stats;
     return p.playerName+': '+v.points+' PTS / '+v.rebounds+' REB / '+v.assists+' AST / '+v.minutes+' MIN';
    });
-   results.push(String(event.away_team)+' @ '+String(event.home_team)+' ('+String(matches[0].date||'date unavailable')+'): '+Object.entries(counts).map(([k,v])=>v+' '+k.replaceAll('_',' ')).join(', ')+(research.completeTeamCoverage?'':' (incomplete coverage)')+(statLines.length?'. Single-game stats (up to 8 players): '+statLines.join('; '):''));
-  }
+   return matchup+' ('+String(matches[0].date||'date unavailable')+'): '+Object.entries(counts).map(([k,v])=>v+' '+k.replaceAll('_',' ')).join(', ')+(research.completeTeamCoverage?'':' (incomplete coverage)')+(statLines.length?'. Single-game stats (up to 8 players): '+statLines.join('; '):'');
+ }catch(error){
+  return matchup+': box-score research unavailable ('+error.message+')';
+ }
+}
+async function checkHistoricalBoxscores(){
+ const revision=snapshotRevision,button=byId('checkBoxscores'),status=byId('boxscoreStatus');
+ button.disabled=true;
+ status.textContent='Researching ESPN historical box scores for loaded games…';
+ try{
+  if(!propEvents.length)throw Error('No loaded NBA events');
+  if(propEvents.length>3)throw Error('Manual box-score research limited to three games');
+  const {reconcileNbaBoxscore}=await import('./lib/nba-boxscore-reconciliation.mjs');
+  const {extractNbaPlayerGameStats}=await import('./lib/nba-player-game-stats.mjs');
+  const results=await Promise.all(propEvents.map(event=>researchHistoricalBoxscore(event,reconcileNbaBoxscore,extractNbaPlayerGameStats)));
   if(revision!==snapshotRevision)return;
   status.textContent=results.join(' | ')+'. Single-game research only, NOT last-five averages. Sportsbook player/event identities, quote accuracy and EV remain unverified.';
  }catch(error){if(revision===snapshotRevision)status.textContent='Historical box-score research unavailable: '+error.message+'. No verification changed.'}
- finally{clearTimeout(timer);if(revision===snapshotRevision)button.disabled=false}
+ finally{if(revision===snapshotRevision)button.disabled=false}
 }
 async function checkNbaSchedule(){
 const revision=snapshotRevision;
