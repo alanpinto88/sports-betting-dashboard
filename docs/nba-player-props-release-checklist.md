@@ -2,6 +2,20 @@
 
 This checklist protects the live dashboard from unverified or misleading betting signals.
 
+## Release status
+
+The public NBA Player Props dashboard is available for historical research. Player Finder, archived sportsbook snapshots, quote audits, and box-score research can be used now.
+
+| Release gate | Evidence | Status |
+| --- | --- | --- |
+| Public research dashboard | Deployment, offline tests, and internal navigation checks passed. | Available |
+| Sportsbook player-to-game identity | Published captures carry raw display names and event IDs. All 94 outcomes in the latest checked capture lack independently verified player-to-event mappings. | Blocked |
+| Authenticated PrizePicks coverage | Vercel reached the provider on the unauthenticated probe. The authenticated request ended before an HTTP response. | Unverified |
+| EV picks | No verified sportsbook quote inputs or calibrated model evidence are available for this capture. | Disabled |
+| Mobile browser acceptance | Viewport and touch checks remain pending. | Pending |
+
+To verify a live comparison, obtain provider-supported player and event identifiers and immutable quote provenance, reconcile them against independent evidence, and confirm both sides represent the same market and settlement rules. Historical box scores can corroborate participation and remain research evidence.
+
 ## Data provenance
 - [ ] Player identity is resolved to a stable provider/player ID; ambiguous names are quarantined.
 - [ ] Market key includes league, event ID, player ID, stat type, period, line, and side.
