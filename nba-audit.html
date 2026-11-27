@@ -4,18 +4,23 @@
 import {auditSnapshot} from './scripts/audit-nba-snapshot.mjs';
 import {crossEventReview} from './lib/nba-identity-review.mjs';
 const status=document.getElementById('status'),metrics=document.getElementById('metrics');
+const retry=document.getElementById('retry'),captured=document.getElementById('captured');
+const target=document.getElementById('identityReview');
 async function load(){
-status.textContent='Checking published historical snapshot…';metrics.replaceChildren();
+retry.disabled=true;
+status.textContent='Checking published historical snapshot…';
+metrics.replaceChildren();target.replaceChildren();captured.textContent='';
 try{
 const response=await fetch('./data/nba-player-props-latest.json',{cache:'no-store'});
 if(!response.ok)throw Error('Snapshot HTTP '+response.status);
 const data=await response.json(),audit=auditSnapshot(data);
-const review=crossEventReview(data),target=document.getElementById('identityReview');target.replaceChildren();if(!review.length)target.textContent='No repeated names across event IDs found in this snapshot.';for(const item of review.slice(0,40)){const row=document.createElement('p');row.textContent=item.name+' · '+item.eventCount+' events · '+item.bookCount+' sportsbooks · needs review';target.append(row)}
-document.getElementById('captured').textContent='Snapshot capture: '+(data.captured_at||'unknown');
-status.textContent='Historical audit completed · research-only · zero verified player quotes';
-const labels=[['Events',audit.events],['Sportsbooks',audit.books],['Raw outcomes',audit.outcomes],['Paired markets',audit.pairedMarkets],['Unpaired sides',audit.unpairedSides],['Invalid prices',audit.invalidPrices],['Invalid thresholds',audit.invalidThresholds],['Stale / undated markets',audit.staleOrUndatedMarkets],['Unverified identities',audit.identityUnverified],['Names across multiple events',audit.playersAcrossMultipleEvents],['Verified EV picks',audit.verifiedEVPicks]];
+const review=crossEventReview(data);if(!review.length)target.textContent='No names were repeated across event IDs in this snapshot. Player-to-game matches still need verification.';for(const item of review.slice(0,40)){const row=document.createElement('p');row.textContent=item.name+' · '+item.eventCount+' events · '+item.bookCount+' sportsbooks · needs review';target.append(row)}
+captured.textContent='Snapshot capture: '+(data.captured_at||'unknown');
+status.textContent='Historical audit complete. '+(audit.events===1?'This snapshot covers one game. ':'Full slate coverage has not been verified. ')+'Zero verified player quotes.';
+const labels=[['Events',audit.events],['Sportsbooks',audit.books],['Raw outcomes',audit.outcomes],['Paired markets',audit.pairedMarkets],['Unpaired sides',audit.unpairedSides],['Invalid prices',audit.invalidPrices],['Invalid thresholds',audit.invalidThresholds],['Stale / undated markets',audit.staleOrUndatedMarkets],['Outcomes awaiting player-to-game verification',audit.identityUnverified],['Names across multiple events',audit.playersAcrossMultipleEvents],['Verified EV picks',audit.verifiedEVPicks]];
 for(const [label,value] of labels){const div=document.createElement('div');div.className='metric';const name=document.createElement('span');name.className='muted';name.textContent=label;const count=document.createElement('strong');count.textContent=String(value);div.append(name,count);metrics.append(div)}
-}catch(error){status.textContent='Audit unavailable: '+error.message+'. No values are assumed.';document.getElementById('captured').textContent='';metrics.textContent='No verified data.'}
+}catch(error){status.textContent='Audit unavailable: '+error.message+'. No values are assumed.';captured.textContent='';target.replaceChildren();metrics.textContent='No verified data.'}
+finally{retry.disabled=false}
 }
-document.getElementById('retry').addEventListener('click',load);load();
+retry.addEventListener('click',load);load();
 </script></body></html>
