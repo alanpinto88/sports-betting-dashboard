@@ -1,1 +1,1 @@
-One-time NBA player-points capture, 2026-11-20. No recurring polling.
+One-event NBA points capture to verify the published archive and Pages deployment handoff.
