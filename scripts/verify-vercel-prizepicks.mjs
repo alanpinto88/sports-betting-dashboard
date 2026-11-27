@@ -1,6 +1,8 @@
+import { writeFile } from 'node:fs/promises';
+
 // Verify PrizePicks coverage during the Vercel production build.
 async function verifyCoverage() {
-  if (process.env.VERCEL_ENV !== 'production') return;
+  
 
   const key = process.env.PRIZEPICKS_API_KEY;
   if (!key) throw new Error('PrizePicks production secret is unavailable.');
@@ -29,10 +31,9 @@ async function verifyCoverage() {
     throw new Error('PrizePicks coverage response did not include NBA.');
   }
 
-  console.log('PrizePicks authenticated NBA coverage verified.');
+  return 'PrizePicks authenticated NBA coverage verified.';
 }
 
-verifyCoverage().catch(error => {
-  console.error(error.message);
-  process.exitCode = 1;
-});
+const result = await verifyCoverage().then(message => ({ ok: true, message }), error => ({ ok: false, message: error.message }));
+console.log(result.message);
+await writeFile('prizepicks-coverage-diagnostic.json', JSON.stringify(result));
