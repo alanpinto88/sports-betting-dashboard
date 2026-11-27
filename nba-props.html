@@ -326,13 +326,15 @@ async function researchHistoricalBoxscore(event,reconcileNbaBoxscore,extractNbaP
    const payload=await summary.json();
    const research=reconcileNbaBoxscore(event,payload.boxscore||{});
    const counts={};for(const item of research.findings)counts[item.status]=(counts[item.status]||0)+1;
-   const statLines=research.findings.filter(p=>p.status==='listed_in_boxscore_unverified_minutes').slice(0,8).map(p=>{
-    const item=extractNbaPlayerGameStats(payload.boxscore,p.playerName);
-    if(item.status!=='stats_available')return p.playerName+': '+item.status.replaceAll('_',' ');
-    const v=item.stats;
-    return p.playerName+': '+v.points+' PTS / '+v.rebounds+' REB / '+v.assists+' AST / '+v.minutes+' MIN';
-   });
-   return matchup+' ('+String(matches[0].date||'date unavailable')+'): '+Object.entries(counts).map(([k,v])=>v+' '+k.replaceAll('_',' ')).join(', ')+(research.completeTeamCoverage?'':' (incomplete coverage)')+(statLines.length?'. Single-game stats (up to 8 players): '+statLines.join('; '):'');
+   const playerStats=research.findings
+    .filter(player=>player.status==='listed_in_boxscore_unverified_minutes')
+    .map(player=>extractNbaPlayerGameStats(payload.boxscore,player.playerName));
+   const playersWithMinutes=playerStats.filter(item=>item.stats?.minutes>0).length;
+   const completeStats=playerStats.filter(item=>item.status==='stats_available');
+   const statLines=completeStats.slice(0,8).map(({stats})=>
+    stats.playerName+': '+stats.points+' PTS / '+stats.rebounds+' REB / '+stats.assists+' AST / '+stats.minutes+' MIN');
+   const participation=' · '+playersWithMinutes+' with recorded minutes · '+completeStats.length+' with complete stats';
+   return matchup+' ('+String(matches[0].date||'date unavailable')+'): '+Object.entries(counts).map(([k,v])=>v+' '+k.replaceAll('_',' ')).join(', ')+(research.completeTeamCoverage?'':' (incomplete coverage)')+participation+(statLines.length?'. Single-game stats (up to 8 players): '+statLines.join('; '):'');
  }catch(error){
   return matchup+': box-score research unavailable ('+error.message+')';
  }
